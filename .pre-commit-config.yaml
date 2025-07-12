@@ -7,12 +7,26 @@ repos:
           - id: check-hooks-apply
           - id: check-useless-excludes
     - repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: v4.6.0
+      rev: v5.0.0
       hooks:
           - id: check-added-large-files
           - id: check-toml
           - id: check-yaml
+    - repo: https://github.com/editorconfig-checker/editorconfig-checker.python
+      rev: 3.1.2
+      hooks:
+          - id: editorconfig-checker
+    - repo: https://github.com/gitleaks/gitleaks
+      rev: v8.23.1
+      hooks:
+          - id: gitleaks
     - repo: https://github.com/jorisroovers/gitlint
       rev: v0.19.1
       hooks:
           - id: gitlint
+    - repo: https://github.com/doublify/pre-commit-rust
+      rev: v1.0
+      hooks:
+          - id: clippy
+          - id: cargo-check
+          - id: fmt
