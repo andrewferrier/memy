@@ -32,14 +32,12 @@ struct Args {
     #[arg(long, conflicts_with = "note")]
     include_frecency_score: bool,
 
-    /// Controls recency weighting (higher means favor recency more)
-    #[arg(long, default_value = "3600.0")]
-    recency_bias: f64,
-
     /// Disable symlink normalization when noting paths (only valid with --note)
     #[arg(long)]
     no_normalize_symlinks: bool,
 }
+
+const RECENCY_BIAS: f64 = 3600.0;
 
 fn get_db_path() -> PathBuf {
     let cache_dir = dirs::cache_dir().expect("Cannot determine cache directory");
@@ -133,7 +131,7 @@ fn list_paths(conn: &Connection, args: &Args) {
                 let age_secs = now
                     .signed_duration_since(last_dt.with_timezone(&Utc))
                     .num_seconds() as f64;
-                let frecency = count as f64 * (1.0 / (1.0 + age_secs / args.recency_bias));
+                let frecency = count as f64 * (1.0 / (1.0 + age_secs / RECENCY_BIAS));
                 results.push((path, frecency));
             }
         }
