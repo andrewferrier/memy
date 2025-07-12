@@ -12,6 +12,8 @@ readme = "README.md"
 chrono = { version = "0.4", features = ["serde"] }
 clap = { version = "4.5", features = ["derive"] }
 dirs = "5.0"
+env_logger = "0.11"
+log = "0.4.27"
 predicates = "3.1.3"
 rusqlite = "0.30"
 

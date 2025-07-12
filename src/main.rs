@@ -1,5 +1,6 @@
 use chrono::Utc;
 use clap::Parser;
+use log::{debug, info};
 use rusqlite::{params, Connection};
 use std::{
     fs,
@@ -59,6 +60,7 @@ fn init_db(conn: &Connection) {
         [],
     )
     .expect("Failed to initialize database");
+    debug!("Database initialized");
 }
 
 fn normalize_path(path: &str) -> Option<String> {
@@ -90,6 +92,7 @@ fn note_path(conn: &Connection, raw_path: &str, normalize: bool) {
         params![path, now],
     )
     .unwrap();
+    info!("Path {raw_path} noted");
 }
 
 fn list_paths(conn: &Connection, args: &Args) {
@@ -114,6 +117,7 @@ fn list_paths(conn: &Connection, args: &Args) {
         if !Path::new(&path).exists() {
             conn.execute("DELETE FROM paths WHERE path = ?", params![path])
                 .unwrap();
+            info!("Path {path} no longer exists, deleted from database.");
             continue;
         }
 
@@ -147,10 +151,13 @@ fn list_paths(conn: &Connection, args: &Args) {
 }
 
 fn main() {
+    env_logger::init();
+
     let args = Args::parse();
 
     let db_path = get_db_path();
     let conn = Connection::open(db_path).expect("Failed to open memy database");
+    debug!("Database opened");
     init_db(&conn);
 
     let normalize = !args.no_normalize_symlinks;
