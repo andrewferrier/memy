@@ -20,11 +20,11 @@ struct Args {
     #[arg(short, long, conflicts_with = "note")]
     list: bool,
 
-    /// Show only files in the list
+    /// Show only files in the list (only valid with --list)
     #[arg(short, long, conflicts_with = "note")]
     files_only: bool,
 
-    /// Show only directories in the list
+    /// Show only directories in the list (only valid with --list)
     #[arg(short, long, conflicts_with = "note")]
     directories_only: bool,
 
@@ -36,7 +36,7 @@ struct Args {
     #[arg(long, default_value = "3600.0")]
     recency_bias: f64,
 
-    /// Disable symlink normalization when noting paths
+    /// Disable symlink normalization when noting paths (only valid with --note)
     #[arg(long)]
     no_normalize_symlinks: bool,
 }
