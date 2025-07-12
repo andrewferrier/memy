@@ -63,24 +63,21 @@ fn init_db(conn: &Connection) {
     debug!("Database initialized");
 }
 
-fn normalize_path(path: &str) -> Option<String> {
-    let p = Path::new(path);
-    fs::canonicalize(p)
-        .ok()
-        .map(|p| p.to_string_lossy().into_owned())
-        .or_else(|| Some(p.to_string_lossy().into_owned()))
-}
-
 fn note_path(conn: &Connection, raw_path: &str, normalize: bool) {
-    if !Path::new(raw_path).exists() {
+    let path = Path::new(raw_path);
+
+    if !path.exists() {
         eprintln!("Path {raw_path} does not exist.");
         std::process::exit(1);
     }
 
-    let path = if normalize {
-        normalize_path(raw_path)
+    let clean_path = if normalize {
+        fs::canonicalize(path)
+            .ok()
+            .map(|path| path.to_string_lossy().into_owned())
+            .or_else(|| Some(path.to_string_lossy().into_owned()))
     } else {
-        Some(Path::new(raw_path).to_string_lossy().into_owned())
+        Some(path.to_string_lossy().into_owned())
     };
 
     let now = Utc::now().to_rfc3339();
@@ -89,7 +86,7 @@ fn note_path(conn: &Connection, raw_path: &str, normalize: bool) {
             ON CONFLICT(path) DO UPDATE SET \
                 noted_count = noted_count + 1, \
                 last_noted = excluded.last_noted",
-        params![path, now],
+        params![clean_path, now],
     )
     .unwrap();
     info!("Path {raw_path} noted");
