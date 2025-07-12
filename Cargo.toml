@@ -2,6 +2,11 @@
 name = "memy"
 version = "0.1.0"
 edition = "2021"
+authors = ["Andrew Ferrier <andrew.ferrier@example.com>"]
+description = "Track and recall frequently and recently used files or directories."
+license = "MIT"
+repository = "https://github.com/andrewferrier/memy"
+readme = "README.md"
 
 [dependencies]
 chrono = { version = "0.4", features = ["serde"] }
