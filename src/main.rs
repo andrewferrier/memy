@@ -20,6 +20,14 @@ struct Args {
     #[arg(short, long, conflicts_with = "note")]
     list: bool,
 
+    /// Show only files in the list
+    #[arg(short, long, conflicts_with = "note")]
+    files_only: bool,
+
+    /// Show only directories in the list
+    #[arg(short, long, conflicts_with = "note")]
+    directories_only: bool,
+
     /// Controls recency weighting (higher means favor recency more)
     #[arg(long, default_value = "3600.0")]
     recency_bias: f64,
@@ -81,7 +89,7 @@ fn note_path(conn: &Connection, raw_path: &str, normalize: bool) {
     .unwrap();
 }
 
-fn list_paths(conn: &Connection, recent_bias: f64) {
+fn list_paths(conn: &Connection, recent_bias: f64, files_only: bool, directories_only: bool) {
     let mut stmt = conn
         .prepare("SELECT path, noted_count, last_noted FROM paths")
         .unwrap();
@@ -104,6 +112,16 @@ fn list_paths(conn: &Connection, recent_bias: f64) {
             if !Path::new(&path).exists() {
                 conn.execute("DELETE FROM paths WHERE path = ?", params![path])
                     .unwrap();
+                continue;
+            }
+
+            let metadata = fs::metadata(&path).unwrap();
+
+            if files_only && !metadata.is_file() {
+                continue;
+            }
+
+            if directories_only && !metadata.is_dir() {
                 continue;
             }
 
@@ -137,6 +155,6 @@ fn main() {
             note_path(&conn, &path, normalize);
         }
     } else {
-        list_paths(&conn, args.recency_bias);
+        list_paths(&conn, args.recency_bias, args.files_only, args.directories_only);
     }
 }

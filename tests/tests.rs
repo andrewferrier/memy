@@ -37,8 +37,10 @@ fn note_path(cache_path: &std::path::Path, path: &str, count: usize, no_normaliz
     }
 }
 
-fn list_paths(cache_path: &std::path::Path) -> String {
-    let output = memy_cmd(cache_path, &["--list"])
+fn list_paths(cache_path: &std::path::Path, flags: &[&str]) -> String {
+    let mut args = vec!["--list"];
+    args.extend(flags);
+    let output = memy_cmd(cache_path, &args)
         .output()
         .expect("failed to run memy");
     assert!(output.status.success());
@@ -53,7 +55,7 @@ fn test_note_and_list_paths() {
     sleep(1000);
     note_path(&cache_path, "/usr", 1, false);
 
-    let stdout = list_paths(&cache_path);
+    let stdout = list_paths(&cache_path, &[]);
     let lines: Vec<&str> = stdout.lines().collect();
 
     assert_eq!(lines.len(), 2);
@@ -86,7 +88,7 @@ fn test_frecency_ordering() {
     sleep(500);
     note_path(&cache_path, "/etc", 10, false);
 
-    let stdout = list_paths(&cache_path);
+    let stdout = list_paths(&cache_path, &[]);
     let lines: Vec<&str> = stdout.lines().collect();
 
     assert_eq!(lines.len(), 3);
@@ -137,7 +139,7 @@ fn test_note_symlink_resolves_to_target() {
 
     note_path(&cache_path, symlink_path.to_str().unwrap(), 1, false);
 
-    let stdout = list_paths(&cache_path);
+    let stdout = list_paths(&cache_path, &[]);
     let lines: Vec<&str> = stdout.lines().collect();
 
     assert_eq!(lines.len(), 1);
@@ -157,7 +159,7 @@ fn test_note_symlink_with_no_normalize_option() {
 
     note_path(&cache_path, symlink_path.to_str().unwrap(), 1, true);
 
-    let stdout = list_paths(&cache_path);
+    let stdout = list_paths(&cache_path, &[]);
     let lines: Vec<&str> = stdout.lines().collect();
 
     assert_eq!(lines.len(), 1);
@@ -174,14 +176,56 @@ fn test_note_deleted_file_not_in_list() {
 
     note_path(&cache_path, temp_file_path.to_str().unwrap(), 1, false);
 
-    let stdout_before = list_paths(&cache_path);
+    let stdout_before = list_paths(&cache_path, &[]);
     let lines_before: Vec<&str> = stdout_before.lines().collect();
     assert_eq!(lines_before.len(), 1);
     assert!(lines_before[0].contains(temp_file_path.to_str().unwrap()));
 
     fs::remove_file(&temp_file_path).expect("failed to delete test file");
 
-    let stdout_after = list_paths(&cache_path);
+    let stdout_after = list_paths(&cache_path, &[]);
     let lines_after: Vec<&str> = stdout_after.lines().collect();
     assert_eq!(lines_after.len(), 0);
+}
+
+#[test]
+fn test_files_only_flag() {
+    let (_temp_dir, cache_path) = temp_dir();
+
+    let test_file_path = cache_path.join("test_file");
+    fs::write(&test_file_path, "test content").expect("failed to create test file");
+
+    let test_dir_path = cache_path.join("test_dir");
+    fs::create_dir(&test_dir_path).expect("failed to create test directory");
+
+    note_path(&cache_path, test_file_path.to_str().unwrap(), 1, false);
+    note_path(&cache_path, test_dir_path.to_str().unwrap(), 1, false);
+
+    let stdout = list_paths(&cache_path, &["--files-only"]);
+    let lines: Vec<&str> = stdout.lines().collect();
+
+    assert_eq!(lines.len(), 1);
+    assert!(lines[0].contains(test_file_path.to_str().unwrap()));
+    assert!(!lines[0].contains(test_dir_path.to_str().unwrap()));
+}
+
+#[test]
+fn test_directories_only_flag() {
+    let (_temp_dir, cache_path) = temp_dir();
+
+    let test_file_path = cache_path.join("test_file");
+    fs::write(&test_file_path, "test content").expect("failed to create test file");
+
+    let test_dir_path = cache_path.join("test_dir");
+    fs::create_dir(&test_dir_path).expect("failed to create test directory");
+
+    note_path(&cache_path, test_file_path.to_str().unwrap(), 1, false);
+    note_path(&cache_path, test_dir_path.to_str().unwrap(), 1, false);
+
+    let stdout = list_paths(&cache_path, &["--directories-only"]);
+    let lines: Vec<&str> = stdout.lines().collect();
+
+    assert_eq!(lines.len(), 1);
+    assert!(lines[0].contains(test_dir_path.to_str().unwrap()));
+    assert!(!lines[0].contains(test_file_path.to_str().unwrap()));
 }
