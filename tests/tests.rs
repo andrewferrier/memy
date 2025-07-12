@@ -59,8 +59,24 @@ fn test_note_and_list_paths() {
     let lines: Vec<&str> = stdout.lines().collect();
 
     assert_eq!(lines.len(), 2);
-    assert!(lines[0].starts_with("/tmp"),);
-    assert!(lines[1].starts_with("/usr"),);
+    assert_eq!(lines[0], "/tmp");
+    assert_eq!(lines[1], "/usr");
+}
+
+#[test]
+fn test_note_and_list_paths_with_scores() {
+    let (_temp_dir, cache_path) = temp_dir();
+
+    note_path(&cache_path, "/tmp", 1, false);
+    sleep(1000);
+    note_path(&cache_path, "/usr", 1, false);
+
+    let stdout = list_paths(&cache_path, &["--include-frecency-score"]);
+    let lines: Vec<&str> = stdout.lines().collect();
+
+    assert_eq!(lines.len(), 2);
+    assert!(lines[0].starts_with("/tmp"));
+    assert!(lines[1].starts_with("/usr"));
 
     let tmp_score: f64 = lines[0]
         .split_whitespace()
@@ -92,9 +108,28 @@ fn test_frecency_ordering() {
     let lines: Vec<&str> = stdout.lines().collect();
 
     assert_eq!(lines.len(), 3);
-    assert!(lines[0].starts_with("/usr"),);
-    assert!(lines[1].starts_with("/tmp"),);
-    assert!(lines[2].starts_with("/etc"),);
+    assert_eq!(lines[0], "/usr");
+    assert_eq!(lines[1], "/tmp");
+    assert_eq!(lines[2], "/etc");
+}
+
+#[test]
+fn test_frecency_ordering_with_scores() {
+    let (_temp_dir, cache_path) = temp_dir();
+
+    note_path(&cache_path, "/tmp", 10, false);
+    sleep(500);
+    note_path(&cache_path, "/usr", 1, false);
+    sleep(500);
+    note_path(&cache_path, "/etc", 10, false);
+
+    let stdout = list_paths(&cache_path, &["--include-frecency-score"]);
+    let lines: Vec<&str> = stdout.lines().collect();
+
+    assert_eq!(lines.len(), 3);
+    assert!(lines[0].starts_with("/usr"));
+    assert!(lines[1].starts_with("/tmp"));
+    assert!(lines[2].starts_with("/etc"));
 }
 
 #[test]
@@ -143,8 +178,7 @@ fn test_note_symlink_resolves_to_target() {
     let lines: Vec<&str> = stdout.lines().collect();
 
     assert_eq!(lines.len(), 1);
-    assert!(lines[0].contains(dummy_file_path.to_str().unwrap()));
-    assert!(!lines[0].contains(symlink_path.to_str().unwrap()));
+    assert_eq!(lines[0], dummy_file_path.to_str().unwrap());
 }
 
 #[test]
@@ -163,8 +197,7 @@ fn test_note_symlink_with_no_normalize_option() {
     let lines: Vec<&str> = stdout.lines().collect();
 
     assert_eq!(lines.len(), 1);
-    assert!(lines[0].contains(symlink_path.to_str().unwrap()));
-    assert!(!lines[0].contains(dummy_file_path.to_str().unwrap()));
+    assert_eq!(lines[0], symlink_path.to_str().unwrap());
 }
 
 #[test]
@@ -179,7 +212,7 @@ fn test_note_deleted_file_not_in_list() {
     let stdout_before = list_paths(&cache_path, &[]);
     let lines_before: Vec<&str> = stdout_before.lines().collect();
     assert_eq!(lines_before.len(), 1);
-    assert!(lines_before[0].contains(temp_file_path.to_str().unwrap()));
+    assert_eq!(lines_before[0], temp_file_path.to_str().unwrap());
 
     fs::remove_file(&temp_file_path).expect("failed to delete test file");
 
@@ -205,8 +238,7 @@ fn test_files_only_flag() {
     let lines: Vec<&str> = stdout.lines().collect();
 
     assert_eq!(lines.len(), 1);
-    assert!(lines[0].contains(test_file_path.to_str().unwrap()));
-    assert!(!lines[0].contains(test_dir_path.to_str().unwrap()));
+    assert_eq!(lines[0], test_file_path.to_str().unwrap());
 }
 
 #[test]
@@ -226,6 +258,5 @@ fn test_directories_only_flag() {
     let lines: Vec<&str> = stdout.lines().collect();
 
     assert_eq!(lines.len(), 1);
-    assert!(lines[0].contains(test_dir_path.to_str().unwrap()));
-    assert!(!lines[0].contains(test_file_path.to_str().unwrap()));
+    assert_eq!(lines[0], test_dir_path.to_str().unwrap());
 }
