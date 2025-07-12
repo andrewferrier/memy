@@ -11,6 +11,7 @@ use std::{
 #[command(version = "0.1")]
 #[command(author = "Andrew Ferrier")]
 #[command(about = "Track and recall frequently and recently used files or directories.")]
+#[allow(clippy::struct_excessive_bools)]
 struct Args {
     /// Note usage of one or more paths
     #[arg(short, long, value_name = "PATHS", conflicts_with = "list")]
@@ -70,7 +71,7 @@ fn normalize_path(path: &str) -> Option<String> {
 
 fn note_path(conn: &Connection, raw_path: &str, normalize: bool) {
     if !Path::new(raw_path).exists() {
-        eprintln!("Path {} does not exist.", raw_path);
+        eprintln!("Path {raw_path} does not exist.");
         std::process::exit(1);
     }
 
@@ -109,40 +110,38 @@ fn list_paths(conn: &Connection, args: &Args) {
 
     let mut results: Vec<(String, f64)> = vec![];
 
-    for row in rows {
-        if let Ok((path, count, last_noted)) = row {
-            if !Path::new(&path).exists() {
-                conn.execute("DELETE FROM paths WHERE path = ?", params![path])
-                    .unwrap();
-                continue;
-            }
+    for (path, count, last_noted) in rows.into_iter().flatten() {
+        if !Path::new(&path).exists() {
+            conn.execute("DELETE FROM paths WHERE path = ?", params![path])
+                .unwrap();
+            continue;
+        }
 
-            let metadata = fs::metadata(&path).unwrap();
+        let metadata = fs::metadata(&path).unwrap();
 
-            if args.files_only && !metadata.is_file() {
-                continue;
-            }
+        if args.files_only && !metadata.is_file() {
+            continue;
+        }
 
-            if args.directories_only && !metadata.is_dir() {
-                continue;
-            }
+        if args.directories_only && !metadata.is_dir() {
+            continue;
+        }
 
-            if let Ok(last_dt) = chrono::DateTime::parse_from_rfc3339(&last_noted) {
-                let age_secs = now
-                    .signed_duration_since(last_dt.with_timezone(&Utc))
-                    .num_seconds() as f64;
-                let frecency = count as f64 * (1.0 / (1.0 + age_secs / RECENCY_BIAS));
-                results.push((path, frecency));
-            }
+        if let Ok(last_dt) = chrono::DateTime::parse_from_rfc3339(&last_noted) {
+            let age_secs = now
+                .signed_duration_since(last_dt.with_timezone(&Utc))
+                .num_seconds() as f64;
+            let frecency = count as f64 * (1.0 / (1.0 + age_secs / RECENCY_BIAS));
+            results.push((path, frecency));
         }
     }
 
     results.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
     for (path, score) in results {
         if args.include_frecency_score {
-            println!("{}\t{}", path, score);
+            println!("{path}\t{score}");
         } else {
-            println!("{}", path);
+            println!("{path}");
         }
     }
 }

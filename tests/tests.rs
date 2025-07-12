@@ -146,7 +146,7 @@ fn test_note_nonexistent_path() {
     assert_eq!(output.status.code(), Some(1));
 
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let expected_error = format!("Path {} does not exist.", test_path);
+    let expected_error = format!("Path {test_path} does not exist.");
     assert!(stderr.contains(&expected_error),);
 }
 
@@ -217,8 +217,7 @@ fn test_note_deleted_file_not_in_list() {
     fs::remove_file(&temp_file_path).expect("failed to delete test file");
 
     let stdout_after = list_paths(&cache_path, &[]);
-    let lines_after: Vec<&str> = stdout_after.lines().collect();
-    assert_eq!(lines_after.len(), 0);
+    assert_eq!(stdout_after.lines().count(), 0);
 }
 
 #[test]
