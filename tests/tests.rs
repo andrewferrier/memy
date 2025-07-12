@@ -164,3 +164,24 @@ fn test_note_symlink_with_no_normalize_option() {
     assert!(lines[0].contains(symlink_path.to_str().unwrap()));
     assert!(!lines[0].contains(dummy_file_path.to_str().unwrap()));
 }
+
+#[test]
+fn test_note_deleted_file_not_in_list() {
+    let (_temp_dir, cache_path) = temp_dir();
+
+    let temp_file_path = cache_path.join("test_file");
+    fs::write(&temp_file_path, "test content").expect("failed to create test file");
+
+    note_path(&cache_path, temp_file_path.to_str().unwrap(), 1, false);
+
+    let stdout_before = list_paths(&cache_path);
+    let lines_before: Vec<&str> = stdout_before.lines().collect();
+    assert_eq!(lines_before.len(), 1);
+    assert!(lines_before[0].contains(temp_file_path.to_str().unwrap()));
+
+    fs::remove_file(&temp_file_path).expect("failed to delete test file");
+
+    let stdout_after = list_paths(&cache_path);
+    let lines_after: Vec<&str> = stdout_after.lines().collect();
+    assert_eq!(lines_after.len(), 0);
+}

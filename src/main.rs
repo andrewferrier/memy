@@ -101,6 +101,12 @@ fn list_paths(conn: &Connection, recent_bias: f64) {
 
     for row in rows {
         if let Ok((path, count, last_noted)) = row {
+            if !Path::new(&path).exists() {
+                conn.execute("DELETE FROM paths WHERE path = ?", params![path])
+                    .unwrap();
+                continue;
+            }
+
             if let Ok(last_dt) = chrono::DateTime::parse_from_rfc3339(&last_noted) {
                 let age_secs = now
                     .signed_duration_since(last_dt.with_timezone(&Utc))
