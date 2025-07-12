@@ -93,7 +93,7 @@ fn note_path(conn: &Connection, raw_path: &str, normalize: bool) {
     .unwrap();
 }
 
-fn list_paths(conn: &Connection, recent_bias: f64, files_only: bool, directories_only: bool, include_score: bool) {
+fn list_paths(conn: &Connection, args: &Args) {
     let mut stmt = conn
         .prepare("SELECT path, noted_count, last_noted FROM paths")
         .unwrap();
@@ -121,11 +121,11 @@ fn list_paths(conn: &Connection, recent_bias: f64, files_only: bool, directories
 
             let metadata = fs::metadata(&path).unwrap();
 
-            if files_only && !metadata.is_file() {
+            if args.files_only && !metadata.is_file() {
                 continue;
             }
 
-            if directories_only && !metadata.is_dir() {
+            if args.directories_only && !metadata.is_dir() {
                 continue;
             }
 
@@ -133,7 +133,7 @@ fn list_paths(conn: &Connection, recent_bias: f64, files_only: bool, directories
                 let age_secs = now
                     .signed_duration_since(last_dt.with_timezone(&Utc))
                     .num_seconds() as f64;
-                let frecency = count as f64 * (1.0 / (1.0 + age_secs / recent_bias));
+                let frecency = count as f64 * (1.0 / (1.0 + age_secs / args.recency_bias));
                 results.push((path, frecency));
             }
         }
@@ -141,7 +141,7 @@ fn list_paths(conn: &Connection, recent_bias: f64, files_only: bool, directories
 
     results.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
     for (path, score) in results {
-        if include_score {
+        if args.include_frecency_score {
             println!("{}\t{}", path, score);
         } else {
             println!("{}", path);
@@ -163,6 +163,6 @@ fn main() {
             note_path(&conn, &path, normalize);
         }
     } else {
-        list_paths(&conn, args.recency_bias, args.files_only, args.directories_only, args.include_frecency_score);
+        list_paths(&conn, &args);
     }
 }
