@@ -14,7 +14,6 @@ clap = { version = "4.5", features = ["derive"] }
 dirs-next = "2.0.0"
 env_logger = "0.11"
 log = "0.4.27"
-predicates = "3.1.3"
 rusqlite = "0.30"
 
 [dev-dependencies]
