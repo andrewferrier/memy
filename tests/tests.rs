@@ -110,6 +110,27 @@ fn test_note_and_list_paths_with_scores() {
 }
 
 #[test]
+fn test_note_relative_path() {
+    let (_temp_dir, cache_path) = temp_dir();
+
+    let test_file_name = "rel_test_file";
+    let test_file_path = cache_path.join(test_file_name);
+    fs::write(&test_file_path, "test content").expect("failed to create test file");
+
+    let orig_dir = std::env::current_dir().expect("failed to get current dir");
+    std::env::set_current_dir(&cache_path).expect("failed to change dir");
+
+    note_path(&cache_path, test_file_name, 1, false);
+
+    std::env::set_current_dir(orig_dir).expect("failed to restore dir");
+
+    let stdout = list_paths(&cache_path, &[]);
+    let lines: Vec<&str> = stdout.lines().collect();
+    assert_eq!(lines.len(), 1);
+    assert_eq!(lines[0], test_file_path.to_str().unwrap());
+}
+
+#[test]
 fn test_frecency_ordering() {
     let (_temp_dir, cache_path) = temp_dir();
     let (_working_temp, working_path) = temp_dir();
