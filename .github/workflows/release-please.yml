@@ -8,6 +8,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  issues: write # Required to create labels (https://github.com/googleapis/release-please-action/issues/1105)
 
 jobs:
   release-please:
