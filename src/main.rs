@@ -1,4 +1,4 @@
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 use clap::Parser;
 use log::{debug, info};
 use rusqlite::{params, Connection};
@@ -64,7 +64,7 @@ fn init_db(conn: &Connection) {
         "CREATE TABLE IF NOT EXISTS paths (
             path TEXT PRIMARY KEY,
             noted_count INTEGER NOT NULL,
-            last_noted TEXT NOT NULL
+            last_noted_timestamp INTEGER NOT NULL
         )",
         [],
     )
@@ -96,12 +96,12 @@ fn note_path(conn: &Connection, raw_path: &str, normalize: bool) {
         }
     }
 
-    let now = Utc::now().to_rfc3339();
+    let now = Utc::now().timestamp();
     conn.execute(
-        "INSERT INTO paths (path, noted_count, last_noted) VALUES (?1, 1, ?2) \
+        "INSERT INTO paths (path, noted_count, last_noted_timestamp) VALUES (?1, 1, ?2) \
             ON CONFLICT(path) DO UPDATE SET \
                 noted_count = noted_count + 1, \
-                last_noted = excluded.last_noted",
+                last_noted_timestamp = excluded.last_noted_timestamp",
         params![clean_path, now],
     )
     .unwrap();
@@ -110,15 +110,15 @@ fn note_path(conn: &Connection, raw_path: &str, normalize: bool) {
 
 fn list_paths(conn: &Connection, args: &Args) {
     let mut stmt = conn
-        .prepare("SELECT path, noted_count, last_noted FROM paths")
+        .prepare("SELECT path, noted_count, last_noted_timestamp FROM paths")
         .unwrap();
 
     let rows = stmt
         .query_map([], |row| {
             let path: String = row.get(0)?;
             let count: i64 = row.get(1)?;
-            let last_noted: String = row.get(2)?;
-            Ok((path, count, last_noted))
+            let last_noted_timestamp: i64 = row.get(2)?;
+            Ok((path, count, last_noted_timestamp))
         })
         .unwrap();
 
@@ -126,7 +126,7 @@ fn list_paths(conn: &Connection, args: &Args) {
 
     let mut results: Vec<(String, f64)> = vec![];
 
-    for (path, count, last_noted) in rows.into_iter().flatten() {
+    for (path, count, last_noted_timestamp) in rows.into_iter().flatten() {
         if !Path::new(&path).exists() {
             conn.execute("DELETE FROM paths WHERE path = ?", params![path])
                 .unwrap();
@@ -144,13 +144,10 @@ fn list_paths(conn: &Connection, args: &Args) {
             continue;
         }
 
-        if let Ok(last_dt) = chrono::DateTime::parse_from_rfc3339(&last_noted) {
-            let age_secs = now
-                .signed_duration_since(last_dt.with_timezone(&Utc))
-                .num_seconds() as f64;
-            let frecency = count as f64 * (1.0 / (1.0 + age_secs / RECENCY_BIAS));
-            results.push((path, frecency));
-        }
+        let last_dt = DateTime::from_timestamp(last_noted_timestamp, 0).expect("invalid timestamp");
+        let age_secs = now.signed_duration_since(last_dt).num_seconds() as f64;
+        let frecency = count as f64 * (1.0 / (1.0 + age_secs / RECENCY_BIAS));
+        results.push((path, frecency));
     }
 
     results.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
