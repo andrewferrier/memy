@@ -2,6 +2,8 @@
 
 "Track and recall frequently and recently used files or directories" - [fasd](https://github.com/clvv/fasd), rebooted.
 
+Better docs coming soon :)
+
 ## Using
 
 * `memy --note <filename>` to note a file
