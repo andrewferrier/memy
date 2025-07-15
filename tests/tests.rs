@@ -26,6 +26,12 @@ fn create_test_file(dir: &std::path::Path, filename: &str, contents: &str) -> st
     file_path
 }
 
+fn create_test_directory(base: &std::path::Path, dirname: &str) -> std::path::PathBuf {
+    let dir_path = base.join(dirname);
+    std::fs::create_dir(&dir_path).expect("failed to create test directory");
+    dir_path
+}
+
 fn memy_cmd(
     cache_path: &std::path::Path,
     config_path: Option<&std::path::Path>,
@@ -96,10 +102,8 @@ fn test_note_and_list_paths() {
     let (_temp_dir, cache_path) = temp_dir();
     let (_working_temp, working_path) = temp_dir();
 
-    let dir_a = working_path.join("dir_a");
-    let dir_b = working_path.join("dir_b");
-    fs::create_dir(&dir_a).expect("failed to create dir_a");
-    fs::create_dir(&dir_b).expect("failed to create dir_b");
+    let dir_a = create_test_directory(&working_path, "dir_a");
+    let dir_b = create_test_directory(&working_path, "dir_b");
 
     note_path(&cache_path, None, dir_a.to_str().unwrap(), 1, false);
     sleep(1000);
@@ -117,10 +121,8 @@ fn test_note_and_list_paths_with_scores() {
     let (_temp_dir, cache_path) = temp_dir();
     let (_working_temp, working_path) = temp_dir();
 
-    let dir_a = working_path.join("dir_a");
-    let dir_b = working_path.join("dir_b");
-    fs::create_dir(&dir_a).expect("failed to create dir_a");
-    fs::create_dir(&dir_b).expect("failed to create dir_b");
+    let dir_a = create_test_directory(&working_path, "dir_a");
+    let dir_b = create_test_directory(&working_path, "dir_b");
 
     note_path(&cache_path, None, dir_a.to_str().unwrap(), 1, false);
     sleep(1000);
@@ -172,12 +174,9 @@ fn test_frecency_ordering() {
     let (_temp_dir, cache_path) = temp_dir();
     let (_working_temp, working_path) = temp_dir();
 
-    let dir_a = working_path.join("dir_a");
-    let dir_b = working_path.join("dir_b");
-    let dir_c = working_path.join("dir_c");
-    fs::create_dir(&dir_a).expect("failed to create dir_a");
-    fs::create_dir(&dir_b).expect("failed to create dir_b");
-    fs::create_dir(&dir_c).expect("failed to create dir_c");
+    let dir_a = create_test_directory(&working_path, "dir_a");
+    let dir_b = create_test_directory(&working_path, "dir_b");
+    let dir_c = create_test_directory(&working_path, "dir_c");
 
     note_path(&cache_path, None, dir_a.to_str().unwrap(), 10, false);
     sleep(500);
@@ -198,12 +197,9 @@ fn test_frecency_ordering_with_scores() {
     let (_temp_dir, cache_path) = temp_dir();
     let (_working_temp, working_path) = temp_dir();
 
-    let dir_a = working_path.join("dir_a");
-    let dir_b = working_path.join("dir_b");
-    let dir_c = working_path.join("dir_c");
-    fs::create_dir(&dir_a).expect("failed to create dir_a");
-    fs::create_dir(&dir_b).expect("failed to create dir_b");
-    fs::create_dir(&dir_c).expect("failed to create dir_c");
+    let dir_a = create_test_directory(&working_path, "dir_a");
+    let dir_b = create_test_directory(&working_path, "dir_b");
+    let dir_c = create_test_directory(&working_path, "dir_c");
 
     note_path(&cache_path, None, dir_a.to_str().unwrap(), 10, false);
     sleep(500);
@@ -313,8 +309,7 @@ fn test_files_only_flag() {
 
     let test_file_path = create_test_file(&cache_path, "test_file", "test content");
 
-    let test_dir_path = cache_path.join("test_dir");
-    fs::create_dir(&test_dir_path).expect("failed to create test directory");
+    let test_dir = create_test_directory(&cache_path, "test_dir");
 
     note_path(
         &cache_path,
@@ -323,7 +318,7 @@ fn test_files_only_flag() {
         1,
         false,
     );
-    note_path(&cache_path, None, test_dir_path.to_str().unwrap(), 1, false);
+    note_path(&cache_path, None, test_dir.to_str().unwrap(), 1, false);
 
     let lines: Vec<String> = list_paths(&cache_path, None, &["--files-only"]);
 
@@ -337,8 +332,7 @@ fn test_directories_only_flag() {
 
     let test_file_path = create_test_file(&cache_path, "test_file", "test content");
 
-    let test_dir_path = cache_path.join("test_dir");
-    fs::create_dir(&test_dir_path).expect("failed to create test directory");
+    let test_dir = create_test_directory(&cache_path, "test_dir");
 
     note_path(
         &cache_path,
@@ -347,12 +341,12 @@ fn test_directories_only_flag() {
         1,
         false,
     );
-    note_path(&cache_path, None, test_dir_path.to_str().unwrap(), 1, false);
+    note_path(&cache_path, None, test_dir.to_str().unwrap(), 1, false);
 
     let lines: Vec<String> = list_paths(&cache_path, None, &["--directories-only"]);
 
     assert_eq!(lines.len(), 1);
-    assert_eq!(lines[0], test_dir_path.to_str().unwrap());
+    assert_eq!(lines[0], test_dir.to_str().unwrap());
 }
 
 #[test]
@@ -385,8 +379,7 @@ fn test_denylist_excludes_file_with_subdir_glob() {
     let (_working_temp, working_path) = temp_dir();
     let (_config_temp_dir, config_path) = temp_dir();
 
-    let subdir = working_path.join("subdir");
-    fs::create_dir(&subdir).expect("failed to create subdir");
+    let subdir = create_test_directory(&working_path, "subdir");
     let deny_file = create_test_file(&subdir, "denyme.txt", "deny me");
 
     let deny_pattern = format!("{}/*", subdir.to_str().unwrap());
