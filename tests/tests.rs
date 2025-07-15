@@ -75,14 +75,20 @@ fn list_paths(
     cache_path: &std::path::Path,
     config_path: Option<&std::path::Path>,
     flags: &[&str],
-) -> String {
+) -> Vec<String> {
     let mut args = vec!["--list"];
     args.extend(flags);
+
     let output = memy_cmd(cache_path, config_path, &args)
         .output()
         .expect("failed to run memy");
+
     assert!(output.status.success());
-    String::from_utf8_lossy(&output.stdout).to_string()
+
+    String::from_utf8_lossy(&output.stdout)
+        .lines()
+        .map(str::to_string)
+        .collect()
 }
 
 #[test]
@@ -99,8 +105,7 @@ fn test_note_and_list_paths() {
     sleep(1000);
     note_path(&cache_path, None, dir_b.to_str().unwrap(), 1, false);
 
-    let stdout = list_paths(&cache_path, None, &[]);
-    let lines: Vec<&str> = stdout.lines().collect();
+    let lines: Vec<String> = list_paths(&cache_path, None, &[]);
 
     assert_eq!(lines.len(), 2);
     assert_eq!(lines[0], dir_a.to_str().unwrap());
@@ -121,8 +126,7 @@ fn test_note_and_list_paths_with_scores() {
     sleep(1000);
     note_path(&cache_path, None, dir_b.to_str().unwrap(), 1, false);
 
-    let stdout = list_paths(&cache_path, None, &["--include-frecency-score"]);
-    let lines: Vec<&str> = stdout.lines().collect();
+    let lines: Vec<String> = list_paths(&cache_path, None, &["--include-frecency-score"]);
 
     assert_eq!(lines.len(), 2);
     assert!(lines[0].starts_with(dir_a.to_str().unwrap()));
@@ -158,8 +162,7 @@ fn test_note_relative_path() {
 
     std::env::set_current_dir(orig_dir).expect("failed to restore dir");
 
-    let stdout = list_paths(&cache_path, None, &[]);
-    let lines: Vec<&str> = stdout.lines().collect();
+    let lines: Vec<String> = list_paths(&cache_path, None, &[]);
     assert_eq!(lines.len(), 1);
     assert_eq!(lines[0], test_file_path.to_str().unwrap());
 }
@@ -182,8 +185,7 @@ fn test_frecency_ordering() {
     sleep(500);
     note_path(&cache_path, None, dir_c.to_str().unwrap(), 10, false);
 
-    let stdout = list_paths(&cache_path, None, &[]);
-    let lines: Vec<&str> = stdout.lines().collect();
+    let lines: Vec<String> = list_paths(&cache_path, None, &[]);
 
     assert_eq!(lines.len(), 3);
     assert_eq!(lines[0], dir_b.to_str().unwrap());
@@ -209,8 +211,7 @@ fn test_frecency_ordering_with_scores() {
     sleep(500);
     note_path(&cache_path, None, dir_c.to_str().unwrap(), 10, false);
 
-    let stdout = list_paths(&cache_path, None, &["--include-frecency-score"]);
-    let lines: Vec<&str> = stdout.lines().collect();
+    let lines: Vec<String> = list_paths(&cache_path, None, &["--include-frecency-score"]);
 
     assert_eq!(lines.len(), 3);
     assert!(lines[0].starts_with(dir_b.to_str().unwrap()));
@@ -259,8 +260,7 @@ fn test_note_symlink_resolves_to_target() {
 
     note_path(&cache_path, None, symlink_path.to_str().unwrap(), 1, false);
 
-    let stdout = list_paths(&cache_path, None, &[]);
-    let lines: Vec<&str> = stdout.lines().collect();
+    let lines: Vec<String> = list_paths(&cache_path, None, &[]);
 
     assert_eq!(lines.len(), 1);
     assert_eq!(lines[0], dummy_file_path.to_str().unwrap());
@@ -277,8 +277,7 @@ fn test_note_symlink_with_no_normalize_option() {
 
     note_path(&cache_path, None, symlink_path.to_str().unwrap(), 1, true);
 
-    let stdout = list_paths(&cache_path, None, &[]);
-    let lines: Vec<&str> = stdout.lines().collect();
+    let lines: Vec<String> = list_paths(&cache_path, None, &[]);
 
     assert_eq!(lines.len(), 1);
     assert_eq!(lines[0], symlink_path.to_str().unwrap());
@@ -298,15 +297,14 @@ fn test_note_deleted_file_not_in_list() {
         false,
     );
 
-    let stdout_before = list_paths(&cache_path, None, &[]);
-    let lines_before: Vec<&str> = stdout_before.lines().collect();
+    let lines_before: Vec<String> = list_paths(&cache_path, None, &[]);
     assert_eq!(lines_before.len(), 1);
     assert_eq!(lines_before[0], temp_file_path.to_str().unwrap());
 
     fs::remove_file(&temp_file_path).expect("failed to delete test file");
 
-    let stdout_after = list_paths(&cache_path, None, &[]);
-    assert_eq!(stdout_after.lines().count(), 0);
+    let lines_after: Vec<String> = list_paths(&cache_path, None, &[]);
+    assert_eq!(lines_after.len(), 0);
 }
 
 #[test]
@@ -327,8 +325,7 @@ fn test_files_only_flag() {
     );
     note_path(&cache_path, None, test_dir_path.to_str().unwrap(), 1, false);
 
-    let stdout = list_paths(&cache_path, None, &["--files-only"]);
-    let lines: Vec<&str> = stdout.lines().collect();
+    let lines: Vec<String> = list_paths(&cache_path, None, &["--files-only"]);
 
     assert_eq!(lines.len(), 1);
     assert_eq!(lines[0], test_file_path.to_str().unwrap());
@@ -352,8 +349,7 @@ fn test_directories_only_flag() {
     );
     note_path(&cache_path, None, test_dir_path.to_str().unwrap(), 1, false);
 
-    let stdout = list_paths(&cache_path, None, &["--directories-only"]);
-    let lines: Vec<&str> = stdout.lines().collect();
+    let lines: Vec<String> = list_paths(&cache_path, None, &["--directories-only"]);
 
     assert_eq!(lines.len(), 1);
     assert_eq!(lines[0], test_dir_path.to_str().unwrap());
@@ -379,8 +375,8 @@ fn test_denylist_excludes_file() {
         false,
     );
 
-    let stdout = list_paths(&cache_path, Some(&config_path), &[]);
-    assert_eq!(stdout.lines().count(), 0);
+    let lines: Vec<String> = list_paths(&cache_path, Some(&config_path), &[]);
+    assert_eq!(lines.len(), 0);
 }
 
 #[test]
@@ -405,8 +401,8 @@ fn test_denylist_excludes_file_with_subdir_glob() {
         false,
     );
 
-    let stdout = list_paths(&cache_path, Some(&config_path), &[]);
-    assert_eq!(stdout.lines().count(), 0);
+    let lines: Vec<String> = list_paths(&cache_path, Some(&config_path), &[]);
+    assert_eq!(lines.len(), 0);
 }
 
 #[test]
@@ -430,8 +426,8 @@ fn test_denylist_excludes_file_with_double_star_glob() {
         false,
     );
 
-    let stdout = list_paths(&cache_path, Some(&config_path), &[]);
-    assert_eq!(stdout.lines().count(), 0);
+    let lines: Vec<String> = list_paths(&cache_path, Some(&config_path), &[]);
+    assert_eq!(lines.len(), 0);
 }
 
 #[test]
@@ -465,8 +461,8 @@ fn test_denylist_excludes_multiple_patterns() {
         false,
     );
 
-    let stdout = list_paths(&cache_path, Some(&config_path), &[]);
-    assert_eq!(stdout.lines().count(), 0);
+    let lines: Vec<String> = list_paths(&cache_path, Some(&config_path), &[]);
+    assert_eq!(lines.len(), 0);
 }
 
 #[test]
@@ -488,8 +484,7 @@ fn test_denylist_pattern_not_rooted_does_not_match_absolute() {
         false,
     );
 
-    let stdout = list_paths(&cache_path, Some(&config_path), &[]);
-    let lines: Vec<&str> = stdout.lines().collect();
+    let lines: Vec<String> = list_paths(&cache_path, Some(&config_path), &[]);
     assert_eq!(lines.len(), 1);
     assert_eq!(lines[0], file1.to_str().unwrap());
 }
