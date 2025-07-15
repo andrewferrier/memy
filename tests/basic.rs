@@ -16,7 +16,7 @@ fn test_note_and_list_paths() {
     sleep(1000);
     note_path(&cache_path, None, dir_b.to_str().unwrap(), 1, false);
 
-    let lines: Vec<String> = list_paths(&cache_path, None, &[]);
+    let lines = list_paths(&cache_path, None, &[]);
 
     assert_eq!(lines.len(), 2);
     assert_eq!(lines[0], dir_a.to_str().unwrap());
@@ -35,7 +35,7 @@ fn test_note_and_list_paths_with_scores() {
     sleep(1000);
     note_path(&cache_path, None, dir_b.to_str().unwrap(), 1, false);
 
-    let lines: Vec<String> = list_paths(&cache_path, None, &["--include-frecency-score"]);
+    let lines = list_paths(&cache_path, None, &["--include-frecency-score"]);
 
     assert_eq!(lines.len(), 2);
     assert!(lines[0].starts_with(dir_a.to_str().unwrap()));
@@ -72,7 +72,7 @@ fn test_note_relative_path() {
 
     std::env::set_current_dir(orig_dir).expect("failed to restore dir");
 
-    let lines: Vec<String> = list_paths(&cache_path, None, &[]);
+    let lines = list_paths(&cache_path, None, &[]);
     assert_eq!(lines.len(), 1);
     assert_eq!(lines[0], test_file_path.to_str().unwrap());
 }
@@ -92,7 +92,7 @@ fn test_frecency_ordering() {
     sleep(500);
     note_path(&cache_path, None, dir_c.to_str().unwrap(), 10, false);
 
-    let lines: Vec<String> = list_paths(&cache_path, None, &[]);
+    let lines = list_paths(&cache_path, None, &[]);
 
     assert_eq!(lines.len(), 3);
     assert_eq!(lines[0], dir_b.to_str().unwrap());
@@ -115,7 +115,7 @@ fn test_frecency_ordering_with_scores() {
     sleep(500);
     note_path(&cache_path, None, dir_c.to_str().unwrap(), 10, false);
 
-    let lines: Vec<String> = list_paths(&cache_path, None, &["--include-frecency-score"]);
+    let lines = list_paths(&cache_path, None, &["--include-frecency-score"]);
 
     assert_eq!(lines.len(), 3);
     assert!(lines[0].starts_with(dir_b.to_str().unwrap()));
@@ -165,7 +165,7 @@ fn test_note_symlink_resolves_to_target() {
 
     note_path(&cache_path, None, symlink_path.to_str().unwrap(), 1, false);
 
-    let lines: Vec<String> = list_paths(&cache_path, None, &[]);
+    let lines = list_paths(&cache_path, None, &[]);
 
     assert_eq!(lines.len(), 1);
     assert_eq!(lines[0], dummy_file_path.to_str().unwrap());
@@ -183,7 +183,7 @@ fn test_note_symlink_with_no_normalize_option() {
 
     note_path(&cache_path, None, symlink_path.to_str().unwrap(), 1, true);
 
-    let lines: Vec<String> = list_paths(&cache_path, None, &[]);
+    let lines = list_paths(&cache_path, None, &[]);
 
     assert_eq!(lines.len(), 1);
     assert_eq!(lines[0], symlink_path.to_str().unwrap());
@@ -231,7 +231,7 @@ fn test_files_only_flag() {
     );
     note_path(&cache_path, None, test_dir.to_str().unwrap(), 1, false);
 
-    let lines: Vec<String> = list_paths(&cache_path, None, &["--files-only"]);
+    let lines = list_paths(&cache_path, None, &["--files-only"]);
 
     assert_eq!(lines.len(), 1);
     assert_eq!(lines[0], test_file_path.to_str().unwrap());
@@ -254,7 +254,7 @@ fn test_directories_only_flag() {
     );
     note_path(&cache_path, None, test_dir.to_str().unwrap(), 1, false);
 
-    let lines: Vec<String> = list_paths(&cache_path, None, &["--directories-only"]);
+    let lines = list_paths(&cache_path, None, &["--directories-only"]);
 
     assert_eq!(lines.len(), 1);
     assert_eq!(lines[0], test_dir.to_str().unwrap());
