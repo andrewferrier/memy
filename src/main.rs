@@ -47,7 +47,7 @@ fn get_db_path() -> PathBuf {
     if let Ok(env_path) = env::var("MEMY_CACHE_DIR") {
         memy_dir = PathBuf::from(env_path);
     } else {
-        let cache_dir = dirs::cache_dir().expect("Cannot determine cache directory");
+        let cache_dir = dirs_next::cache_dir().expect("Cannot determine cache directory");
         memy_dir = cache_dir.join("memy");
         if !memy_dir.exists() {
             fs::create_dir_all(&memy_dir).expect("Failed to create memy cache directory");
