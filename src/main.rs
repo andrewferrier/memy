@@ -3,7 +3,7 @@ use clap::Parser;
 use log::{debug, info};
 use rusqlite::{params, Connection};
 use std::{
-    fs,
+    env, fs,
     path::{Path, PathBuf},
 };
 
@@ -42,11 +42,18 @@ struct Args {
 const RECENCY_BIAS: f64 = 3600.0;
 
 fn get_db_path() -> PathBuf {
-    let cache_dir = dirs::cache_dir().expect("Cannot determine cache directory");
-    let memy_dir = cache_dir.join("memy");
-    if !memy_dir.exists() {
-        fs::create_dir_all(&memy_dir).expect("Failed to create memy cache directory");
+    let memy_dir: PathBuf;
+
+    if let Ok(env_path) = env::var("MEMY_CACHE_DIR") {
+        memy_dir = PathBuf::from(env_path);
+    } else {
+        let cache_dir = dirs::cache_dir().expect("Cannot determine cache directory");
+        memy_dir = cache_dir.join("memy");
+        if !memy_dir.exists() {
+            fs::create_dir_all(&memy_dir).expect("Failed to create memy cache directory");
+        }
     }
+
     memy_dir.join("memy.sqlite3")
 }
 

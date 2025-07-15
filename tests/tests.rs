@@ -8,13 +8,16 @@ use tempfile::TempDir;
 
 fn temp_dir() -> (TempDir, PathBuf) {
     let temp_dir = TempDir::new().expect("failed to create temp dir");
-    let path = temp_dir.path().to_path_buf();
+    let path = temp_dir
+        .path()
+        .canonicalize()
+        .expect("failed to canonicalize temp dir path");
     (temp_dir, path)
 }
 
 fn memy_cmd(cache_path: &std::path::Path, args: &[&str]) -> Command {
     let mut cmd = Command::cargo_bin("memy").unwrap();
-    cmd.env("XDG_CACHE_HOME", cache_path);
+    cmd.env("MEMY_CACHE_DIR", cache_path);
     cmd.args(args);
     cmd
 }
@@ -50,86 +53,114 @@ fn list_paths(cache_path: &std::path::Path, flags: &[&str]) -> String {
 #[test]
 fn test_note_and_list_paths() {
     let (_temp_dir, cache_path) = temp_dir();
+    let (_working_temp, working_path) = temp_dir();
 
-    note_path(&cache_path, "/tmp", 1, false);
+    let dir_a = working_path.join("dir_a");
+    let dir_b = working_path.join("dir_b");
+    fs::create_dir(&dir_a).expect("failed to create dir_a");
+    fs::create_dir(&dir_b).expect("failed to create dir_b");
+
+    note_path(&cache_path, dir_a.to_str().unwrap(), 1, false);
     sleep(1000);
-    note_path(&cache_path, "/usr", 1, false);
+    note_path(&cache_path, dir_b.to_str().unwrap(), 1, false);
 
     let stdout = list_paths(&cache_path, &[]);
     let lines: Vec<&str> = stdout.lines().collect();
 
     assert_eq!(lines.len(), 2);
-    assert_eq!(lines[0], "/tmp");
-    assert_eq!(lines[1], "/usr");
+    assert_eq!(lines[0], dir_a.to_str().unwrap());
+    assert_eq!(lines[1], dir_b.to_str().unwrap());
 }
 
 #[test]
 fn test_note_and_list_paths_with_scores() {
     let (_temp_dir, cache_path) = temp_dir();
+    let (_working_temp, working_path) = temp_dir();
 
-    note_path(&cache_path, "/tmp", 1, false);
+    let dir_a = working_path.join("dir_a");
+    let dir_b = working_path.join("dir_b");
+    fs::create_dir(&dir_a).expect("failed to create dir_a");
+    fs::create_dir(&dir_b).expect("failed to create dir_b");
+
+    note_path(&cache_path, dir_a.to_str().unwrap(), 1, false);
     sleep(1000);
-    note_path(&cache_path, "/usr", 1, false);
+    note_path(&cache_path, dir_b.to_str().unwrap(), 1, false);
 
     let stdout = list_paths(&cache_path, &["--include-frecency-score"]);
     let lines: Vec<&str> = stdout.lines().collect();
 
     assert_eq!(lines.len(), 2);
-    assert!(lines[0].starts_with("/tmp"));
-    assert!(lines[1].starts_with("/usr"));
+    assert!(lines[0].starts_with(dir_a.to_str().unwrap()));
+    assert!(lines[1].starts_with(dir_b.to_str().unwrap()));
 
-    let tmp_score: f64 = lines[0]
+    let a_score: f64 = lines[0]
         .split_whitespace()
         .nth(1)
         .unwrap()
         .parse()
         .expect("score parse");
-    let usr_score: f64 = lines[1]
+    let b_score: f64 = lines[1]
         .split_whitespace()
         .nth(1)
         .unwrap()
         .parse()
         .expect("score parse");
 
-    assert!(usr_score >= tmp_score);
+    assert!(b_score >= a_score);
 }
 
 #[test]
 fn test_frecency_ordering() {
     let (_temp_dir, cache_path) = temp_dir();
+    let (_working_temp, working_path) = temp_dir();
 
-    note_path(&cache_path, "/tmp", 10, false);
+    let dir_a = working_path.join("dir_a");
+    let dir_b = working_path.join("dir_b");
+    let dir_c = working_path.join("dir_c");
+    fs::create_dir(&dir_a).expect("failed to create dir_a");
+    fs::create_dir(&dir_b).expect("failed to create dir_b");
+    fs::create_dir(&dir_c).expect("failed to create dir_c");
+
+    note_path(&cache_path, dir_a.to_str().unwrap(), 10, false);
     sleep(500);
-    note_path(&cache_path, "/usr", 1, false);
+    note_path(&cache_path, dir_b.to_str().unwrap(), 1, false);
     sleep(500);
-    note_path(&cache_path, "/etc", 10, false);
+    note_path(&cache_path, dir_c.to_str().unwrap(), 10, false);
 
     let stdout = list_paths(&cache_path, &[]);
     let lines: Vec<&str> = stdout.lines().collect();
 
     assert_eq!(lines.len(), 3);
-    assert_eq!(lines[0], "/usr");
-    assert_eq!(lines[1], "/tmp");
-    assert_eq!(lines[2], "/etc");
+    assert_eq!(lines[0], dir_b.to_str().unwrap());
+    assert_eq!(lines[1], dir_a.to_str().unwrap());
+    assert_eq!(lines[2], dir_c.to_str().unwrap());
 }
 
 #[test]
 fn test_frecency_ordering_with_scores() {
     let (_temp_dir, cache_path) = temp_dir();
+    let (_working_temp, working_path) = temp_dir();
 
-    note_path(&cache_path, "/tmp", 10, false);
+    let dir_a = working_path.join("dir_a");
+    let dir_b = working_path.join("dir_b");
+    let dir_c = working_path.join("dir_c");
+    fs::create_dir(&dir_a).expect("failed to create dir_a");
+    fs::create_dir(&dir_b).expect("failed to create dir_b");
+    fs::create_dir(&dir_c).expect("failed to create dir_c");
+
+    note_path(&cache_path, dir_a.to_str().unwrap(), 10, false);
     sleep(500);
-    note_path(&cache_path, "/usr", 1, false);
+    note_path(&cache_path, dir_b.to_str().unwrap(), 1, false);
     sleep(500);
-    note_path(&cache_path, "/etc", 10, false);
+    note_path(&cache_path, dir_c.to_str().unwrap(), 10, false);
 
     let stdout = list_paths(&cache_path, &["--include-frecency-score"]);
     let lines: Vec<&str> = stdout.lines().collect();
 
     assert_eq!(lines.len(), 3);
-    assert!(lines[0].starts_with("/usr"));
-    assert!(lines[1].starts_with("/tmp"));
-    assert!(lines[2].starts_with("/etc"));
+    assert!(lines[0].starts_with(dir_b.to_str().unwrap()));
+    assert!(lines[1].starts_with(dir_a.to_str().unwrap()));
+    assert!(lines[2].starts_with(dir_c.to_str().unwrap()));
 }
 
 #[test]
