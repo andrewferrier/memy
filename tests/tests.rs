@@ -153,12 +153,13 @@ fn test_note_and_list_paths_with_scores() {
 #[test]
 fn test_note_relative_path() {
     let (_temp_dir, cache_path) = temp_dir();
+    let (_working_temp, working_path) = temp_dir();
 
     let test_file_name = "rel_test_file";
-    let test_file_path = create_test_file(&cache_path, test_file_name, "test content");
+    let test_file_path = create_test_file(&working_path, test_file_name, "test content");
 
     let orig_dir = std::env::current_dir().expect("failed to get current dir");
-    std::env::set_current_dir(&cache_path).expect("failed to change dir");
+    std::env::set_current_dir(&working_path).expect("failed to change dir");
 
     note_path(&cache_path, None, test_file_name, 1, false);
 
@@ -248,10 +249,11 @@ fn test_help_flag() {
 #[test]
 fn test_note_symlink_resolves_to_target() {
     let (_temp_dir, cache_path) = temp_dir();
+    let (_working_temp, working_path) = temp_dir();
 
-    let dummy_file_path = create_test_file(&cache_path, "dummy_file_A", "dummy content");
+    let dummy_file_path = create_test_file(&working_path, "dummy_file_A", "dummy content");
 
-    let symlink_path = cache_path.join("symlink_B");
+    let symlink_path = working_path.join("symlink_B");
     symlink(&dummy_file_path, &symlink_path).expect("failed to create symlink");
 
     note_path(&cache_path, None, symlink_path.to_str().unwrap(), 1, false);
@@ -265,10 +267,11 @@ fn test_note_symlink_resolves_to_target() {
 #[test]
 fn test_note_symlink_with_no_normalize_option() {
     let (_temp_dir, cache_path) = temp_dir();
+    let (_working_temp, working_path) = temp_dir();
 
-    let dummy_file_path = create_test_file(&cache_path, "dummy_file_A", "dummy content");
+    let dummy_file_path = create_test_file(&working_path, "dummy_file_A", "dummy content");
 
-    let symlink_path = cache_path.join("symlink_B");
+    let symlink_path = working_path.join("symlink_B");
     symlink(&dummy_file_path, &symlink_path).expect("failed to create symlink");
 
     note_path(&cache_path, None, symlink_path.to_str().unwrap(), 1, true);
@@ -282,22 +285,23 @@ fn test_note_symlink_with_no_normalize_option() {
 #[test]
 fn test_note_deleted_file_not_in_list() {
     let (_temp_dir, cache_path) = temp_dir();
+    let (_working_temp, working_path) = temp_dir();
 
-    let temp_file_path = create_test_file(&cache_path, "test_file", "test content");
+    let test_file_path = create_test_file(&working_path, "test_file", "test content");
 
     note_path(
         &cache_path,
         None,
-        temp_file_path.to_str().unwrap(),
+        test_file_path.to_str().unwrap(),
         1,
         false,
     );
 
     let lines_before: Vec<String> = list_paths(&cache_path, None, &[]);
     assert_eq!(lines_before.len(), 1);
-    assert_eq!(lines_before[0], temp_file_path.to_str().unwrap());
+    assert_eq!(lines_before[0], test_file_path.to_str().unwrap());
 
-    fs::remove_file(&temp_file_path).expect("failed to delete test file");
+    fs::remove_file(&test_file_path).expect("failed to delete test file");
 
     let lines_after: Vec<String> = list_paths(&cache_path, None, &[]);
     assert_eq!(lines_after.len(), 0);
@@ -306,10 +310,10 @@ fn test_note_deleted_file_not_in_list() {
 #[test]
 fn test_files_only_flag() {
     let (_temp_dir, cache_path) = temp_dir();
+    let (_working_temp, working_path) = temp_dir();
 
-    let test_file_path = create_test_file(&cache_path, "test_file", "test content");
-
-    let test_dir = create_test_directory(&cache_path, "test_dir");
+    let test_file_path = create_test_file(&working_path, "test_file", "test content");
+    let test_dir = create_test_directory(&working_path, "test_dir");
 
     note_path(
         &cache_path,
@@ -329,10 +333,10 @@ fn test_files_only_flag() {
 #[test]
 fn test_directories_only_flag() {
     let (_temp_dir, cache_path) = temp_dir();
+    let (_working_temp, working_path) = temp_dir();
 
-    let test_file_path = create_test_file(&cache_path, "test_file", "test content");
-
-    let test_dir = create_test_directory(&cache_path, "test_dir");
+    let test_file_path = create_test_file(&working_path, "test_file", "test content");
+    let test_dir = create_test_directory(&working_path, "test_dir");
 
     note_path(
         &cache_path,
