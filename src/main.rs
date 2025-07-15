@@ -7,6 +7,8 @@ use std::{
     path::{Path, PathBuf},
 };
 
+mod config;
+
 #[derive(Parser)]
 #[command(name = "memy")]
 #[command(version = "0.1")]
@@ -86,6 +88,13 @@ fn note_path(conn: &Connection, raw_path: &str, normalize: bool) {
     } else {
         Some(path.to_string_lossy().into_owned())
     };
+
+    if let Some(ref resolved) = clean_path {
+        let patterns = config::get_denylist_patterns();
+        if patterns.iter().any(|pat| pat.matches(resolved)) {
+            return;
+        }
+    }
 
     let now = Utc::now().to_rfc3339();
     conn.execute(
