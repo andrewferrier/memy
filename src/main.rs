@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use clap::Parser;
 use env_logger::{Builder, Env};
-use log::{debug, info, LevelFilter};
+use log::{debug, error, info, LevelFilter};
 use rusqlite::{params, Connection};
 use std::{
     env, fs,
@@ -51,6 +51,18 @@ struct Args {
 }
 
 const RECENCY_BIAS: f64 = 3600.0;
+const DB_VERSION: i32 = 1;
+
+fn check_db_version(conn: &Connection) {
+    debug!("Checking database version...");
+    let version: i32 = conn
+        .query_row("PRAGMA user_version;", [], |row| row.get(0))
+        .expect("Failed to read database version");
+    if version != DB_VERSION {
+        error!("Database version mismatch: expected {DB_VERSION}, found {version}. Please delete your database.");
+        std::process::exit(1);
+    }
+}
 
 fn get_db_path() -> PathBuf {
     let memy_dir: PathBuf;
@@ -69,8 +81,9 @@ fn get_db_path() -> PathBuf {
 }
 
 fn init_db(conn: &Connection) {
+    debug!("Initializing database...");
     conn.execute(
-        "CREATE TABLE IF NOT EXISTS paths (
+        "CREATE TABLE paths (
             path TEXT PRIMARY KEY,
             noted_count INTEGER NOT NULL,
             last_noted_timestamp INTEGER NOT NULL
@@ -78,6 +91,8 @@ fn init_db(conn: &Connection) {
         [],
     )
     .expect("Failed to initialize database");
+    conn.execute(&format!("PRAGMA user_version = {DB_VERSION};"), [])
+        .expect("Failed to set database version");
     debug!("Database initialized");
 }
 
@@ -185,9 +200,16 @@ fn main() {
         .init();
 
     let db_path = get_db_path();
+    let db_path_exists = db_path.exists();
     let conn = Connection::open(db_path).expect("Failed to open memy database");
+
+    if !db_path_exists {
+        init_db(&conn);
+    } else {
+        check_db_version(&conn);
+    }
+
     debug!("Database opened");
-    init_db(&conn);
 
     let normalize = !args.no_normalize_symlinks;
 
