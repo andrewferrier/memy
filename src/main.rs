@@ -200,12 +200,15 @@ fn main() {
         .init();
 
     let db_path = get_db_path();
+    let db_path_str = db_path.to_string_lossy().to_string();
     let db_path_exists = db_path.exists();
-    let conn = Connection::open(db_path).expect("Failed to open memy database");
+    let conn = Connection::open(&db_path).expect("Failed to open memy database");
 
     if !db_path_exists {
+        debug!("Database at {db_path_str} does not exist");
         init_db(&conn);
     } else {
+        debug!("Database at {db_path_str} does exist");
         check_db_version(&conn);
     }
 
