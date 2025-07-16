@@ -1,6 +1,7 @@
 use chrono::{DateTime, Utc};
 use clap::Parser;
-use log::{debug, info};
+use env_logger::{Builder, Env};
+use log::{debug, info, LevelFilter};
 use rusqlite::{params, Connection};
 use std::{
     env, fs,
@@ -39,6 +40,14 @@ struct Args {
     /// Disable symlink normalization when noting paths (only valid with --note)
     #[arg(long)]
     no_normalize_symlinks: bool,
+
+    /// Enable verbose (info) logging
+    #[arg(short, long)]
+    verbose: bool,
+
+    /// Enable debug (very detailed) logging
+    #[arg(long)]
+    debug: bool,
 }
 
 const RECENCY_BIAS: f64 = 3600.0;
@@ -161,9 +170,19 @@ fn list_paths(conn: &Connection, args: &Args) {
 }
 
 fn main() {
-    env_logger::init();
-
     let args = Args::parse();
+
+    let level = if args.debug {
+        LevelFilter::Debug
+    } else if args.verbose {
+        LevelFilter::Info
+    } else {
+        LevelFilter::Warn
+    };
+
+    Builder::from_env(Env::default().default_filter_or(level.to_string()))
+        .target(env_logger::Target::Stderr)
+        .init();
 
     let db_path = get_db_path();
     let conn = Connection::open(db_path).expect("Failed to open memy database");
