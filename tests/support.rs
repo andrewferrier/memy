@@ -42,12 +42,12 @@ pub fn create_test_directory(base: &std::path::Path, dirname: &str) -> std::path
 
 #[must_use]
 pub fn memy_cmd(
-    cache_path: &std::path::Path,
+    db_path: &std::path::Path,
     config_path: Option<&std::path::Path>,
     args: &[&str],
 ) -> Command {
     let mut cmd = Command::cargo_bin("memy").unwrap();
-    cmd.env("MEMY_CACHE_DIR", cache_path);
+    cmd.env("MEMY_DB_DIR", db_path);
 
     let _temp_config_dir;
     if let Some(config) = config_path {
@@ -67,7 +67,7 @@ pub fn sleep(millis: u64) {
 }
 
 pub fn note_path(
-    cache_path: &std::path::Path,
+    db_path: &std::path::Path,
     config_path: Option<&std::path::Path>,
     path: &str,
     count: usize,
@@ -81,20 +81,20 @@ pub fn note_path(
             args.push("--no-normalize-symlinks");
         }
 
-        memy_cmd(cache_path, config_path, &args).assert().success();
+        memy_cmd(db_path, config_path, &args).assert().success();
         sleep(100);
     }
 }
 
 pub fn list_paths(
-    cache_path: &std::path::Path,
+    db_path: &std::path::Path,
     config_path: Option<&std::path::Path>,
     flags: &[&str],
 ) -> Vec<String> {
     let mut args = vec!["--list"];
     args.extend(flags);
 
-    let output = memy_cmd(cache_path, config_path, &args)
+    let output = memy_cmd(db_path, config_path, &args)
         .output()
         .expect("failed to run memy");
 

@@ -7,6 +7,7 @@ use std::{
     env, fs,
     path::{Path, PathBuf},
 };
+use xdg::BaseDirectories;
 
 mod config;
 
@@ -65,19 +66,14 @@ fn check_db_version(conn: &Connection) {
 }
 
 fn get_db_path() -> PathBuf {
-    let memy_dir: PathBuf;
-
-    if let Ok(env_path) = env::var("MEMY_CACHE_DIR") {
-        memy_dir = PathBuf::from(env_path);
+    if let Ok(env_path) = env::var("MEMY_DB_DIR") {
+        PathBuf::from(env_path).join("memy.sqlite3")
     } else {
-        let cache_dir = dirs_next::cache_dir().expect("Cannot determine cache directory");
-        memy_dir = cache_dir.join("memy");
-        if !memy_dir.exists() {
-            fs::create_dir_all(&memy_dir).expect("Failed to create memy cache directory");
-        }
+        let xdg_dirs = BaseDirectories::with_prefix("memy");
+        xdg_dirs
+            .place_state_file("memy.sqlite3")
+            .expect("Cannot determine state file path")
     }
-
-    memy_dir.join("memy.sqlite3")
 }
 
 fn init_db(conn: &Connection) {

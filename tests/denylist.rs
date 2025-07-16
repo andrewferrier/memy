@@ -5,7 +5,7 @@ use std::fs;
 
 #[test]
 fn test_denylist_excludes_file() {
-    let (_temp_dir, cache_path) = temp_dir();
+    let (_db_temp, db_path) = temp_dir();
     let (_working_temp, working_path) = temp_dir();
     let (_config_temp_dir, config_path) = temp_dir();
 
@@ -16,20 +16,20 @@ fn test_denylist_excludes_file() {
     create_config_file(&config_path, &config_contents);
 
     note_path(
-        &cache_path,
+        &db_path,
         Some(&config_path),
         deny_file.to_str().unwrap(),
         1,
         false,
     );
 
-    let lines: Vec<String> = list_paths(&cache_path, Some(&config_path), &[]);
+    let lines: Vec<String> = list_paths(&db_path, Some(&config_path), &[]);
     assert_eq!(lines.len(), 0);
 }
 
 #[test]
 fn test_denylist_excludes_file_with_subdir_glob() {
-    let (_temp_dir, cache_path) = temp_dir();
+    let (_db_temp, db_path) = temp_dir();
     let (_working_temp, working_path) = temp_dir();
     let (_config_temp_dir, config_path) = temp_dir();
 
@@ -41,20 +41,20 @@ fn test_denylist_excludes_file_with_subdir_glob() {
     create_config_file(&config_path, &config_contents);
 
     note_path(
-        &cache_path,
+        &db_path,
         Some(&config_path),
         deny_file.to_str().unwrap(),
         1,
         false,
     );
 
-    let lines: Vec<String> = list_paths(&cache_path, Some(&config_path), &[]);
+    let lines: Vec<String> = list_paths(&db_path, Some(&config_path), &[]);
     assert_eq!(lines.len(), 0);
 }
 
 #[test]
 fn test_denylist_excludes_file_with_double_star_glob() {
-    let (_temp_dir, cache_path) = temp_dir();
+    let (_db_temp, db_path) = temp_dir();
     let (_working_temp, working_path) = temp_dir();
     let (_config_temp_dir, config_path) = temp_dir();
 
@@ -66,20 +66,20 @@ fn test_denylist_excludes_file_with_double_star_glob() {
     create_config_file(&config_path, config_contents);
 
     note_path(
-        &cache_path,
+        &db_path,
         Some(&config_path),
         deny_file.to_str().unwrap(),
         1,
         false,
     );
 
-    let lines: Vec<String> = list_paths(&cache_path, Some(&config_path), &[]);
+    let lines: Vec<String> = list_paths(&db_path, Some(&config_path), &[]);
     assert_eq!(lines.len(), 0);
 }
 
 #[test]
 fn test_denylist_excludes_multiple_patterns() {
-    let (_temp_dir, cache_path) = temp_dir();
+    let (_db_temp, db_path) = temp_dir();
     let (_working_temp, working_path) = temp_dir();
     let (_config_temp_dir, config_path) = temp_dir();
 
@@ -94,27 +94,27 @@ fn test_denylist_excludes_multiple_patterns() {
     create_config_file(&config_path, &config_contents);
 
     note_path(
-        &cache_path,
+        &db_path,
         Some(&config_path),
         file1.to_str().unwrap(),
         1,
         false,
     );
     note_path(
-        &cache_path,
+        &db_path,
         Some(&config_path),
         file2.to_str().unwrap(),
         1,
         false,
     );
 
-    let lines: Vec<String> = list_paths(&cache_path, Some(&config_path), &[]);
+    let lines: Vec<String> = list_paths(&db_path, Some(&config_path), &[]);
     assert_eq!(lines.len(), 0);
 }
 
 #[test]
 fn test_denylist_pattern_not_rooted_does_not_match_absolute() {
-    let (_temp_dir, cache_path) = temp_dir();
+    let (_db_temp, db_path) = temp_dir();
     let (_working_temp, working_path) = temp_dir();
     let (_config_temp_dir, config_path) = temp_dir();
 
@@ -124,14 +124,14 @@ fn test_denylist_pattern_not_rooted_does_not_match_absolute() {
     create_config_file(&config_path, config_contents);
 
     note_path(
-        &cache_path,
+        &db_path,
         Some(&config_path),
         file1.to_str().unwrap(),
         1,
         false,
     );
 
-    let lines: Vec<String> = list_paths(&cache_path, Some(&config_path), &[]);
+    let lines: Vec<String> = list_paths(&db_path, Some(&config_path), &[]);
     assert_eq!(lines.len(), 1);
     assert_eq!(lines[0], file1.to_str().unwrap());
 }
