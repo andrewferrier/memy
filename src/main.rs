@@ -13,7 +13,7 @@ mod config;
 
 #[derive(Parser)]
 #[command(name = "memy")]
-#[command(version = "0.1")]
+#[command(version = env!("GIT_VERSION"))]
 #[command(author = "Andrew Ferrier")]
 #[command(about = "Track and recall frequently and recently used files or directories.")]
 #[allow(clippy::struct_excessive_bools)]
