@@ -34,6 +34,7 @@ pub fn create_test_file(
 }
 
 #[cfg_attr(test, allow(dead_code))]
+#[must_use]
 pub fn create_test_directory(base: &std::path::Path, dirname: &str) -> std::path::PathBuf {
     let dir_path = base.join(dirname);
     std::fs::create_dir(&dir_path).expect("failed to create test directory");
