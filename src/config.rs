@@ -1,11 +1,11 @@
 use config::{Config, File, FileFormat};
 use glob::Pattern;
-use log::debug;
+use log::{debug, error, info};
 use std::env;
 use std::path::PathBuf;
 use xdg::BaseDirectories;
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct MemyConfig {
     pub denylist_silent: Option<Vec<String>>,
     pub normalize_symlinks_on_note: Option<bool>,
@@ -50,6 +50,20 @@ fn load_config() -> MemyConfig {
     }
     debug!("Defaulting config");
     MemyConfig::default()
+}
+
+pub fn generate_config() {
+    let config_path = get_config_file_path();
+
+    if config_path.exists() {
+        error!("Config file already exists at {}", config_path.display());
+        std::process::exit(1);
+    }
+
+    let config = MemyConfig::default();
+    let toml = toml::to_string_pretty(&config).expect("Failed to serialize config");
+    std::fs::write(&config_path, toml).expect("Failed to write config file");
+    info!("Config file created at {}", config_path.display());
 }
 
 pub fn get_denylist_patterns() -> Vec<Pattern> {

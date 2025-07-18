@@ -36,6 +36,8 @@ enum Commands {
     Note(NoteArgs),
     /// List paths by frecency score
     List(ListArgs),
+    /// Generate a template memy.toml config file
+    GenerateConfig,
 }
 
 #[derive(Args)]
@@ -196,12 +198,23 @@ fn list_paths(conn: &Connection, args: &ListArgs) {
 fn main() {
     let cli = Cli::parse();
 
-    let level = if cli.debug {
-        LevelFilter::Debug
-    } else if cli.verbose {
-        LevelFilter::Info
-    } else {
-        LevelFilter::Warn
+    let level = match &cli.command {
+        Commands::GenerateConfig => {
+            if cli.debug {
+                LevelFilter::Debug
+            } else {
+                LevelFilter::Info
+            }
+        }
+        _ => {
+            if cli.debug {
+                LevelFilter::Debug
+            } else if cli.verbose {
+                LevelFilter::Info
+            } else {
+                LevelFilter::Warn
+            }
+        }
     };
 
     Builder::from_env(Env::default().default_filter_or(level.to_string()))
@@ -231,6 +244,9 @@ fn main() {
         }
         Commands::List(list_args) => {
             list_paths(&conn, &list_args);
+        }
+        Commands::GenerateConfig => {
+            config::generate_config();
         }
     }
 }
