@@ -20,10 +20,25 @@ memy is ideal for developers, sysadmins, and anyone who works with many files an
   memy list
   ```
 
+Many of these more advanced tricks would could be configured as [shell aliases](https://linuxize.com/post/how-to-create-bash-aliases/):
+
 - Change to a directory from your remembered paths using [fzf](https://github.com/junegunn/fzf) as a wrapper:
 
   ```sh
   cd $(memy list -d | fzf)
+  ```
+
+- Open a recently used file in your editor, selecting it using `fzf` (assuming
+  your editor is `vim`.
+
+  ```sh
+  vim "$(memy list -f | fzf)"
+  ```
+
+- (On Linux) Open a recently used path in your GUI file manager:
+
+  ```sh
+  xdg-open "$(memy list -d | fzf)"
   ```
 
 ## Installation
@@ -51,7 +66,7 @@ cargo install --git https://github.com/andrewferrier/memy
 
 #### Don't have Cargo?
 
-Cargo is Rust's package manager and build tool. The easiest way to get Cargo (and Rust) is to use [rustup](https://rustup.rs/), which works on Linux, macOS, and Windows. See the official instructions [here](https://doc.rust-lang.org/cargo/getting-started/installation.html).
+Cargo is Rust's package manager and build tool. The easiest way to get Cargo (and Rust) is to use [rustup](https://rustup.rs/), which works on Linux, macOS, and Windows. See [the official instructions](https://doc.rust-lang.org/cargo/getting-started/installation.html).
 
 ## Under the Hood
 
