@@ -6,8 +6,8 @@ Better docs coming soon :)
 
 ## Using
 
-* `memy --note <filename>` to note a file
-* `memy --list` to list all filenames remembered, in frecency order
+* `memy note <filename>` to note a file
+* `memy list` to list all filenames remembered, in frecency order
 * `memy --help` to find out detailed information on other options.
 
 ## Install from GitHub
