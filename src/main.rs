@@ -1,4 +1,5 @@
 use chrono::{DateTime, Utc};
+use clap::CommandFactory;
 use clap::{Args, Parser, Subcommand};
 use env_logger::{Builder, Env};
 use log::{debug, error, info, LevelFilter};
@@ -10,6 +11,7 @@ use std::{
 use xdg::BaseDirectories;
 
 mod config;
+mod utils;
 
 #[derive(Parser)]
 #[command(name = "memy")]
@@ -38,6 +40,12 @@ enum Commands {
     List(ListArgs),
     /// Generate a template memy.toml config file
     GenerateConfig,
+    /// Generate shell completion scripts
+    Completions {
+        /// The shell to generate completions for (e.g. bash, zsh)
+        #[arg(value_enum)]
+        shell: Option<clap_complete::Shell>,
+    },
 }
 
 #[derive(Args)]
@@ -247,6 +255,14 @@ fn main() {
         }
         Commands::GenerateConfig => {
             config::generate_config();
+        }
+        Commands::Completions { shell } => {
+            let shell = shell
+                .or_else(utils::detect_shell)
+                .expect("Could not determine shell. Specify one explicitly.");
+            let mut cmd = Cli::command();
+            let bin_name = cmd.get_name().to_string();
+            clap_complete::generate(shell, &mut cmd, bin_name, &mut std::io::stdout());
         }
     }
 }
