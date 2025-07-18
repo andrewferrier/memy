@@ -2,7 +2,7 @@
 
 **memy** is a modern, fast, and simple command-line tool to help you track and recall the files and directories you use most often. Inspired by [fasd](https://github.com/clvv/fasd), memy remembers the paths you interact with, lists them back to you by a combination of frequency and recency ("frecency"), and makes it easy to build a workflow around them using standard Linux/Unix tools.
 
-Unlike tools such as zoxide, memy is less focused on providing a direct "jump" command for navigating directories. Instead, memy is designed to be a flexible backend for tracking your usage, which you can combine with tools like `fzf` and `cd` to jump around directories if you wish. Crucially, memy also supports tracking files you use - not just directories - unlike most other tools in this space (except for `fasd`, which is no longer maintained).
+Unlike tools such as [zoxide](https://github.com/ajeetdsouza/zoxide), memy is less focused on providing a direct "jump" command for navigating directories. Instead, memy is designed to be a flexible backend for tracking your usage, which you can combine with tools like `fzf` and `cd` to jump around directories if you wish. Crucially, memy also supports tracking files you use - not just directories - unlike most other tools in this space (except for `fasd`, which is no longer maintained).
 
 memy is ideal for developers, sysadmins, and anyone who works with many files and directories and wants a smarter way to recall them.
 
@@ -67,11 +67,7 @@ memy generate-config
 
 ## More Information
 
-- For a full list of commands, flags, and options, run:
-
-  ```sh
-  memy --help
-  ```
+- For a full list of commands, flags, and options, run `memy --help`
 
 - For release notes, see [CHANGELOG.md](CHANGELOG.md)
 
@@ -81,7 +77,7 @@ memy generate-config
 
 Here's how **memy** compares to other popular directory/file jump and tracking tools:
 
-| Feature                 | memy                                                                                     | zoxide                                                                                   | autojump                                                                             | z                                                                            | fasd                                                                            | fasder                                                                                   |
+| Feature                 | [memy](https://github.com/andrewferrier/memy)                                            | [zoxide](https://github.com/ajeetdsouza/zoxide)                                          | [autojump](https://github.com/wting/autojump)                                        | [z](https://github.com/rupa/z)                                               | [fasd](https://github.com/clvv/fasd)                                            | [fasder](https://github.com/ajay-gandhi/fasder)                                          |
 | ----------------------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
 | **Platforms supported** | ✅ (Linux, macOS)                                                                        | ✅ (Linux, macOS, Windows)                                                               | ✅ (Linux, macOS, Windows)                                                           | ✅ (Linux, macOS, Windows)                                                   | ✅ (Linux, macOS, Windows)                                                      | ✅ (Linux, macOS, Windows)                                                               |
 | **Tracks Files**        | ✅                                                                                       | ❌                                                                                       | ❌                                                                                   | ❌                                                                           | ✅                                                                              | ✅                                                                                       |
