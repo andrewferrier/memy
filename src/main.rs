@@ -43,10 +43,6 @@ struct NoteArgs {
     /// One or more paths to note
     #[arg(value_name = "PATHS")]
     paths: Vec<String>,
-
-    /// Disable symlink normalization when noting paths
-    #[arg(long)]
-    no_normalize_symlinks: bool,
 }
 
 #[derive(Args)]
@@ -106,7 +102,18 @@ fn init_db(conn: &Connection) {
     debug!("Database initialized");
 }
 
-fn note_path(conn: &Connection, raw_path: &str, normalize: bool) {
+fn normalize_path_if_needed(path: &Path, normalize: bool) -> String {
+    if normalize {
+        std::fs::canonicalize(path).ok().map_or_else(
+            || path.to_string_lossy().into_owned(),
+            |p| p.to_string_lossy().into_owned(),
+        )
+    } else {
+        path.to_string_lossy().into_owned()
+    }
+}
+
+fn note_path(conn: &Connection, raw_path: &str) {
     let path = Path::new(raw_path);
 
     if !path.exists() {
@@ -114,20 +121,12 @@ fn note_path(conn: &Connection, raw_path: &str, normalize: bool) {
         std::process::exit(1);
     }
 
-    let clean_path = if normalize {
-        fs::canonicalize(path)
-            .ok()
-            .map(|path| path.to_string_lossy().into_owned())
-            .or_else(|| Some(path.to_string_lossy().into_owned()))
-    } else {
-        Some(path.to_string_lossy().into_owned())
-    };
+    let config_normalize = config::get_normalize_symlinks_on_note();
+    let clean_path = normalize_path_if_needed(path, config_normalize);
 
-    if let Some(ref resolved) = clean_path {
-        let patterns = config::get_denylist_patterns();
-        if patterns.iter().any(|pat| pat.matches(resolved)) {
-            return;
-        }
+    let patterns = config::get_denylist_patterns();
+    if patterns.iter().any(|pat| pat.matches(&clean_path)) {
+        return;
     }
 
     let now = Utc::now().timestamp();
@@ -226,9 +225,8 @@ fn main() {
 
     match cli.command {
         Commands::Note(note_args) => {
-            let normalize = !note_args.no_normalize_symlinks;
             for path in note_args.paths {
-                note_path(&conn, &path, normalize);
+                note_path(&conn, &path);
             }
         }
         Commands::List(list_args) => {

@@ -8,12 +8,14 @@ use xdg::BaseDirectories;
 #[derive(Debug, serde::Deserialize)]
 pub struct MemyConfig {
     pub denylist_silent: Option<Vec<String>>,
+    pub normalize_symlinks_on_note: Option<bool>,
 }
 
 impl Default for MemyConfig {
     fn default() -> Self {
         Self {
             denylist_silent: Some(vec![]),
+            normalize_symlinks_on_note: Some(true),
         }
     }
 }
@@ -31,7 +33,7 @@ fn get_config_file_path() -> PathBuf {
         .expect("Cannot determine config file path")
 }
 
-pub fn load_config() -> MemyConfig {
+fn load_config() -> MemyConfig {
     let config_path = get_config_file_path();
     debug!("Config path: {}", config_path.display());
     if config_path.exists() {
@@ -58,4 +60,8 @@ pub fn get_denylist_patterns() -> Vec<Pattern> {
         .into_iter()
         .filter_map(|pat| Pattern::new(&pat).ok())
         .collect()
+}
+
+pub fn get_normalize_symlinks_on_note() -> bool {
+    load_config().normalize_symlinks_on_note.unwrap_or(true)
 }
