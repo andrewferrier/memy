@@ -75,9 +75,7 @@ pub fn note_path(
     no_normalize_symlinks: bool,
 ) {
     for _ in 0..count {
-        let mut args = vec!["--note"];
-        args.push(path);
-
+        let mut args = vec!["note", path];
         if no_normalize_symlinks {
             args.push("--no-normalize-symlinks");
         }
@@ -92,7 +90,7 @@ pub fn list_paths(
     config_path: Option<&std::path::Path>,
     flags: &[&str],
 ) -> Vec<String> {
-    let mut args = vec!["--list"];
+    let mut args = vec!["list"];
     args.extend(flags);
 
     let output = memy_cmd(db_path, config_path, &args)

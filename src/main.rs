@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use clap::Parser;
+use clap::{Args, Parser, Subcommand};
 use env_logger::{Builder, Env};
 use log::{debug, error, info, LevelFilter};
 use rusqlite::{params, Connection};
@@ -17,38 +17,51 @@ mod config;
 #[command(author = "Andrew Ferrier")]
 #[command(about = "Track and recall frequently and recently used files or directories.")]
 #[allow(clippy::struct_excessive_bools)]
-struct Args {
-    /// Note usage of one or more paths
-    #[arg(short, long, value_name = "PATHS", conflicts_with = "list")]
-    note: Option<Vec<String>>,
-
-    /// List paths by frecency score (default action)
-    #[arg(short, long, conflicts_with = "note")]
-    list: bool,
-
-    /// Show only files in the list (only valid with --list)
-    #[arg(short, long, conflicts_with = "note")]
-    files_only: bool,
-
-    /// Show only directories in the list (only valid with --list)
-    #[arg(short, long, conflicts_with = "note")]
-    directories_only: bool,
-
-    /// Include frecency score in output (only valid with --list)
-    #[arg(long, conflicts_with = "note")]
-    include_frecency_score: bool,
-
-    /// Disable symlink normalization when noting paths (only valid with --note)
-    #[arg(long)]
-    no_normalize_symlinks: bool,
-
+struct Cli {
     /// Enable verbose (info) logging
-    #[arg(short, long)]
+    #[arg(short, long, global = true)]
     verbose: bool,
 
     /// Enable debug (very detailed) logging
-    #[arg(long)]
+    #[arg(long, global = true)]
     debug: bool,
+
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    /// Note usage of one or more paths
+    Note(NoteArgs),
+    /// List paths by frecency score
+    List(ListArgs),
+}
+
+#[derive(Args)]
+struct NoteArgs {
+    /// One or more paths to note
+    #[arg(value_name = "PATHS")]
+    paths: Vec<String>,
+
+    /// Disable symlink normalization when noting paths
+    #[arg(long)]
+    no_normalize_symlinks: bool,
+}
+
+#[derive(Args)]
+struct ListArgs {
+    /// Show only files in the list
+    #[arg(short, long)]
+    files_only: bool,
+
+    /// Show only directories in the list
+    #[arg(short, long)]
+    directories_only: bool,
+
+    /// Include frecency score in output
+    #[arg(long)]
+    include_frecency_score: bool,
 }
 
 const RECENCY_BIAS: f64 = 3600.0;
@@ -129,7 +142,7 @@ fn note_path(conn: &Connection, raw_path: &str, normalize: bool) {
     info!("Path {raw_path} noted");
 }
 
-fn list_paths(conn: &Connection, args: &Args) {
+fn list_paths(conn: &Connection, args: &ListArgs) {
     let mut stmt = conn
         .prepare("SELECT path, noted_count, last_noted_timestamp FROM paths")
         .unwrap();
@@ -182,11 +195,11 @@ fn list_paths(conn: &Connection, args: &Args) {
 }
 
 fn main() {
-    let args = Args::parse();
+    let cli = Cli::parse();
 
-    let level = if args.debug {
+    let level = if cli.debug {
         LevelFilter::Debug
-    } else if args.verbose {
+    } else if cli.verbose {
         LevelFilter::Info
     } else {
         LevelFilter::Warn
@@ -211,13 +224,15 @@ fn main() {
 
     debug!("Database opened");
 
-    let normalize = !args.no_normalize_symlinks;
-
-    if let Some(paths) = args.note {
-        for path in paths {
-            note_path(&conn, &path, normalize);
+    match cli.command {
+        Commands::Note(note_args) => {
+            let normalize = !note_args.no_normalize_symlinks;
+            for path in note_args.paths {
+                note_path(&conn, &path, normalize);
+            }
         }
-    } else {
-        list_paths(&conn, &args);
+        Commands::List(list_args) => {
+            list_paths(&conn, &list_args);
+        }
     }
 }

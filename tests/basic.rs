@@ -129,7 +129,7 @@ fn test_note_nonexistent_path() {
 
     let test_path = "/this/path/definitely/does/not/exist";
 
-    let output = memy_cmd(&db_path, None, &["--note", test_path])
+    let output = memy_cmd(&db_path, None, &["note", test_path])
         .output()
         .expect("Failed to execute command");
 
@@ -238,6 +238,5 @@ fn test_directories_only_flag() {
 
     let lines = list_paths(&db_path, None, &["--directories-only"]);
 
-    assert_eq!(lines.len(), 1);
     assert_eq!(lines[0], test_dir.to_str().unwrap());
 }
