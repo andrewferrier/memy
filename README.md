@@ -52,8 +52,13 @@ Many of these more advanced tricks would work well configured as [shell aliases]
 ### Download Binaries from GitHub
 
 - [Linux (x86_64)](https://github.com/andrewferrier/memy/releases/latest/download/memy-linux-x86_64)
-- [macOS (Intel)](https://github.com/andrewferrier/memy/releases/latest/download/memy-darwin-x86_64)
-- [macOS (Apple Silicon)](https://github.com/andrewferrier/memy/releases/latest/download/memy-darwin-aarch64)
+- [Linux (x86_64) - Static Binary using musl](https://github.com/andrewferrier/memy/releases/latest/download/memy-linux-x86_64-musl)
+
+- [Linux (ARM64)](https://github.com/andrewferrier/memy/releases/latest/download/memy-linux-aarch64)
+- [Linux (ARM64) - Static Binary using musl](https://github.com/andrewferrier/memy/releases/latest/download/memy-linux-aarch64-musl)
+
+- [MacOS (Apple Silicon)](https://github.com/andrewferrier/memy/releases/latest/download/memy-macos-aarch64)
+- [MacOS (Intel)](https://github.com/andrewferrier/memy/releases/latest/download/memy-macos-x86_64)
 
 Download the appropriate binary for your platform, place it somewhere in your `$PATH`, and make it executable if necessary. For example:
 
