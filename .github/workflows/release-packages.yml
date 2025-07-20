@@ -56,7 +56,8 @@ jobs:
         run: |
           mkdir -p dist
           SRC_PATH=target/${{ matrix.target }}/release/memy
-          DEST_NAME="memy-$(echo {{ matrix.filename }})"
+          FILENAME=$(echo ${{ matrix.filename }})
+          DEST_NAME="memy-$FILENAME"
 
           cp "$SRC_PATH" "dist/$DEST_NAME"
           chmod +x "dist/$DEST_NAME"
