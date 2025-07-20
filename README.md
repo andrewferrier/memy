@@ -20,7 +20,7 @@ memy is ideal for developers, sysadmins, and anyone who works with many files an
   memy list
   ```
 
-Many of these more advanced tricks would could be configured as [shell aliases](https://linuxize.com/post/how-to-create-bash-aliases/):
+Many of these more advanced tricks would work well configured as [shell aliases](https://linuxize.com/post/how-to-create-bash-aliases/):
 
 - Change to a directory from your remembered paths using [fzf](https://github.com/junegunn/fzf) as a wrapper:
 
