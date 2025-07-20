@@ -150,24 +150,6 @@ fn test_frecency_ordering_with_scores() {
 }
 
 #[test]
-fn test_note_nonexistent_path() {
-    let (_db_temp, db_path) = temp_dir();
-
-    let test_path = "/this/path/definitely/does/not/exist";
-
-    let output = memy_cmd(&db_path, None, &["note", test_path])
-        .output()
-        .expect("Failed to execute command");
-
-    assert!(!output.status.success(),);
-    assert_eq!(output.status.code(), Some(1));
-
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    let expected_error = format!("Path {test_path} does not exist.");
-    assert!(stderr.contains(&expected_error),);
-}
-
-#[test]
 fn test_help_flag() {
     let (_db_temp, db_path) = temp_dir();
 

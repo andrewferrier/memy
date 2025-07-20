@@ -2,7 +2,7 @@ use chrono::{DateTime, Utc};
 use clap::CommandFactory;
 use clap::{Args, Parser, Subcommand};
 use env_logger::{Builder, Env};
-use log::{debug, error, info, LevelFilter};
+use log::{debug, error, info, warn, LevelFilter};
 use rusqlite::{params, Connection};
 use std::{
     env, fs,
@@ -127,8 +127,11 @@ fn note_path(conn: &Connection, raw_path: &str) {
     let path = Path::new(raw_path);
 
     if !path.exists() {
-        eprintln!("Path {raw_path} does not exist.");
-        std::process::exit(1);
+        if config::get_missing_files_on_note_warn() {
+            warn!("Path {raw_path} does not exist.");
+        }
+
+        return;
     }
 
     let config_normalize = config::get_normalize_symlinks_on_note();

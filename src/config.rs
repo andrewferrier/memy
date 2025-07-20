@@ -9,6 +9,7 @@ use xdg::BaseDirectories;
 pub struct MemyConfig {
     pub denylist_silent: Option<Vec<String>>,
     pub normalize_symlinks_on_note: Option<bool>,
+    pub missing_files_on_note_warn: Option<bool>,
 }
 
 impl Default for MemyConfig {
@@ -16,6 +17,7 @@ impl Default for MemyConfig {
         Self {
             denylist_silent: Some(vec![]),
             normalize_symlinks_on_note: Some(true),
+            missing_files_on_note_warn: Some(true),
         }
     }
 }
@@ -78,4 +80,8 @@ pub fn get_denylist_patterns() -> Vec<Pattern> {
 
 pub fn get_normalize_symlinks_on_note() -> bool {
     load_config().normalize_symlinks_on_note.unwrap_or(true)
+}
+
+pub fn get_missing_files_on_note_warn() -> bool {
+    load_config().missing_files_on_note_warn.unwrap_or(true)
 }

@@ -22,6 +22,7 @@ pub fn create_config_file(config_path: &std::path::Path, contents: &str) {
     fs::write(&config_toml_path, contents).expect("failed to write config");
 }
 
+#[cfg_attr(test, allow(dead_code))]
 #[must_use]
 pub fn create_test_file(
     dir: &std::path::Path,
@@ -63,10 +64,12 @@ pub fn memy_cmd(
     cmd
 }
 
+#[cfg_attr(test, allow(dead_code))]
 pub fn sleep(millis: u64) {
     thread::sleep(Duration::from_millis(millis));
 }
 
+#[cfg_attr(test, allow(dead_code))]
 pub fn note_path(
     db_path: &std::path::Path,
     config_path: Option<&std::path::Path>,
