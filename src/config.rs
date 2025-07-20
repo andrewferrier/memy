@@ -1,6 +1,7 @@
 use config::{Config, File, FileFormat};
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
 use log::{debug, error, info};
+use once_cell::sync::Lazy;
 use std::env;
 use std::path::PathBuf;
 use xdg::BaseDirectories;
@@ -56,6 +57,8 @@ fn load_config() -> MemyConfig {
     MemyConfig::default()
 }
 
+static CACHED_CONFIG: Lazy<MemyConfig> = Lazy::new(load_config);
+
 pub fn generate_config(filename: Option<&str>) {
     let (config_path, check_exists) = filename.map_or_else(
         || (get_config_file_path(), true),
@@ -89,22 +92,22 @@ pub fn generate_config(filename: Option<&str>) {
 }
 
 pub fn get_denylist_matcher() -> Gitignore {
-    let config = load_config();
+    let config = &*CACHED_CONFIG;
     let mut builder = GitignoreBuilder::new("");
-    for pat in config.denylist.unwrap_or_default() {
+    for pat in config.denylist.clone().unwrap_or_default() {
         builder.add_line(None, &pat).ok();
     }
     builder.build().expect("Failed to build denylist matcher")
 }
 
 pub fn get_normalize_symlinks_on_note() -> bool {
-    load_config().normalize_symlinks_on_note.unwrap_or(true)
+    CACHED_CONFIG.normalize_symlinks_on_note.unwrap_or(true)
 }
 
 pub fn get_missing_files_warn_on_note() -> bool {
-    load_config().missing_files_warn_on_note.unwrap_or(true)
+    CACHED_CONFIG.missing_files_warn_on_note.unwrap_or(true)
 }
 
 pub fn get_denied_files_warn_on_note() -> bool {
-    load_config().denied_files_warn_on_note.unwrap_or(true)
+    CACHED_CONFIG.denied_files_warn_on_note.unwrap_or(true)
 }

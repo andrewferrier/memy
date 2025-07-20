@@ -678,6 +678,7 @@ dependencies = [
  "env_logger",
  "ignore",
  "log",
+ "once_cell",
  "rusqlite",
  "serde",
  "tempfile",
