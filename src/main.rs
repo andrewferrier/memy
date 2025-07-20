@@ -180,14 +180,12 @@ fn list_paths(conn: &Connection, args: &ListArgs) {
     let mut results: Vec<(String, f64)> = vec![];
 
     for (path, count, last_noted_timestamp) in rows.into_iter().flatten() {
-        if !Path::new(&path).exists() {
-            conn.execute("DELETE FROM paths WHERE path = ?", params![path])
+        let Ok(metadata) = fs::metadata(&path) else {
+            conn.execute("DELETE FROM paths WHERE path = ?", params![path.clone()])
                 .unwrap();
             info!("Path {path} no longer exists, deleted from database.");
             continue;
-        }
-
-        let metadata = fs::metadata(&path).unwrap();
+        };
 
         if args.files_only && !metadata.is_file() {
             continue;
