@@ -24,6 +24,32 @@ fn test_note_and_list_paths() {
 }
 
 #[test]
+fn test_note_and_list_paths_multiarg() {
+    let (_db_temp, db_path) = temp_dir();
+    let (_working_temp, working_path) = temp_dir();
+
+    let dir_a = create_test_directory(&working_path, "dir_a");
+    let dir_b = create_test_directory(&working_path, "dir_b");
+
+    // Note both paths in a single memy_cmd call
+    let output = memy_cmd(
+        &db_path,
+        None,
+        &["note", dir_a.to_str().unwrap(), dir_b.to_str().unwrap()],
+    )
+    .output()
+    .expect("Failed to execute command");
+
+    assert!(output.status.success());
+    let lines = list_paths(&db_path, None, &[]);
+    assert_eq!(lines.len(), 2);
+    let paths: Vec<&str> = vec![dir_a.to_str().unwrap(), dir_b.to_str().unwrap()];
+    for path in paths {
+        assert!(lines.contains(&path.to_string()), "Missing path: {}", path);
+    }
+}
+
+#[test]
 fn test_note_and_list_paths_with_scores() {
     let (_db_temp, db_path) = temp_dir();
     let (_working_temp, working_path) = temp_dir();
