@@ -131,7 +131,7 @@ fn note_path(conn: &Connection, raw_path: &str) {
     let path = Path::new(raw_path);
 
     if !path.exists() {
-        if config::get_missing_files_on_note_warn() {
+        if config::get_missing_files_warn_on_note() {
             warn!("Path {raw_path} does not exist.");
         }
 

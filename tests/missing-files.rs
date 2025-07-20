@@ -5,7 +5,7 @@ use support::*;
 fn test_note_nonexistent_file_ignore_silently() {
     let (_db_temp, db_path) = temp_dir();
     let (_config_temp, config_path) = temp_dir();
-    let config_contents = "missing_files_on_note_warn = false\n";
+    let config_contents = "missing_files_warn_on_note = false\n";
     create_config_file(&config_path, config_contents);
 
     let test_path = "/tmp/this_file_should_not_exist_ignore_silently";
@@ -24,7 +24,7 @@ fn test_note_nonexistent_file_ignore_silently() {
 fn test_note_nonexistent_file_ignore_with_warning() {
     let (_db_temp, db_path) = temp_dir();
     let (_config_temp, config_path) = temp_dir();
-    let config_contents = "missing_files_on_note_warn = true\n";
+    let config_contents = "missing_files_warn_on_note = true\n";
     create_config_file(&config_path, config_contents);
 
     let test_path = "/tmp/this_file_should_not_exist_ignore_with_warning";
