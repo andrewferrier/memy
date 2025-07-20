@@ -141,8 +141,11 @@ fn note_path(conn: &Connection, raw_path: &str) {
     let config_normalize = config::get_normalize_symlinks_on_note();
     let clean_path = normalize_path_if_needed(path, config_normalize);
 
-    let patterns = config::get_denylist_patterns();
-    if patterns.iter().any(|pat| pat.matches(&clean_path)) {
+    let matcher = config::get_denylist_matcher();
+    if let ignore::Match::Ignore(_matched_pat) = matcher.matched(&clean_path, false) {
+        if config::get_denied_files_warn_on_note() {
+            warn!("Path denied by denylist pattern.");
+        }
         return;
     }
 

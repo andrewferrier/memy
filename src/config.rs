@@ -1,5 +1,5 @@
 use config::{Config, File, FileFormat};
-use glob::Pattern;
+use ignore::gitignore::{Gitignore, GitignoreBuilder};
 use log::{debug, error, info};
 use std::env;
 use std::path::PathBuf;
@@ -10,6 +10,7 @@ pub struct MemyConfig {
     pub denylist: Option<Vec<String>>,
     pub normalize_symlinks_on_note: Option<bool>,
     pub missing_files_warn_on_note: Option<bool>,
+    pub denied_files_warn_on_note: Option<bool>,
 }
 
 impl Default for MemyConfig {
@@ -18,6 +19,7 @@ impl Default for MemyConfig {
             denylist: Some(vec![]),
             normalize_symlinks_on_note: Some(true),
             missing_files_warn_on_note: Some(true),
+            denied_files_warn_on_note: Some(true),
         }
     }
 }
@@ -86,14 +88,13 @@ pub fn generate_config(filename: Option<&str>) {
     info!("Config file created at {}", config_path.display());
 }
 
-pub fn get_denylist_patterns() -> Vec<Pattern> {
+pub fn get_denylist_matcher() -> Gitignore {
     let config = load_config();
-    config
-        .denylist
-        .unwrap_or_default()
-        .into_iter()
-        .filter_map(|pat| Pattern::new(&pat).ok())
-        .collect()
+    let mut builder = GitignoreBuilder::new("");
+    for pat in config.denylist.unwrap_or_default() {
+        builder.add_line(None, &pat).ok();
+    }
+    builder.build().expect("Failed to build denylist matcher")
 }
 
 pub fn get_normalize_symlinks_on_note() -> bool {
@@ -102,4 +103,8 @@ pub fn get_normalize_symlinks_on_note() -> bool {
 
 pub fn get_missing_files_warn_on_note() -> bool {
     load_config().missing_files_warn_on_note.unwrap_or(true)
+}
+
+pub fn get_denied_files_warn_on_note() -> bool {
+    load_config().denied_files_warn_on_note.unwrap_or(true)
 }

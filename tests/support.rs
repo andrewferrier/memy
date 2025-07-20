@@ -1,4 +1,5 @@
 #![allow(clippy::missing_panics_doc)]
+#![allow(clippy::must_use_candidate)]
 use assert_cmd::Command;
 use std::fs;
 use std::path::PathBuf;
@@ -76,16 +77,23 @@ pub fn note_path(
     path: &str,
     count: usize,
     no_normalize_symlinks: bool,
-) {
+) -> assert_cmd::Command {
+    let mut last_cmd = None;
+
     for _ in 0..count {
         let mut args = vec!["note", path];
+
         if no_normalize_symlinks {
             args.push("--no-normalize-symlinks");
         }
 
-        memy_cmd(db_path, config_path, &args).assert().success();
+        let mut cmd = memy_cmd(db_path, config_path, &args);
+        cmd.assert().success();
+        last_cmd = Some(cmd);
         sleep(100);
     }
+
+    last_cmd.expect("note_path called with count == 0")
 }
 
 #[cfg_attr(test, allow(dead_code))]
