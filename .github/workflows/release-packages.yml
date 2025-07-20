@@ -13,14 +13,22 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
+            filename: linux-x86_64
           - os: ubuntu-latest
             target: x86_64-unknown-linux-musl
+            filename: linux-x86_64-musl
           - os: ubuntu-latest
             target: aarch64-unknown-linux-gnu
-          - os: macos-latest
-            target: x86_64-apple-darwin
+            filename: linux-aarch64
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-musl
+            filename: linux-aarch64-musl
           - os: macos-latest
             target: aarch64-apple-darwin
+            filename: macos-aarch64
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            filename: macos-x86_64
 
     runs-on: ${{ matrix.os }}
 
@@ -47,17 +55,8 @@ jobs:
       - name: Prepare binary with OS and arch in filename
         run: |
           mkdir -p dist
-          BIN_NAME=memy
           SRC_PATH=target/${{ matrix.target }}/release/memy
-
-          OS=$(echo ${{ matrix.target }} | cut -d- -f3)
-          ARCH=$(echo ${{ matrix.target }} | cut -d- -f1)
-
-          if [[ "$OS" == "apple" ]]; then
-            OS="macos"
-          fi
-
-          DEST_NAME="${BIN_NAME}-${OS}-${ARCH}"
+          DEST_NAME="memy-$(echo {{ matrix.filename }})"
 
           cp "$SRC_PATH" "dist/$DEST_NAME"
           chmod +x "dist/$DEST_NAME"
