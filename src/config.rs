@@ -7,7 +7,7 @@ use xdg::BaseDirectories;
 
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct MemyConfig {
-    pub denylist_silent: Option<Vec<String>>,
+    pub denylist: Option<Vec<String>>,
     pub normalize_symlinks_on_note: Option<bool>,
     pub missing_files_on_note_warn: Option<bool>,
 }
@@ -15,7 +15,7 @@ pub struct MemyConfig {
 impl Default for MemyConfig {
     fn default() -> Self {
         Self {
-            denylist_silent: Some(vec![]),
+            denylist: Some(vec![]),
             normalize_symlinks_on_note: Some(true),
             missing_files_on_note_warn: Some(true),
         }
@@ -71,7 +71,7 @@ pub fn generate_config() {
 pub fn get_denylist_patterns() -> Vec<Pattern> {
     let config = load_config();
     config
-        .denylist_silent
+        .denylist
         .unwrap_or_default()
         .into_iter()
         .filter_map(|pat| Pattern::new(&pat).ok())

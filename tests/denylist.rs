@@ -12,7 +12,7 @@ fn test_denylist_excludes_file() {
     let deny_file = create_test_file(&working_path, "denyme.txt", "deny me");
 
     let deny_pattern = deny_file.to_str().unwrap();
-    let config_contents = format!("denylist_silent = [\"{deny_pattern}\"]\n");
+    let config_contents = format!("denylist = [\"{deny_pattern}\"]\n");
     create_config_file(&config_path, &config_contents);
 
     note_path(
@@ -37,7 +37,7 @@ fn test_denylist_excludes_file_with_subdir_glob() {
     let deny_file = create_test_file(&subdir, "denyme.txt", "deny me");
 
     let deny_pattern = format!("{}/*", subdir.to_str().unwrap());
-    let config_contents = format!("denylist_silent = [\"{deny_pattern}\"]\n");
+    let config_contents = format!("denylist = [\"{deny_pattern}\"]\n");
     create_config_file(&config_path, &config_contents);
 
     note_path(
@@ -62,7 +62,7 @@ fn test_denylist_excludes_file_with_double_star_glob() {
     fs::create_dir_all(&nested_dir).expect("failed to create nested dirs");
     let deny_file = create_test_file(&nested_dir, "deny.txt", "deny me");
 
-    let config_contents = "denylist_silent = [\"**/deny.txt\"]\n";
+    let config_contents = "denylist = [\"**/deny.txt\"]\n";
     create_config_file(&config_path, config_contents);
 
     note_path(
@@ -87,7 +87,7 @@ fn test_denylist_excludes_multiple_patterns() {
     let file2 = create_test_file(&working_path, "deny2.txt", "deny2");
 
     let config_contents = format!(
-        "denylist_silent = [\"{}\", \"{}\"]\n",
+        "denylist = [\"{}\", \"{}\"]\n",
         file1.to_str().unwrap(),
         file2.to_str().unwrap()
     );
@@ -120,7 +120,7 @@ fn test_denylist_pattern_not_rooted_does_not_match_absolute() {
 
     let file1 = create_test_file(&working_path, "notrooted.txt", "should not be denied");
 
-    let config_contents = "denylist_silent = [\"notrooted.txt\"]\n";
+    let config_contents = "denylist = [\"notrooted.txt\"]\n";
     create_config_file(&config_path, config_contents);
 
     note_path(
