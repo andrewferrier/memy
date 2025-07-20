@@ -30,7 +30,7 @@ Many of these more advanced tricks would work well configured as [shell aliases]
 
 - Change to the most frecent directory containing the string 'download' (case-insensitive):
 
-  ```ssh
+  ```sh
   cd $(memy list -d | grep -i download | tail -1)
   ```
 
