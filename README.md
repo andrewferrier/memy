@@ -28,6 +28,12 @@ Many of these more advanced tricks would could be configured as [shell aliases](
   cd $(memy list -d | fzf)
   ```
 
+- Change to the most frecent directory containing the string 'download' (case-insensitive):
+
+  ```ssh
+  cd $(memy list -d | grep -i download | tail -1)
+  ```
+
 - Open a recently used file in your editor, selecting it using `fzf` (assuming
   your editor is `vim`.
 
