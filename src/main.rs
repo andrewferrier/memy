@@ -39,7 +39,11 @@ enum Commands {
     /// List paths by frecency score
     List(ListArgs),
     /// Generate a template memy.toml config file
-    GenerateConfig,
+    GenerateConfig {
+        /// Optional output filename for the generated config
+        #[arg(value_name = "FILENAME")]
+        filename: Option<String>,
+    },
     /// Generate shell completion scripts
     Completions {
         /// The shell to generate completions for (e.g. bash, zsh)
@@ -210,7 +214,7 @@ fn main() {
     let cli = Cli::parse();
 
     let level = match &cli.command {
-        Commands::GenerateConfig => {
+        Commands::GenerateConfig { .. } => {
             if cli.debug {
                 LevelFilter::Debug
             } else {
@@ -256,8 +260,8 @@ fn main() {
         Commands::List(list_args) => {
             list_paths(&conn, &list_args);
         }
-        Commands::GenerateConfig => {
-            config::generate_config();
+        Commands::GenerateConfig { filename } => {
+            config::generate_config(filename.as_deref());
         }
         Commands::Completions { shell } => {
             let shell = shell

@@ -88,6 +88,7 @@ pub fn note_path(
     }
 }
 
+#[cfg_attr(test, allow(dead_code))]
 pub fn list_paths(
     db_path: &std::path::Path,
     config_path: Option<&std::path::Path>,
