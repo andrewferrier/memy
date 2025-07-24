@@ -3,9 +3,9 @@ name: Check conventional commits
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
-    branches: [master]
+    branches: [main]
 
 jobs:
   commit_lint:
