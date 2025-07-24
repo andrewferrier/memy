@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.5.0](https://github.com/andrewferrier/memy/compare/v0.4.0...v0.5.0) (2025-07-24)
+
+
+### Features
+
+* gitignore pattern, add denied_files_warn_on_note ([087e142](https://github.com/andrewferrier/memy/commit/087e14272ae678f2599f9bbde702acd9de63a179))
+* More aggressively prefer recent files ([643f8d5](https://github.com/andrewferrier/memy/commit/643f8d5b80c84207e8d7bd9be8c4ec3b72d8d887))
+* Rename to missing_files_warn_on_note ([1b13ad0](https://github.com/andrewferrier/memy/commit/1b13ad0a5818d4bb7b06909d500b311a2289a53f))
+
+
+### Performance Improvements
+
+* Cache config load - closes [#22](https://github.com/andrewferrier/memy/issues/22) ([70fd476](https://github.com/andrewferrier/memy/commit/70fd4760774b7ecd03870408094aae779af6e36f))
+* Use metadata to detect file existence ([f21ead5](https://github.com/andrewferrier/memy/commit/f21ead5f5920500c7af04fb7aa4a471d1d86d2ce))
+
 ## [0.4.0](https://github.com/andrewferrier/memy/compare/v0.3.0...v0.4.0) (2025-07-20)
 
 
