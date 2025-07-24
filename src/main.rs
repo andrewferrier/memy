@@ -74,7 +74,7 @@ struct ListArgs {
     include_frecency_score: bool,
 }
 
-const RECENCY_BIAS: f64 = 3600.0;
+const RECENCY_BIAS: f64 = 20000.0;
 const DB_VERSION: i32 = 1;
 
 fn check_db_version(conn: &Connection) {
