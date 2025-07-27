@@ -11,6 +11,7 @@ use std::{
 use xdg::BaseDirectories;
 
 mod config;
+use config::DeniedFilesOnList;
 mod utils;
 
 #[derive(Parser)]
@@ -179,7 +180,28 @@ fn list_paths(conn: &Connection, args: &ListArgs) {
 
     let mut results: Vec<(String, f64)> = vec![];
 
+    let list_denied_action = config::get_denied_files_on_list();
+    let matcher = config::get_denylist_matcher();
+
     for (path, count, last_noted_timestamp) in rows.into_iter().flatten() {
+        if let ignore::Match::Ignore(_matched_pat) = matcher.matched(&path, false) {
+            match list_denied_action {
+                DeniedFilesOnList::SkipSilently => {
+                    continue;
+                }
+                DeniedFilesOnList::Warn => {
+                    warn!("Path {path} is denied, remaining in database.");
+                    continue;
+                }
+                DeniedFilesOnList::Delete => {
+                    conn.execute("DELETE FROM paths WHERE path = ?", params![path.clone()])
+                        .unwrap();
+                    info!("Path {path} is denied, deleted from database.");
+                    continue;
+                }
+            }
+        }
+
         let Ok(metadata) = fs::metadata(&path) else {
             conn.execute("DELETE FROM paths WHERE path = ?", params![path.clone()])
                 .unwrap();

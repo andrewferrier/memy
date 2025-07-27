@@ -6,12 +6,21 @@ use std::env;
 use std::path::PathBuf;
 use xdg::BaseDirectories;
 
+#[derive(Debug, serde::Deserialize, serde::Serialize, Clone, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+pub enum DeniedFilesOnList {
+    SkipSilently,
+    Warn,
+    Delete,
+}
+
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct MemyConfig {
     pub denylist: Option<Vec<String>>,
     pub normalize_symlinks_on_note: Option<bool>,
     pub missing_files_warn_on_note: Option<bool>,
     pub denied_files_warn_on_note: Option<bool>,
+    pub denied_files_on_list: Option<DeniedFilesOnList>,
 }
 
 impl Default for MemyConfig {
@@ -21,6 +30,7 @@ impl Default for MemyConfig {
             normalize_symlinks_on_note: Some(true),
             missing_files_warn_on_note: Some(true),
             denied_files_warn_on_note: Some(true),
+            denied_files_on_list: Some(DeniedFilesOnList::Delete),
         }
     }
 }
@@ -110,4 +120,11 @@ pub fn get_missing_files_warn_on_note() -> bool {
 
 pub fn get_denied_files_warn_on_note() -> bool {
     CACHED_CONFIG.denied_files_warn_on_note.unwrap_or(true)
+}
+
+pub fn get_denied_files_on_list() -> DeniedFilesOnList {
+    CACHED_CONFIG
+        .denied_files_on_list
+        .clone()
+        .unwrap_or(DeniedFilesOnList::Delete)
 }
