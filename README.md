@@ -1,5 +1,7 @@
 # memy
 
+![Tests](https://github.com/andrewferrier/memy/actions/workflows/tests.yml/badge.svg)
+
 **memy** is a modern, fast, and simple command-line tool to help you track and recall the files and directories you use most often. Inspired by [fasd](https://github.com/clvv/fasd), memy remembers the paths you interact with, lists them back to you by a combination of frequency and recency ("frecency"), and makes it easy to build a workflow around them using standard Linux/Unix tools.
 
 Unlike tools such as [zoxide](https://github.com/ajeetdsouza/zoxide), memy is less focused on providing a direct "jump" command for navigating directories. Instead, memy is designed to be a flexible backend for tracking your usage, which you can combine with tools like `fzf` and `cd` to jump around directories if you wish. Crucially, memy also supports tracking files you use - not just directories - unlike most other tools in this space (except for `fasd`, which is no longer maintained).
