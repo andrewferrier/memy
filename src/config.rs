@@ -1,9 +1,9 @@
 use config::{Config, File, FileFormat};
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
 use log::{debug, error, info};
-use once_cell::sync::Lazy;
 use std::env;
 use std::path::PathBuf;
+use std::sync::LazyLock;
 use xdg::BaseDirectories;
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, Clone, PartialEq, Eq)]
@@ -67,7 +67,7 @@ fn load_config() -> MemyConfig {
     MemyConfig::default()
 }
 
-static CACHED_CONFIG: Lazy<MemyConfig> = Lazy::new(load_config);
+static CACHED_CONFIG: LazyLock<MemyConfig> = LazyLock::new(load_config);
 
 pub fn generate_config(filename: Option<&str>) {
     let (config_path, check_exists) = filename.map_or_else(
