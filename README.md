@@ -81,9 +81,7 @@ cargo install --git https://github.com/andrewferrier/memy
 
 Cargo is Rust's package manager and build tool. The easiest way to get Cargo (and Rust) is to use [rustup](https://rustup.rs/), which works on Linux, macOS, and Windows. See [the official instructions](https://doc.rust-lang.org/cargo/getting-started/installation.html).
 
-## Under the Hood
-
-By default, memy stores its cache data in `$XDG_STATE_HOME/memy/memy.sqlite3` (typically `~/.local/state/memy/memy.sqlite3`). You can override the database location by setting the `MEMY_DB_DIR` environment variable to a directory of your choice.
+## Configuration & Under the Hood
 
 By default, memy looks for its config file at `$XDG_CONFIG_HOME/memy/memy.toml` (typically `~/.config/memy/memy.toml`). You can override the config location by setting the `MEMY_CONFIG_DIR` environment variable to a directory of your choice.
 
@@ -93,9 +91,13 @@ You can generate a default config file in the default location with:
 memy generate-config
 ```
 
+The config file will be annotated with comments explaining what each option does.
+
+By default, memy stores its cache data in `$XDG_STATE_HOME/memy/memy.sqlite3` (typically `~/.local/state/memy/memy.sqlite3`). You can override the database location by setting the `MEMY_DB_DIR` environment variable to a directory of your choice.
+
 ## More Information
 
-- For a full list of commands, flags, and options, run `memy --help`
+- For a full list of commands and flags, run `memy --help`
 
 - For release notes, see [CHANGELOG.md](CHANGELOG.md)
 

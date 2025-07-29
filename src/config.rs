@@ -2,6 +2,7 @@ use config::{Config, File, FileFormat};
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
 use log::{debug, error, info};
 use std::env;
+use std::fs;
 use std::path::PathBuf;
 use std::sync::LazyLock;
 use xdg::BaseDirectories;
@@ -34,6 +35,27 @@ impl Default for MemyConfig {
         }
     }
 }
+
+const TEMPLATE_CONFIG: &str = r#"# This is a configuration file for memy - the values below are the defaults.
+# **************************************
+
+# List of paths that won't be saved to the memy database even if they are noted - these follow the same syntax as gitignore rules: https://git-scm.com/docs/gitignore
+# Example: denylist = ['*.log', '*.out']
+denylist = []
+
+# When noting symlinks using memy, should the symlink be saved, or the file the symlink points at?
+normalize_symlinks_on_note = true
+
+# When noting files that aren't there, should a warning be emitted?
+missing_files_warn_on_note = true
+
+# When noting files that are in the denylist, should a warning be emitted?
+denied_files_warn_on_note = true
+
+# When listing files that are in the denylist (they've been added to the denylist after being noted),
+# what should happen? Valid values are "skip-silently", "warn", "delete"
+denied_files_on_list = "delete"
+"#;
 
 fn get_config_file_path() -> PathBuf {
     if let Ok(dir) = env::var("MEMY_CONFIG_DIR") {
@@ -95,9 +117,7 @@ pub fn generate_config(filename: Option<&str>) {
         std::process::exit(1);
     }
 
-    let config = MemyConfig::default();
-    let toml = toml::to_string_pretty(&config).expect("Failed to serialize config");
-    std::fs::write(&config_path, toml).expect("Failed to write config file");
+    fs::write(&config_path, TEMPLATE_CONFIG).expect("Failed to write config file");
     info!("Config file created at {}", config_path.display());
 }
 
