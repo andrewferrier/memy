@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/andrewferrier/memy/compare/v0.5.0...v0.6.0) (2025-07-29)
+
+
+### Features
+
+* Produce config file annotated with comments - closes [#28](https://github.com/andrewferrier/memy/issues/28) ([4af4154](https://github.com/andrewferrier/memy/commit/4af4154a7c67c0f2b5170bf52b4dac13a87f53f5))
+
 ## [0.5.0](https://github.com/andrewferrier/memy/compare/v0.4.0...v0.5.0) (2025-07-27)
 
 
