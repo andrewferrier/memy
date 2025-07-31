@@ -12,6 +12,7 @@ use xdg::BaseDirectories;
 
 mod config;
 use config::DeniedFilesOnList;
+mod plugins_generated;
 mod utils;
 
 #[derive(Parser)]
@@ -50,6 +51,11 @@ enum Commands {
         /// The shell to generate completions for (e.g. bash, zsh)
         #[arg(value_enum)]
         shell: Option<clap_complete::Shell>,
+    },
+    /// Show contents of a memy plugin
+    Plugin {
+        #[arg(value_enum)]
+        plugin_name: Option<String>,
     },
 }
 
@@ -293,6 +299,21 @@ fn main() {
             let mut cmd = Cli::command();
             let bin_name = cmd.get_name().to_string();
             clap_complete::generate(shell, &mut cmd, bin_name, &mut std::io::stdout());
+        }
+        Commands::Plugin { plugin_name } => {
+            if let Some(plugin_name) = plugin_name {
+                if let Some(content) = plugins_generated::get_plugin_content(&plugin_name) {
+                    print!("{content}");
+                } else {
+                    eprintln!("Plugin not found: {plugin_name}");
+                    std::process::exit(1);
+                }
+            } else {
+                println!("Available plugins:");
+                for plugin in plugins_generated::get_plugin_list() {
+                    println!("{plugin}");
+                }
+            }
         }
     }
 }

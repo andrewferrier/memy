@@ -1,0 +1,3 @@
+cmd on-cd &{{
+    memy note ${PWD} &
+}}
