@@ -2,16 +2,13 @@ use chrono::{DateTime, Utc};
 use clap::CommandFactory;
 use clap::{Args, Parser, Subcommand};
 use env_logger::{Builder, Env};
-use log::{debug, error, info, warn, LevelFilter};
+use log::{info, warn, LevelFilter};
 use rusqlite::{params, Connection};
-use std::{
-    env, fs,
-    path::{Path, PathBuf},
-};
-use xdg::BaseDirectories;
+use std::{fs, path::Path};
 
 mod config;
 use config::DeniedFilesOnList;
+mod db;
 mod plugins_generated;
 mod utils;
 
@@ -82,45 +79,30 @@ struct ListArgs {
 }
 
 const RECENCY_BIAS: f64 = 20000.0;
-const DB_VERSION: i32 = 1;
 
-fn check_db_version(conn: &Connection) {
-    debug!("Checking database version...");
-    let version: i32 = conn
-        .query_row("PRAGMA user_version;", [], |row| row.get(0))
-        .expect("Failed to read database version");
-    if version != DB_VERSION {
-        error!("Database version mismatch: expected {DB_VERSION}, found {version}. Please delete your database.");
-        std::process::exit(1);
-    }
-}
+fn set_logging_level(cli: &Cli) {
+    let level = match &cli.command {
+        Commands::GenerateConfig { .. } => {
+            if cli.debug {
+                LevelFilter::Debug
+            } else {
+                LevelFilter::Info
+            }
+        }
+        _ => {
+            if cli.debug {
+                LevelFilter::Debug
+            } else if cli.verbose {
+                LevelFilter::Info
+            } else {
+                LevelFilter::Warn
+            }
+        }
+    };
 
-fn get_db_path() -> PathBuf {
-    env::var("MEMY_DB_DIR").map_or_else(
-        |_| {
-            let xdg_dirs = BaseDirectories::with_prefix("memy");
-            xdg_dirs
-                .place_state_file("memy.sqlite3")
-                .expect("Cannot determine state file path")
-        },
-        |env_path| PathBuf::from(env_path).join("memy.sqlite3"),
-    )
-}
-
-fn init_db(conn: &Connection) {
-    debug!("Initializing database...");
-    conn.execute(
-        "CREATE TABLE paths (
-            path TEXT PRIMARY KEY,
-            noted_count INTEGER NOT NULL,
-            last_noted_timestamp INTEGER NOT NULL
-        )",
-        [],
-    )
-    .expect("Failed to initialize database");
-    conn.execute(&format!("PRAGMA user_version = {DB_VERSION};"), [])
-        .expect("Failed to set database version");
-    debug!("Database initialized");
+    Builder::from_env(Env::default().default_filter_or(level.to_string()))
+        .target(env_logger::Target::Stderr)
+        .init();
 }
 
 fn normalize_path_if_needed(path: &Path, normalize: bool) -> String {
@@ -166,6 +148,12 @@ fn note_path(conn: &Connection, raw_path: &str) {
     )
     .unwrap();
     info!("Path {raw_path} noted");
+}
+
+fn calculate_frecency(now: DateTime<Utc>, count: i64, last_noted_timestamp: i64) -> f64 {
+    let last_dt = DateTime::from_timestamp(last_noted_timestamp, 0).expect("invalid timestamp");
+    let age_secs = now.signed_duration_since(last_dt).num_seconds() as f64;
+    count as f64 * (1.0 / (1.0 + age_secs / RECENCY_BIAS))
 }
 
 fn list_paths(conn: &Connection, args: &ListArgs) {
@@ -223,9 +211,7 @@ fn list_paths(conn: &Connection, args: &ListArgs) {
             continue;
         }
 
-        let last_dt = DateTime::from_timestamp(last_noted_timestamp, 0).expect("invalid timestamp");
-        let age_secs = now.signed_duration_since(last_dt).num_seconds() as f64;
-        let frecency = count as f64 * (1.0 / (1.0 + age_secs / RECENCY_BIAS));
+        let frecency = calculate_frecency(now, count, last_noted_timestamp);
         results.push((path, frecency));
     }
 
@@ -239,81 +225,55 @@ fn list_paths(conn: &Connection, args: &ListArgs) {
     }
 }
 
+fn completions(shell: Option<clap_complete::Shell>) {
+    let shell = shell
+        .or_else(utils::detect_shell)
+        .expect("Could not determine shell. Specify one explicitly.");
+    let mut cmd = Cli::command();
+    let bin_name = cmd.get_name().to_string();
+    clap_complete::generate(shell, &mut cmd, bin_name, &mut std::io::stdout());
+}
+
+fn plugin_show(plugin_name: Option<String>) {
+    if let Some(plugin_name) = plugin_name {
+        if let Some(content) = plugins_generated::get_plugin_content(&plugin_name) {
+            print!("{content}");
+        } else {
+            eprintln!("Plugin not found: {plugin_name}");
+            std::process::exit(1);
+        }
+    } else {
+        println!("Available plugins:");
+        for plugin in plugins_generated::get_plugin_list() {
+            println!("{plugin}");
+        }
+    }
+}
+
 fn main() {
     let cli = Cli::parse();
 
-    let level = match &cli.command {
-        Commands::GenerateConfig { .. } => {
-            if cli.debug {
-                LevelFilter::Debug
-            } else {
-                LevelFilter::Info
-            }
-        }
-        _ => {
-            if cli.debug {
-                LevelFilter::Debug
-            } else if cli.verbose {
-                LevelFilter::Info
-            } else {
-                LevelFilter::Warn
-            }
-        }
-    };
-
-    Builder::from_env(Env::default().default_filter_or(level.to_string()))
-        .target(env_logger::Target::Stderr)
-        .init();
-
-    let db_path = get_db_path();
-    let db_path_str = db_path.to_string_lossy().to_string();
-    let db_path_exists = db_path.exists();
-    let conn = Connection::open(&db_path).expect("Failed to open memy database");
-
-    if db_path_exists {
-        debug!("Database at {db_path_str} does exist");
-        check_db_version(&conn);
-    } else {
-        debug!("Database at {db_path_str} does not exist");
-        init_db(&conn);
-    }
-
-    debug!("Database opened");
+    set_logging_level(&cli);
 
     match cli.command {
         Commands::Note(note_args) => {
+            let db_connection = db::open_db();
             for path in note_args.paths {
-                note_path(&conn, &path);
+                note_path(&db_connection, &path);
             }
         }
         Commands::List(list_args) => {
-            list_paths(&conn, &list_args);
+            let db_connection = db::open_db();
+            list_paths(&db_connection, &list_args);
         }
         Commands::GenerateConfig { filename } => {
             config::generate_config(filename.as_deref());
         }
         Commands::Completions { shell } => {
-            let shell = shell
-                .or_else(utils::detect_shell)
-                .expect("Could not determine shell. Specify one explicitly.");
-            let mut cmd = Cli::command();
-            let bin_name = cmd.get_name().to_string();
-            clap_complete::generate(shell, &mut cmd, bin_name, &mut std::io::stdout());
+            completions(shell);
         }
         Commands::Plugin { plugin_name } => {
-            if let Some(plugin_name) = plugin_name {
-                if let Some(content) = plugins_generated::get_plugin_content(&plugin_name) {
-                    print!("{content}");
-                } else {
-                    eprintln!("Plugin not found: {plugin_name}");
-                    std::process::exit(1);
-                }
-            } else {
-                println!("Available plugins:");
-                for plugin in plugins_generated::get_plugin_list() {
-                    println!("{plugin}");
-                }
-            }
+            plugin_show(plugin_name);
         }
     }
 }
