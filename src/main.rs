@@ -9,7 +9,7 @@ use std::{fs, path::Path};
 mod config;
 use config::DeniedFilesOnList;
 mod db;
-mod plugins_generated;
+mod hooks_generated;
 mod utils;
 
 #[derive(Parser)]
@@ -49,10 +49,10 @@ enum Commands {
         #[arg(value_enum)]
         shell: Option<clap_complete::Shell>,
     },
-    /// Show contents of a memy plugin
-    Plugin {
+    /// Show contents of a memy hook
+    Hook {
         #[arg(value_enum)]
-        plugin_name: Option<String>,
+        hook_name: Option<String>,
     },
 }
 
@@ -234,18 +234,18 @@ fn completions(shell: Option<clap_complete::Shell>) {
     clap_complete::generate(shell, &mut cmd, bin_name, &mut std::io::stdout());
 }
 
-fn plugin_show(plugin_name: Option<String>) {
-    if let Some(plugin_name) = plugin_name {
-        if let Some(content) = plugins_generated::get_plugin_content(&plugin_name) {
+fn hook_show(hook_name: Option<String>) {
+    if let Some(hook_name) = hook_name {
+        if let Some(content) = hooks_generated::get_hook_content(&hook_name) {
             print!("{content}");
         } else {
-            eprintln!("Plugin not found: {plugin_name}");
+            eprintln!("Hook not found: {hook_name}");
             std::process::exit(1);
         }
     } else {
-        println!("Available plugins:");
-        for plugin in plugins_generated::get_plugin_list() {
-            println!("{plugin}");
+        println!("Available hooks:");
+        for hook in hooks_generated::get_hook_list() {
+            println!("{hook}");
         }
     }
 }
@@ -272,8 +272,8 @@ fn main() {
         Commands::Completions { shell } => {
             completions(shell);
         }
-        Commands::Plugin { plugin_name } => {
-            plugin_show(plugin_name);
+        Commands::Hook { hook_name } => {
+            hook_show(hook_name);
         }
     }
 }
