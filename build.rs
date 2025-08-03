@@ -4,17 +4,22 @@ use std::fs::{create_dir_all, File};
 use std::io::BufWriter;
 use std::path::PathBuf;
 use std::process::Command;
-use std::{fs, path::Path};
+use std::{fs, io, path::Path};
 
 include!("src/cli.rs");
+
+fn read_dir_sorted<P: AsRef<Path>>(path: P) -> io::Result<Vec<fs::DirEntry>> {
+    let mut entries: Vec<fs::DirEntry> = fs::read_dir(path)?.filter_map(Result::ok).collect();
+    entries.sort_by_key(std::fs::DirEntry::file_name);
+    Ok(entries)
+}
 
 fn embed_hooks() {
     let hooks_dir = Path::new("hooks");
 
     let mut entries = Vec::new();
 
-    for entry in fs::read_dir(hooks_dir).unwrap() {
-        let entry = entry.unwrap();
+    for entry in read_dir_sorted(hooks_dir).unwrap() {
         let path = entry.path();
         if path.is_file() {
             let filename = path.file_name().unwrap().to_string_lossy();
