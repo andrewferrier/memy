@@ -3,7 +3,7 @@ use clap::CommandFactory;
 use clap::{Args, Parser, Subcommand};
 use env_logger::{Builder, Env};
 use log::{info, warn, LevelFilter};
-use rusqlite::{params, Connection};
+use rusqlite::{params, Connection, OptionalExtension};
 use std::{fs, path::Path};
 
 mod config;
@@ -78,8 +78,6 @@ struct ListArgs {
     include_frecency_score: bool,
 }
 
-const RECENCY_BIAS: f64 = 20000.0;
-
 fn set_logging_level(cli: &Cli) {
     let level = match &cli.command {
         Commands::GenerateConfig { .. } => {
@@ -150,10 +148,56 @@ fn note_path(conn: &Connection, raw_path: &str) {
     info!("Path {raw_path} noted");
 }
 
-fn calculate_frecency(now: DateTime<Utc>, count: i64, last_noted_timestamp: i64) -> f64 {
-    let last_dt = DateTime::from_timestamp(last_noted_timestamp, 0).expect("invalid timestamp");
-    let age_secs = now.signed_duration_since(last_dt).num_seconds() as f64;
-    count as f64 * (1.0 / (1.0 + age_secs / RECENCY_BIAS))
+fn timestamp_to_age_hours(now: DateTime<Utc>, timestamp: i64) -> f64 {
+    let dt = DateTime::from_timestamp(timestamp, 0).expect("invalid timestamp");
+    let age_seconds = now.signed_duration_since(dt).num_seconds();
+    age_seconds as f64 / 3600.0
+}
+
+fn calculate_frecency(
+    count: i64,
+    last_noted_timestamp_hours: f64,
+    highest_count: i64,
+    oldest_last_noted_timestamp_hours: f64,
+) -> f64 {
+    let freq_score = if highest_count > 0 {
+        count as f64 / highest_count as f64
+    } else {
+        0.0
+    };
+
+    let recency_score = if last_noted_timestamp_hours < oldest_last_noted_timestamp_hours {
+        1.0 - (last_noted_timestamp_hours / oldest_last_noted_timestamp_hours)
+    } else {
+        0.0
+    };
+
+    let lambda = config::get_recency_bias();
+    (1.0 - lambda).mul_add(freq_score, lambda * recency_score)
+}
+
+fn get_oldest_timestamp_and_highest_count(conn: &Connection, now: DateTime<Utc>) -> (i64, i64) {
+    let oldest_last_noted_timestamp: i64 = conn
+        .query_row(
+            "SELECT last_noted_timestamp FROM paths ORDER BY last_noted_timestamp ASC LIMIT 1",
+            [],
+            |row| row.get(0),
+        )
+        .optional()
+        .unwrap() // unwrap the Result<Option<T>, E>
+        .unwrap_or_else(|| now.timestamp());
+
+    let highest_count: i64 = conn
+        .query_row(
+            "SELECT noted_count FROM paths ORDER BY noted_count DESC LIMIT 1",
+            [],
+            |row| row.get(0),
+        )
+        .optional()
+        .unwrap()
+        .unwrap_or(0);
+
+    (oldest_last_noted_timestamp, highest_count)
 }
 
 fn list_paths(conn: &Connection, args: &ListArgs) {
@@ -176,6 +220,11 @@ fn list_paths(conn: &Connection, args: &ListArgs) {
 
     let list_denied_action = config::get_denied_files_on_list();
     let matcher = config::get_denylist_matcher();
+
+    let (oldest_last_noted_timestamp, highest_count) =
+        get_oldest_timestamp_and_highest_count(conn, now);
+    let oldest_last_noted_timestamp_hours =
+        timestamp_to_age_hours(now, oldest_last_noted_timestamp);
 
     for (path, count, last_noted_timestamp) in rows.into_iter().flatten() {
         if let ignore::Match::Ignore(_matched_pat) = matcher.matched(&path, false) {
@@ -211,7 +260,12 @@ fn list_paths(conn: &Connection, args: &ListArgs) {
             continue;
         }
 
-        let frecency = calculate_frecency(now, count, last_noted_timestamp);
+        let frecency = calculate_frecency(
+            count,
+            timestamp_to_age_hours(now, last_noted_timestamp),
+            highest_count,
+            oldest_last_noted_timestamp_hours,
+        );
         results.push((path, frecency));
     }
 

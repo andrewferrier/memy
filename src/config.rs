@@ -1,6 +1,7 @@
 use config::{Config, File, FileFormat};
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
 use log::{debug, error, info};
+use serde::Deserialize;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
@@ -22,6 +23,8 @@ pub struct MemyConfig {
     pub missing_files_warn_on_note: Option<bool>,
     pub denied_files_warn_on_note: Option<bool>,
     pub denied_files_on_list: Option<DeniedFilesOnList>,
+    #[serde(default, deserialize_with = "validate_recency_bias")]
+    pub recency_bias: Option<f64>,
 }
 
 impl Default for MemyConfig {
@@ -32,8 +35,23 @@ impl Default for MemyConfig {
             missing_files_warn_on_note: Some(true),
             denied_files_warn_on_note: Some(true),
             denied_files_on_list: Some(DeniedFilesOnList::Delete),
+            recency_bias: Some(0.5),
         }
     }
+}
+
+fn validate_recency_bias<'de, D>(deserializer: D) -> Result<Option<f64>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let value: Option<f64> = Option::deserialize(deserializer)?;
+    if let Some(v) = value {
+        if !(0.0..=1.0).contains(&v) {
+            error!("recency_bias configuration option must be between 0 and 1");
+            std::process::exit(1);
+        }
+    }
+    Ok(value)
 }
 
 const TEMPLATE_CONFIG: &str = r#"# This is a configuration file for memy - the values below are the defaults.
@@ -55,6 +73,9 @@ denied_files_warn_on_note = true
 # When listing files that are in the denylist (they've been added to the denylist after being noted),
 # what should happen? Valid values are "skip-silently", "warn", "delete"
 denied_files_on_list = "delete"
+
+# When listing, how much should *recency of file noting* dominate over *frequency of noting* in the sort? 0.0 means pure frequency; 1.0 means pure recency.
+recency_bias = 0.5
 "#;
 
 fn get_config_file_path() -> PathBuf {
@@ -147,4 +168,8 @@ pub fn get_denied_files_on_list() -> DeniedFilesOnList {
         .denied_files_on_list
         .clone()
         .unwrap_or(DeniedFilesOnList::Delete)
+}
+
+pub fn get_recency_bias() -> f64 {
+    CACHED_CONFIG.recency_bias.unwrap_or(0.5)
 }
