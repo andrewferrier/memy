@@ -100,8 +100,8 @@ fn load_config() -> MemyConfig {
             .add_source(File::from(config_path).format(FileFormat::Toml))
             .build();
 
-        if let Ok(settings) = settings {
-            if let Ok(cfg) = settings.try_deserialize::<MemyConfig>() {
+        if let Ok(actual_settings) = settings {
+            if let Ok(cfg) = actual_settings.try_deserialize::<MemyConfig>() {
                 return cfg;
             }
         }
@@ -146,7 +146,7 @@ pub fn get_denylist_matcher() -> Gitignore {
     let config = &*CACHED_CONFIG;
     let mut builder = GitignoreBuilder::new("");
     for pat in config.denylist.clone().unwrap_or_default() {
-        builder.add_line(None, &pat).ok();
+        let _ = builder.add_line(None, &pat);
     }
     builder.build().expect("Failed to build denylist matcher")
 }

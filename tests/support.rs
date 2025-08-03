@@ -1,5 +1,7 @@
+#![allow(clippy::unwrap_used)]
 #![allow(clippy::missing_panics_doc)]
 #![allow(clippy::must_use_candidate)]
+
 use assert_cmd::Command;
 use std::fs;
 use std::path::PathBuf;
@@ -49,7 +51,7 @@ pub fn memy_cmd(
     config_path: Option<&std::path::Path>,
     args: &[&str],
 ) -> Command {
-    let mut cmd = Command::cargo_bin("memy").unwrap();
+    let mut cmd = Command::cargo_bin("memy").expect("Cannot set up memy command");
     cmd.env("MEMY_DB_DIR", db_path);
 
     let _temp_config_dir;

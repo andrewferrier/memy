@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_used)]
+
 mod support;
 use std::os::unix::fs::symlink;
 use support::*;

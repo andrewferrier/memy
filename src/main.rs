@@ -73,7 +73,7 @@ fn note_path(conn: &Connection, raw_path: &str) {
                 last_noted_timestamp = excluded.last_noted_timestamp",
         params![clean_path, now],
     )
-    .unwrap();
+    .expect("Insert failed");
     info!("Path {raw_path} noted");
 }
 
@@ -113,7 +113,7 @@ fn get_oldest_timestamp_and_highest_count(conn: &Connection, now: DateTime<Utc>)
             |row| row.get(0),
         )
         .optional()
-        .unwrap() // unwrap the Result<Option<T>, E>
+        .expect("Cannot get oldest timestamp")
         .unwrap_or_else(|| now.timestamp());
 
     let highest_count: i64 = conn
@@ -123,7 +123,7 @@ fn get_oldest_timestamp_and_highest_count(conn: &Connection, now: DateTime<Utc>)
             |row| row.get(0),
         )
         .optional()
-        .unwrap()
+        .expect("Cannot get highest count")
         .unwrap_or(0);
 
     (oldest_last_noted_timestamp, highest_count)
@@ -132,7 +132,7 @@ fn get_oldest_timestamp_and_highest_count(conn: &Connection, now: DateTime<Utc>)
 fn list_paths(conn: &Connection, args: &ListArgs) {
     let mut stmt = conn
         .prepare("SELECT path, noted_count, last_noted_timestamp FROM paths")
-        .unwrap();
+        .expect("Select failed");
 
     let rows = stmt
         .query_map([], |row| {
@@ -141,7 +141,7 @@ fn list_paths(conn: &Connection, args: &ListArgs) {
             let last_noted_timestamp: i64 = row.get(2)?;
             Ok((path, count, last_noted_timestamp))
         })
-        .unwrap();
+        .expect("query_map failed");
 
     let now = Utc::now();
 
@@ -167,7 +167,7 @@ fn list_paths(conn: &Connection, args: &ListArgs) {
                 }
                 DeniedFilesOnList::Delete => {
                     conn.execute("DELETE FROM paths WHERE path = ?", params![path])
-                        .unwrap();
+                        .expect("Delete failed");
                     info!("Path {path} is denied, deleted from database.");
                     continue;
                 }
@@ -176,7 +176,7 @@ fn list_paths(conn: &Connection, args: &ListArgs) {
 
         let Ok(metadata) = fs::metadata(&path) else {
             conn.execute("DELETE FROM paths WHERE path = ?", params![path])
-                .unwrap();
+                .expect("Delete failed");
             info!("Path {path} no longer exists, deleted from database.");
             continue;
         };
@@ -198,7 +198,7 @@ fn list_paths(conn: &Connection, args: &ListArgs) {
         results.push((path, frecency));
     }
 
-    results.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+    results.sort_by(|a, b| a.1.partial_cmp(&b.1).expect("Sort results failed"));
     for (path, score) in results {
         if args.include_frecency_score {
             println!("{path}\t{score}");
@@ -209,20 +209,20 @@ fn list_paths(conn: &Connection, args: &ListArgs) {
 }
 
 fn completions(shell: Option<clap_complete::Shell>) {
-    let shell = shell
+    let actual_shell = shell
         .or_else(utils::detect_shell)
         .expect("Could not determine shell. Specify one explicitly.");
     let mut cmd = Cli::command();
     let bin_name = cmd.get_name().to_string();
-    clap_complete::generate(shell, &mut cmd, bin_name, &mut std::io::stdout());
+    clap_complete::generate(actual_shell, &mut cmd, bin_name, &mut std::io::stdout());
 }
 
 fn hook_show(hook_name: Option<String>) {
-    if let Some(hook_name) = hook_name {
-        if let Some(content) = hooks::get_hook_content(&hook_name) {
+    if let Some(actual_hook_name) = hook_name {
+        if let Some(content) = hooks::get_hook_content(&actual_hook_name) {
             print!("{content}");
         } else {
-            eprintln!("Hook not found: {hook_name}");
+            eprintln!("Hook not found: {actual_hook_name}");
             std::process::exit(1);
         }
     } else {

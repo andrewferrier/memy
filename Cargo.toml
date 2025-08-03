@@ -7,6 +7,8 @@ description = "Track and recall frequently and recently used files or directorie
 license = "MIT"
 repository = "https://github.com/andrewferrier/memy"
 readme = "README.md"
+keywords = ["cli", "file-tracking"]
+categories = ["Command line utilities"]
 
 [dependencies]
 chrono = { version = "0.4", features = ["serde"] }
@@ -29,3 +31,22 @@ tempfile = "3"
 clap = { version = "4.5", features = ["derive"] }
 clap_complete = "4.5.55"
 clap_mangen = "0.2.29"
+
+[lints.clippy]
+cargo = { level = "warn", priority = -1 }
+complexity = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+# restriction = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+perf = { level = "warn", priority = -1 }
+style = { level = "warn", priority = -1 }
+suspicious = { level = "warn", priority = -1 }
+
+cast_precision_loss = "allow"
+multiple_crate_versions = "allow"
+
+shadow_reuse = "warn"
+shadow_same = "warn"
+shadow_unrelated = "warn"
+unwrap_used = "warn"
+unused_result_ok = "warn"

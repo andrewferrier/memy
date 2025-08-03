@@ -19,10 +19,13 @@ fn embed_hooks() {
 
     let mut entries = Vec::new();
 
-    for entry in read_dir_sorted(hooks_dir).unwrap() {
+    for entry in read_dir_sorted(hooks_dir).expect("Cannot read hook dir") {
         let path = entry.path();
         if path.is_file() {
-            let filename = path.file_name().unwrap().to_string_lossy();
+            let filename = path
+                .file_name()
+                .expect("Cannot read hook filename")
+                .to_string_lossy();
             let content = fs::read_to_string(&path).expect("Failed to read hook file");
             let escaped = content.escape_default().to_string(); // escape for safe inclusion in code
             entries.push(format!("map.insert(\"{filename}\", \"{escaped}\");"));
@@ -52,7 +55,7 @@ fn get_git_version() {
         .output()
         .expect("Failed to execute git");
 
-    let git_version = String::from_utf8(output.stdout).unwrap();
+    let git_version = String::from_utf8(output.stdout).expect("Cannot get git version");
     println!("cargo:rustc-env=GIT_VERSION={}", git_version.trim());
 
     // Invalidate the build if HEAD changes
