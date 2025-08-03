@@ -1,4 +1,3 @@
-use chrono::{DateTime, Utc};
 use clap::CommandFactory;
 use clap::Parser;
 use env_logger::{Builder, Env};
@@ -65,7 +64,7 @@ fn note_path(conn: &Connection, raw_path: &str) {
         return;
     }
 
-    let now = Utc::now().timestamp();
+    let now = utils::get_secs_since_epoch();
     conn.execute(
         "INSERT INTO paths (path, noted_count, last_noted_timestamp) VALUES (?1, 1, ?2) \
             ON CONFLICT(path) DO UPDATE SET \
@@ -77,16 +76,15 @@ fn note_path(conn: &Connection, raw_path: &str) {
     info!("Path {raw_path} noted");
 }
 
-fn timestamp_to_age_hours(now: DateTime<Utc>, timestamp: i64) -> f64 {
-    let dt = DateTime::from_timestamp(timestamp, 0).expect("invalid timestamp");
-    let age_seconds = now.signed_duration_since(dt).num_seconds();
+fn timestamp_to_age_hours(now: u64, timestamp: u64) -> f64 {
+    let age_seconds = now - timestamp;
     age_seconds as f64 / 3600.0
 }
 
 fn calculate_frecency(
-    count: i64,
+    count: u64,
     last_noted_timestamp_hours: f64,
-    highest_count: i64,
+    highest_count: u64,
     oldest_last_noted_timestamp_hours: f64,
 ) -> f64 {
     let freq_score = if highest_count > 0 {
@@ -105,8 +103,8 @@ fn calculate_frecency(
     (1.0 - lambda).mul_add(freq_score, lambda * recency_score)
 }
 
-fn get_oldest_timestamp_and_highest_count(conn: &Connection, now: DateTime<Utc>) -> (i64, i64) {
-    let oldest_last_noted_timestamp: i64 = conn
+fn get_oldest_timestamp_and_highest_count(conn: &Connection, now: u64) -> (u64, u64) {
+    let oldest_last_noted_timestamp: u64 = conn
         .query_row(
             "SELECT last_noted_timestamp FROM paths ORDER BY last_noted_timestamp ASC LIMIT 1",
             [],
@@ -114,9 +112,9 @@ fn get_oldest_timestamp_and_highest_count(conn: &Connection, now: DateTime<Utc>)
         )
         .optional()
         .expect("Cannot get oldest timestamp")
-        .unwrap_or_else(|| now.timestamp());
+        .unwrap_or(now);
 
-    let highest_count: i64 = conn
+    let highest_count: u64 = conn
         .query_row(
             "SELECT noted_count FROM paths ORDER BY noted_count DESC LIMIT 1",
             [],
@@ -137,13 +135,13 @@ fn list_paths(conn: &Connection, args: &ListArgs) {
     let rows = stmt
         .query_map([], |row| {
             let path: String = row.get(0)?;
-            let count: i64 = row.get(1)?;
-            let last_noted_timestamp: i64 = row.get(2)?;
+            let count: u64 = row.get(1)?;
+            let last_noted_timestamp: u64 = row.get(2)?;
             Ok((path, count, last_noted_timestamp))
         })
         .expect("query_map failed");
 
-    let now = Utc::now();
+    let now = utils::get_secs_since_epoch();
 
     let mut results: Vec<(String, f64)> = vec![];
 

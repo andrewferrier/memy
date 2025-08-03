@@ -11,17 +11,24 @@ keywords = ["cli", "file-tracking"]
 categories = ["Command line utilities"]
 
 [dependencies]
-chrono = { version = "0.4", features = ["serde"] }
-clap = { version = "4.5", features = ["derive"] }
+clap = { version = "4.5", default-features = false, features = [
+    "derive",
+    "help",
+] }
 clap_complete = "4.5.55"
-config = { version = "0.15.13", features = ["toml"] }
-env_logger = "0.11"
+config = { version = "0.15.13", default-features = false, features = [
+    "json5",
+    "toml",
+] }
+env_logger = { version = "0.11", default-features = false }
 ignore = "0.4"
 log = "0.4.27"
-rusqlite = { version = "0.37", features = ["bundled"] }
+rusqlite = { version = "0.37", default-features = false, features = [
+    "bundled",
+] }
 serde = "1.0.219"
 toml = "0.9.2"
-xdg = "3.0.0"
+xdg = { version = "3.0.0", default-features = false }
 
 [dev-dependencies]
 assert_cmd = "2"
@@ -31,6 +38,10 @@ tempfile = "3"
 clap = { version = "4.5", features = ["derive"] }
 clap_complete = "4.5.55"
 clap_mangen = "0.2.29"
+
+[profile.release]
+lto = true
+codegen-units = 1
 
 [lints.clippy]
 cargo = { level = "warn", priority = -1 }

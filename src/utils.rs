@@ -1,4 +1,12 @@
 use std::path::Path;
+use std::time::{SystemTime, UNIX_EPOCH};
+
+pub fn get_secs_since_epoch() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("Couldn't get seconds since epoch")
+        .as_secs()
+}
 
 pub fn detect_shell() -> Option<clap_complete::Shell> {
     std::env::var("SHELL").ok().as_deref().and_then(|path| {
