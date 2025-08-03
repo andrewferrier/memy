@@ -27,19 +27,11 @@ fn embed_hooks() {
     let generated_code = format!(
         r"use std::collections::HashMap;
 
-static HOOKS: std::sync::LazyLock<HashMap<&'static str, &'static str>> = std::sync::LazyLock::new(|| {{
+pub static HOOKS: std::sync::LazyLock<HashMap<&'static str, &'static str>> = std::sync::LazyLock::new(|| {{
     let mut map = HashMap::new();
     {}
     map
-}});
-
-pub fn get_hook_content(name: &str) -> Option<&'static str> {{
-    HOOKS.get(name).copied()
-}}
-
-pub fn get_hook_list() -> Vec<&'static str> {{
-    HOOKS.keys().copied().collect()
-}}",
+}});",
         entries.join("\n")
     );
 

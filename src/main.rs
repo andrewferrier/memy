@@ -10,6 +10,7 @@ mod config;
 use config::DeniedFilesOnList;
 mod cli;
 mod db;
+mod hooks;
 mod hooks_generated;
 mod utils;
 use crate::cli::{Cli, Commands, ListArgs};
@@ -227,7 +228,7 @@ fn completions(shell: Option<clap_complete::Shell>) {
 
 fn hook_show(hook_name: Option<String>) {
     if let Some(hook_name) = hook_name {
-        if let Some(content) = hooks_generated::get_hook_content(&hook_name) {
+        if let Some(content) = hooks::get_hook_content(&hook_name) {
             print!("{content}");
         } else {
             eprintln!("Hook not found: {hook_name}");
@@ -235,7 +236,7 @@ fn hook_show(hook_name: Option<String>) {
         }
     } else {
         println!("Available hooks:");
-        for hook in hooks_generated::get_hook_list() {
+        for hook in hooks::get_hook_list() {
             println!("{hook}");
         }
     }
