@@ -49,6 +49,16 @@ Many of these more advanced tricks would work well configured as [shell aliases]
   xdg-open "$(memy list -d | fzf)"
   ```
 
+## Noting files automatically using hooks
+
+Hooks in memy are scripts or other configuration files provided with memy that can be embedded into other tools' configurations. These hooks allow you to automatically note files as they are used, opened, or interacted with, integrating memy seamlessly into your workflow.
+
+For example, you might use a hook to automatically note files opened in your text editor or accessed via the command line. Hooks are designed to be a starting point and can be customized to suit your specific needs and preferences.
+
+By leveraging hooks, you can ensure that memy keeps track of your most-used files and directories without requiring manual intervention, making it an even more powerful tool for managing your workflow.
+
+TODO: Explain how to use hooks.
+
 ## Installation
 
 ### Download Binaries from GitHub
