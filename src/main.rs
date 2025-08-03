@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use clap::CommandFactory;
-use clap::{Args, Parser, Subcommand};
+use clap::Parser;
 use env_logger::{Builder, Env};
 use log::{info, warn, LevelFilter};
 use rusqlite::{params, Connection, OptionalExtension};
@@ -8,75 +8,11 @@ use std::{fs, path::Path};
 
 mod config;
 use config::DeniedFilesOnList;
+mod cli;
 mod db;
 mod hooks_generated;
 mod utils;
-
-#[derive(Parser)]
-#[command(name = "memy")]
-#[command(version = env!("GIT_VERSION"))]
-#[command(author = "Andrew Ferrier")]
-#[command(about = "Track and recall frequently and recently used files or directories.")]
-#[allow(clippy::struct_excessive_bools)]
-struct Cli {
-    /// Enable verbose (info) logging
-    #[arg(short, long, global = true)]
-    verbose: bool,
-
-    /// Enable debug (very detailed) logging
-    #[arg(long, global = true)]
-    debug: bool,
-
-    #[command(subcommand)]
-    command: Commands,
-}
-
-#[derive(Subcommand)]
-enum Commands {
-    /// Note usage of one or more paths
-    Note(NoteArgs),
-    /// List paths by frecency score
-    List(ListArgs),
-    /// Generate a template memy.toml config file
-    GenerateConfig {
-        /// Optional output filename for the generated config
-        #[arg(value_name = "FILENAME")]
-        filename: Option<String>,
-    },
-    /// Generate shell completion scripts
-    Completions {
-        /// The shell to generate completions for (e.g. bash, zsh)
-        #[arg(value_enum)]
-        shell: Option<clap_complete::Shell>,
-    },
-    /// Show contents of a memy hook
-    Hook {
-        #[arg(value_enum)]
-        hook_name: Option<String>,
-    },
-}
-
-#[derive(Args)]
-struct NoteArgs {
-    /// One or more paths to note
-    #[arg(value_name = "PATHS")]
-    paths: Vec<String>,
-}
-
-#[derive(Args)]
-struct ListArgs {
-    /// Show only files in the list
-    #[arg(short, long)]
-    files_only: bool,
-
-    /// Show only directories in the list
-    #[arg(short, long)]
-    directories_only: bool,
-
-    /// Include frecency score in output
-    #[arg(long)]
-    include_frecency_score: bool,
-}
+use crate::cli::{Cli, Commands, ListArgs};
 
 fn set_logging_level(cli: &Cli) {
     let level = match &cli.command {

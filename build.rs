@@ -1,5 +1,12 @@
+use clap::CommandFactory;
+use clap_mangen::Man;
+use std::fs::{create_dir_all, File};
+use std::io::BufWriter;
+use std::path::PathBuf;
 use std::process::Command;
 use std::{fs, path::Path};
+
+include!("src/cli.rs");
 
 fn embed_hooks() {
     let hooks_dir = Path::new("hooks");
@@ -56,7 +63,41 @@ fn get_git_version() {
     println!("cargo:rerun-if-changed=.git/refs/");
 }
 
+fn build_man_pages() -> std::io::Result<()> {
+    let build_root_dir = std::env::var("CARGO_MANIFEST_DIR")
+        .ok() // converts Result -> Option
+        .map_or_else(
+            || std::env::current_dir().expect("Failed to get current dir"),
+            PathBuf::from,
+        );
+
+    let man_dir = build_root_dir.join("target/man");
+
+    create_dir_all(&man_dir)?;
+
+    let main_cmd = Cli::command();
+
+    {
+        let file = File::create(man_dir.join("memy.1"))?;
+        let mut writer = BufWriter::new(file);
+        Man::new(main_cmd.clone()).render(&mut writer)?;
+    }
+
+    for subcmd in main_cmd.get_subcommands() {
+        let file = File::create(man_dir.join(format!("memy-{}.1", subcmd.get_name())))?;
+        let mut writer = BufWriter::new(file);
+        let sub = main_cmd
+            .find_subcommand(subcmd.get_name())
+            .expect("Subcommand not found")
+            .clone();
+        Man::new(sub).render(&mut writer)?;
+    }
+
+    Ok(())
+}
+
 fn main() {
     get_git_version();
     embed_hooks();
+    build_man_pages().expect("Failed to build man page");
 }
