@@ -42,7 +42,7 @@ pub fn get_hook_list() -> Vec<&'static str> {{
     println!("cargo:rerun-if-changed=plugins");
 }
 
-fn main() {
+fn get_git_version() {
     let output = Command::new("git")
         .args(["describe", "--tags", "--always", "--dirty"])
         .output()
@@ -54,6 +54,9 @@ fn main() {
     // Invalidate the build if HEAD changes
     println!("cargo:rerun-if-changed=.git/HEAD");
     println!("cargo:rerun-if-changed=.git/refs/");
+}
 
+fn main() {
+    get_git_version();
     embed_hooks();
 }
