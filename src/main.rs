@@ -39,7 +39,9 @@ fn set_logging_level(cli: &Cli) {
         .init();
 }
 
-fn normalize_path_if_needed(path: &Path, normalize: bool) -> String {
+fn normalize_path_if_needed(path: &Path) -> String {
+    let normalize = config::get_normalize_symlinks_on_note();
+
     if normalize {
         std::fs::canonicalize(path).ok().map_or_else(
             || path.to_string_lossy().into_owned(),
@@ -61,8 +63,7 @@ fn note_path(conn: &Connection, raw_path: &str) {
         return;
     }
 
-    let config_normalize = config::get_normalize_symlinks_on_note();
-    let clean_path = normalize_path_if_needed(path, config_normalize);
+    let clean_path = normalize_path_if_needed(path);
 
     let matcher = config::get_denylist_matcher();
     if let ignore::Match::Ignore(_matched_pat) = matcher.matched(&clean_path, false) {
@@ -173,7 +174,7 @@ fn list_paths(conn: &Connection, args: &ListArgs) {
                     continue;
                 }
                 DeniedFilesOnList::Delete => {
-                    conn.execute("DELETE FROM paths WHERE path = ?", params![path.clone()])
+                    conn.execute("DELETE FROM paths WHERE path = ?", params![path])
                         .unwrap();
                     info!("Path {path} is denied, deleted from database.");
                     continue;
@@ -182,7 +183,7 @@ fn list_paths(conn: &Connection, args: &ListArgs) {
         }
 
         let Ok(metadata) = fs::metadata(&path) else {
-            conn.execute("DELETE FROM paths WHERE path = ?", params![path.clone()])
+            conn.execute("DELETE FROM paths WHERE path = ?", params![path])
                 .unwrap();
             info!("Path {path} no longer exists, deleted from database.");
             continue;
