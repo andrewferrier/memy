@@ -16,24 +16,15 @@ mod utils;
 use crate::cli::{Cli, Commands, ListArgs};
 
 fn set_logging_level(cli: &Cli) {
-    let level = match &cli.command {
-        Commands::GenerateConfig { .. } => {
-            if cli.debug {
-                LevelFilter::Debug
-            } else {
-                LevelFilter::Info
-            }
-        }
-        _ => {
-            if cli.debug {
-                LevelFilter::Debug
-            } else if cli.verbose {
-                LevelFilter::Info
-            } else {
-                LevelFilter::Warn
-            }
-        }
-    };
+    let level;
+
+    if cli.debug {
+        level = LevelFilter::Debug;
+    } else if cli.verbose {
+        level = LevelFilter::Info;
+    } else {
+        level = LevelFilter::Warn;
+    }
 
     Builder::from_env(Env::default().default_filter_or(level.to_string()))
         .target(env_logger::Target::Stderr)

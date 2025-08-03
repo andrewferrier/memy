@@ -1,6 +1,6 @@
 use config::{Config, File, FileFormat};
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
-use log::{debug, error, info};
+use log::{debug, error};
 use serde::Deserialize;
 use std::env;
 use std::fs;
@@ -139,7 +139,7 @@ pub fn generate_config(filename: Option<&str>) {
     }
 
     fs::write(&config_path, TEMPLATE_CONFIG).expect("Failed to write config file");
-    info!("Config file created at {}", config_path.display());
+    println!("Config file created at {}", config_path.display());
 }
 
 pub fn get_denylist_matcher() -> Gitignore {
