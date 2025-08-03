@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+_memy_note_hook() {
+  local cmd="$BASH_COMMAND"
+  eval "set -- $cmd"
+  for word in "$@"; do
+    # shellcheck disable=SC2154
+    if [[ -e "$word" ]]; then
+      memy note "$word"
+    fi
+  done
+}
+
+trap _memy_note_hook DEBUG
+PROMPT_COMMAND='_memy_note_hook; '"$PROMPT_COMMAND"
