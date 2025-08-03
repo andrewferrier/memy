@@ -1,0 +1,11 @@
+preexec() {
+  local cmd="$1"
+
+  for word in ${(z)cmd}; do
+    eval "expanded=\${~word}"
+
+    if [[ -e $expanded ]]; then
+      memy note "$expanded" &!
+    fi
+  done
+}
