@@ -3,6 +3,7 @@
 mod support;
 use support::*;
 
+use home::home_dir;
 use std::fs;
 use std::os::unix::fs::symlink;
 
@@ -23,6 +24,18 @@ fn test_note_and_list_paths() {
     assert_eq!(lines.len(), 2);
     assert_eq!(lines[0], dir_a.to_str().unwrap());
     assert_eq!(lines[1], dir_b.to_str().unwrap());
+}
+
+#[test]
+fn test_note_homedir() {
+    let (_db_temp, db_path) = temp_dir();
+
+    note_path(&db_path, None, "~", 1, false);
+
+    let lines = list_paths(&db_path, None, &[]);
+
+    assert_eq!(lines.len(), 1);
+    assert_eq!(lines[0], home_dir().unwrap().to_str().unwrap());
 }
 
 #[test]

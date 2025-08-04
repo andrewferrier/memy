@@ -3,7 +3,8 @@ use clap::Parser;
 use env_logger::{Builder, Env};
 use log::{info, warn, LevelFilter};
 use rusqlite::{params, Connection, OptionalExtension};
-use std::{fs, path::Path};
+use std::fs;
+use std::path::{Path, PathBuf};
 
 mod config;
 use config::DeniedFilesOnList;
@@ -11,6 +12,7 @@ mod cli;
 mod db;
 mod hooks;
 mod hooks_generated;
+use home::home_dir;
 mod utils;
 use crate::cli::{Cli, Commands, ListArgs};
 
@@ -30,6 +32,20 @@ fn set_logging_level(cli: &Cli) {
         .init();
 }
 
+fn expand_tilde(path: &str) -> PathBuf {
+    if path == "~" {
+        if let Some(home) = home_dir() {
+            return home;
+        }
+    } else if let Some(stripped) = path.strip_prefix("~/") {
+        if let Some(home) = home_dir() {
+            return home.join(stripped);
+        }
+    }
+
+    PathBuf::from(path)
+}
+
 fn normalize_path_if_needed(path: &Path) -> String {
     let normalize = config::get_normalize_symlinks_on_note();
 
@@ -44,7 +60,8 @@ fn normalize_path_if_needed(path: &Path) -> String {
 }
 
 fn note_path(conn: &Connection, raw_path: &str) {
-    let path = Path::new(raw_path);
+    let pathbuf = expand_tilde(raw_path);
+    let path: &Path = pathbuf.as_path();
 
     if !path.exists() {
         if config::get_missing_files_warn_on_note() {
@@ -73,7 +90,7 @@ fn note_path(conn: &Connection, raw_path: &str) {
         params![clean_path, now],
     )
     .expect("Insert failed");
-    info!("Path {raw_path} noted");
+    info!("Path {clean_path} noted");
 }
 
 fn timestamp_to_age_hours(now: u64, timestamp: u64) -> f64 {
