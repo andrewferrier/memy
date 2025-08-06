@@ -65,40 +65,6 @@ fn test_note_and_list_paths_multiarg() {
 }
 
 #[test]
-fn test_note_and_list_paths_with_scores() {
-    let (_db_temp, db_path) = temp_dir();
-    let (_working_temp, working_path) = temp_dir();
-
-    let dir_a = create_test_directory(&working_path, "dir_a");
-    let dir_b = create_test_directory(&working_path, "dir_b");
-
-    note_path(&db_path, None, dir_a.to_str().unwrap(), 1, false);
-    sleep(1000);
-    note_path(&db_path, None, dir_b.to_str().unwrap(), 1, false);
-
-    let lines = list_paths(&db_path, None, &["--include-frecency-score"]);
-
-    assert_eq!(lines.len(), 2);
-    assert!(lines[0].starts_with(dir_a.to_str().unwrap()));
-    assert!(lines[1].starts_with(dir_b.to_str().unwrap()));
-
-    let a_score: f64 = lines[0]
-        .split_whitespace()
-        .nth(1)
-        .unwrap()
-        .parse()
-        .expect("score parse");
-    let b_score: f64 = lines[1]
-        .split_whitespace()
-        .nth(1)
-        .unwrap()
-        .parse()
-        .expect("score parse");
-
-    assert!(b_score >= a_score);
-}
-
-#[test]
 fn test_note_relative_path() {
     let (_db_temp, db_path) = temp_dir();
     let (_working_temp, working_path) = temp_dir();
@@ -139,29 +105,6 @@ fn test_frecency_ordering() {
     assert_eq!(lines[0], dir_b.to_str().unwrap());
     assert_eq!(lines[1], dir_a.to_str().unwrap());
     assert_eq!(lines[2], dir_c.to_str().unwrap());
-}
-
-#[test]
-fn test_frecency_ordering_with_scores() {
-    let (_db_temp, db_path) = temp_dir();
-    let (_working_temp, working_path) = temp_dir();
-
-    let dir_a = create_test_directory(&working_path, "dir_a");
-    let dir_b = create_test_directory(&working_path, "dir_b");
-    let dir_c = create_test_directory(&working_path, "dir_c");
-
-    note_path(&db_path, None, dir_a.to_str().unwrap(), 10, false);
-    sleep(500);
-    note_path(&db_path, None, dir_b.to_str().unwrap(), 1, false);
-    sleep(500);
-    note_path(&db_path, None, dir_c.to_str().unwrap(), 10, false);
-
-    let lines = list_paths(&db_path, None, &["--include-frecency-score"]);
-
-    assert_eq!(lines.len(), 3);
-    assert!(lines[0].starts_with(dir_b.to_str().unwrap()));
-    assert!(lines[1].starts_with(dir_a.to_str().unwrap()));
-    assert!(lines[2].starts_with(dir_c.to_str().unwrap()));
 }
 
 #[test]

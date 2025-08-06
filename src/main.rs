@@ -214,12 +214,8 @@ fn list_paths(conn: &Connection, args: &ListArgs) {
     }
 
     results.sort_by(|a, b| a.1.partial_cmp(&b.1).expect("Sort results failed"));
-    for (path, score) in results {
-        if args.include_frecency_score {
-            println!("{path}\t{score}");
-        } else {
-            println!("{path}");
-        }
+    for (path, _) in results {
+        println!("{path}");
     }
 }
 

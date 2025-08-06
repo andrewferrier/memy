@@ -60,8 +60,4 @@ pub struct ListArgs {
     /// Show only directories in the list
     #[arg(short, long)]
     pub directories_only: bool,
-
-    /// Include frecency score in output
-    #[arg(long)]
-    pub include_frecency_score: bool,
 }
