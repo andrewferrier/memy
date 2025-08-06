@@ -69,6 +69,8 @@ TODO: Explain how to use hooks.
 - [Linux (ARM64)](https://github.com/andrewferrier/memy/releases/latest/download/memy-linux-aarch64)
 - [Linux (ARM64) - Static Binary using musl](https://github.com/andrewferrier/memy/releases/latest/download/memy-linux-aarch64-musl)
 
+The binaries for MacOS are not currently signed, and so [you will have to work around this](https://www.macworld.com/article/672947/how-to-open-a-mac-app-from-an-unidentified-developer.html).
+
 - [MacOS (Apple Silicon)](https://github.com/andrewferrier/memy/releases/latest/download/memy-macos-aarch64)
 - [MacOS (Intel)](https://github.com/andrewferrier/memy/releases/latest/download/memy-macos-x86_64)
 
