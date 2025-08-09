@@ -1,7 +1,7 @@
 use clap::CommandFactory;
 use clap::Parser;
 use env_logger::{Builder, Env};
-use log::{info, warn, LevelFilter};
+use log::{error, info, warn, LevelFilter};
 use rusqlite::{params, Connection, OptionalExtension};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -252,6 +252,11 @@ fn main() {
     match cli.command {
         Commands::Note(note_args) => {
             let db_connection = db::open_db();
+
+            if note_args.paths.is_empty() {
+                error!("You must specify some paths to note");
+                std::process::exit(1);
+            }
             for path in note_args.paths {
                 note_path(&db_connection, &path);
             }
