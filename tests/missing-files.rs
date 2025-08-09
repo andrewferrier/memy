@@ -11,14 +11,14 @@ fn test_note_nonexistent_file_ignore_silently() {
     create_config_file(&config_path, config_contents);
 
     let test_path = "/tmp/this_file_should_not_exist_ignore_silently";
-    let output = memy_cmd(&db_path, Some(&config_path), &["note", test_path])
+    let output = note_path(&db_path, Some(&config_path), test_path, 1, &[], &[])
         .output()
         .expect("Failed to execute command");
 
     assert!(output.status.success());
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(stderr.is_empty());
-    let lines = list_paths(&db_path, Some(&config_path), &[]);
+    let lines = list_paths(&db_path, Some(&config_path), &[], &[]);
     assert!(lines.is_empty());
 }
 
@@ -30,13 +30,13 @@ fn test_note_nonexistent_file_ignore_with_warning() {
     create_config_file(&config_path, config_contents);
 
     let test_path = "/tmp/this_file_should_not_exist_ignore_with_warning";
-    let output = memy_cmd(&db_path, Some(&config_path), &["note", test_path])
+    let output = note_path(&db_path, Some(&config_path), test_path, 1, &[], &[])
         .output()
         .expect("Failed to execute command");
 
     assert!(output.status.success());
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(stderr.contains("does not exist"));
-    let lines = list_paths(&db_path, Some(&config_path), &[]);
+    let lines = list_paths(&db_path, Some(&config_path), &[], &[]);
     assert!(lines.is_empty());
 }

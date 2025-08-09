@@ -20,7 +20,8 @@ fn test_recency_bias_0() {
         Some(&config_path),
         dir_a.to_str().unwrap(),
         2,
-        false,
+        &[],
+        &[],
     );
     sleep(Duration::from_secs(1));
     note_path(
@@ -28,13 +29,14 @@ fn test_recency_bias_0() {
         Some(&config_path),
         dir_b.to_str().unwrap(),
         1,
-        false,
+        &[],
+        &[],
     );
 
     let config_contents = "recency_bias=0\n";
     create_config_file(&config_path, config_contents);
 
-    let lines = list_paths(&db_path, Some(&config_path), &[]);
+    let lines = list_paths(&db_path, Some(&config_path), &[], &[]);
 
     assert!(
         lines.iter().position(|line| line.contains("dir_b"))
@@ -56,7 +58,8 @@ fn test_recency_bias_1() {
         Some(&config_path),
         dir_a.to_str().unwrap(),
         2,
-        false,
+        &[],
+        &[],
     );
     sleep(Duration::from_secs(1));
     note_path(
@@ -64,13 +67,14 @@ fn test_recency_bias_1() {
         Some(&config_path),
         dir_b.to_str().unwrap(),
         1,
-        false,
+        &[],
+        &[],
     );
 
     let config_contents = "recency_bias=1\n";
     create_config_file(&config_path, config_contents);
 
-    let lines = list_paths(&db_path, Some(&config_path), &[]);
+    let lines = list_paths(&db_path, Some(&config_path), &[], &[]);
 
     assert!(
         lines.iter().position(|line| line.contains("dir_a"))

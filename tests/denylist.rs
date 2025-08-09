@@ -22,7 +22,8 @@ fn test_denylist_excludes_file() {
         Some(&config_path),
         deny_file.to_str().unwrap(),
         1,
-        false,
+        &[],
+        &[],
     )
     .output()
     .expect("Failed to execute command");
@@ -31,7 +32,7 @@ fn test_denylist_excludes_file() {
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(stderr.contains("denied"));
 
-    let lines: Vec<String> = list_paths(&db_path, Some(&config_path), &[]);
+    let lines: Vec<String> = list_paths(&db_path, Some(&config_path), &[], &[]);
     assert_eq!(lines.len(), 0);
 }
 
@@ -53,7 +54,8 @@ fn test_denylist_excludes_file_with_subdir_glob() {
         Some(&config_path),
         deny_file.to_str().unwrap(),
         1,
-        false,
+        &[],
+        &[],
     )
     .output()
     .expect("Failed to execute command");
@@ -61,7 +63,7 @@ fn test_denylist_excludes_file_with_subdir_glob() {
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(stderr.contains("denied"));
 
-    let lines: Vec<String> = list_paths(&db_path, Some(&config_path), &[]);
+    let lines: Vec<String> = list_paths(&db_path, Some(&config_path), &[], &[]);
     assert_eq!(lines.len(), 0);
 }
 
@@ -83,7 +85,8 @@ fn test_denylist_excludes_file_with_double_star_glob() {
         Some(&config_path),
         deny_file.to_str().unwrap(),
         1,
-        false,
+        &[],
+        &[],
     )
     .output()
     .expect("Failed to execute command");
@@ -92,7 +95,7 @@ fn test_denylist_excludes_file_with_double_star_glob() {
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(stderr.contains("denied"));
 
-    let lines: Vec<String> = list_paths(&db_path, Some(&config_path), &[]);
+    let lines: Vec<String> = list_paths(&db_path, Some(&config_path), &[], &[]);
     assert_eq!(lines.len(), 0);
 }
 
@@ -117,7 +120,8 @@ fn test_denylist_excludes_multiple_patterns() {
         Some(&config_path),
         file1.to_str().unwrap(),
         1,
-        false,
+        &[],
+        &[],
     )
     .output()
     .expect("Failed to execute command");
@@ -131,7 +135,8 @@ fn test_denylist_excludes_multiple_patterns() {
         Some(&config_path),
         file2.to_str().unwrap(),
         1,
-        false,
+        &[],
+        &[],
     )
     .output()
     .expect("Failed to execute command");
@@ -140,7 +145,7 @@ fn test_denylist_excludes_multiple_patterns() {
     let stderr2 = String::from_utf8_lossy(&output2.stderr);
     assert!(stderr2.contains("denied"));
 
-    let lines: Vec<String> = list_paths(&db_path, Some(&config_path), &[]);
+    let lines: Vec<String> = list_paths(&db_path, Some(&config_path), &[], &[]);
     assert_eq!(lines.len(), 0);
 }
 
@@ -160,7 +165,8 @@ fn test_denylist_pattern_with_leading_double_star() {
         Some(&config_path),
         file1.to_str().unwrap(),
         1,
-        false,
+        &[],
+        &[],
     )
     .output()
     .expect("Failed to execute command");
@@ -169,7 +175,7 @@ fn test_denylist_pattern_with_leading_double_star() {
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(stderr.contains("denied"));
 
-    let lines: Vec<String> = list_paths(&db_path, Some(&config_path), &[]);
+    let lines: Vec<String> = list_paths(&db_path, Some(&config_path), &[], &[]);
     assert_eq!(lines.len(), 0);
 }
 
@@ -191,7 +197,8 @@ fn test_denylist_excludes_file_no_warning_when_warn_disabled() {
         Some(&config_path),
         deny_file.to_str().unwrap(),
         1,
-        false,
+        &[],
+        &[],
     )
     .output()
     .expect("Failed to execute command");
@@ -200,7 +207,7 @@ fn test_denylist_excludes_file_no_warning_when_warn_disabled() {
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(stderr.is_empty());
 
-    let lines: Vec<String> = list_paths(&db_path, Some(&config_path), &[]);
+    let lines: Vec<String> = list_paths(&db_path, Some(&config_path), &[], &[]);
     assert_eq!(lines.len(), 0);
 }
 
@@ -217,7 +224,8 @@ fn test_denied_files_on_list_delete_behavior() {
         Some(&config_path),
         deny_file.to_str().unwrap(),
         1,
-        false,
+        &[],
+        &[],
     )
     .output()
     .expect("Failed to execute command");
@@ -264,7 +272,8 @@ fn test_denied_files_on_list_warn_behavior() {
         Some(&config_path),
         deny_file.to_str().unwrap(),
         1,
-        false,
+        &[],
+        &[],
     )
     .output()
     .expect("Failed to execute command");
@@ -305,7 +314,8 @@ fn test_denied_files_on_list_skip_silently_behavior() {
         Some(&config_path),
         deny_file.to_str().unwrap(),
         1,
-        false,
+        &[],
+        &[],
     )
     .output()
     .expect("Failed to execute command");

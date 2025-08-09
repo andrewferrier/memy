@@ -22,10 +22,11 @@ fn test_note_symlink_with_no_normalize_option() {
         Some(&config_path),
         symlink_path.to_str().unwrap(),
         1,
-        false,
+        &[],
+        &[],
     );
 
-    let lines = list_paths(&db_path, Some(&config_path), &[]);
+    let lines = list_paths(&db_path, Some(&config_path), &[], &[]);
     assert_eq!(lines.len(), 1);
     assert_eq!(lines[0], symlink_path.to_str().unwrap());
 }

@@ -78,16 +78,17 @@ pub fn note_path(
     config_path: Option<&std::path::Path>,
     path: &str,
     count: usize,
-    no_normalize_symlinks: bool,
+    common_args: &[&str],
+    note_args: &[&str],
 ) -> assert_cmd::Command {
     let mut last_cmd = None;
 
     for _ in 0..count {
-        let mut args = vec!["note", path];
-
-        if no_normalize_symlinks {
-            args.push("--no-normalize-symlinks");
-        }
+        let mut args = Vec::new();
+        args.extend(common_args);
+        args.push("note");
+        args.extend(note_args);
+        args.push(path);
 
         let mut cmd = memy_cmd(db_path, config_path, &args);
         cmd.assert().success();
@@ -102,10 +103,13 @@ pub fn note_path(
 pub fn list_paths(
     db_path: &std::path::Path,
     config_path: Option<&std::path::Path>,
-    flags: &[&str],
+    common_args: &[&str],
+    list_args: &[&str],
 ) -> Vec<String> {
-    let mut args = vec!["list"];
-    args.extend(flags);
+    let mut args = Vec::new();
+    args.extend(common_args);
+    args.push("list");
+    args.extend(list_args);
 
     let output = memy_cmd(db_path, config_path, &args)
         .output()
