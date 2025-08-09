@@ -246,6 +246,7 @@ fn hook_show(hook_name: Option<String>) {
 
 fn main() {
     let cli = Cli::parse();
+    config::set_config_overrides(cli.config.clone());
 
     set_logging_level(&cli);
 

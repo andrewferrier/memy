@@ -15,8 +15,28 @@ pub struct Cli {
     #[arg(long, global = true)]
     pub debug: bool,
 
+    /// Override configuration options in config.toml
+    #[arg(short, long, value_parser = parse_key_val, value_name("OPTION=VALUE"), number_of_values = 1)]
+    pub config: Vec<(String, String)>,
+
     #[command(subcommand)]
     pub command: Commands,
+}
+
+#[allow(clippy::unnecessary_wraps)]
+fn parse_key_val(s: &str) -> Result<(String, String), String> {
+    let pos = s.find('=').unwrap_or_else(|| {
+        eprintln!("Invalid key=value pair: {s}");
+        std::process::exit(1);
+    });
+    let key = s[..pos].to_string();
+    let mut value = s[pos + 1..].to_string();
+    if (value.starts_with('"') && value.ends_with('"'))
+        || (value.starts_with('\'') && value.ends_with('\''))
+    {
+        value = value[1..value.len() - 1].to_string();
+    }
+    Ok((key, value))
 }
 
 #[derive(Subcommand, Debug)]

@@ -1,11 +1,13 @@
-use config::{Config, File, FileFormat};
+use config::{Config, File, FileFormat, Value};
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
-use log::{debug, error};
+use log::error;
 use serde::Deserialize;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
 use std::sync::LazyLock;
+use std::sync::OnceLock;
+use toml::Value as TomlValue;
 use xdg::BaseDirectories;
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, Clone, PartialEq, Eq)]
@@ -27,19 +29,6 @@ pub struct MemyConfig {
     pub recency_bias: Option<f64>,
 }
 
-impl Default for MemyConfig {
-    fn default() -> Self {
-        Self {
-            denylist: Some(vec![]),
-            normalize_symlinks_on_note: Some(true),
-            missing_files_warn_on_note: Some(true),
-            denied_files_warn_on_note: Some(true),
-            denied_files_on_list: Some(DeniedFilesOnList::Delete),
-            recency_bias: Some(0.5),
-        }
-    }
-}
-
 fn validate_recency_bias<'de, D>(deserializer: D) -> Result<Option<f64>, D::Error>
 where
     D: serde::Deserializer<'de>,
@@ -53,6 +42,9 @@ where
     }
     Ok(value)
 }
+
+static CACHED_CONFIG: LazyLock<MemyConfig> = LazyLock::new(load_config);
+static CONFIG_OVERRIDES: OnceLock<Vec<(String, String)>> = OnceLock::new();
 
 const TEMPLATE_CONFIG: &str = r#"# This is a configuration file for memy - the values below are the defaults.
 # **************************************
@@ -91,26 +83,76 @@ fn get_config_file_path() -> PathBuf {
         .expect("Cannot determine config file path")
 }
 
-fn load_config() -> MemyConfig {
-    let config_path = get_config_file_path();
-    debug!("Config path: {}", config_path.display());
-    if config_path.exists() {
-        debug!("Config file exists. Loading config...");
-        let settings = Config::builder()
-            .add_source(File::from(config_path).format(FileFormat::Toml))
-            .build();
-
-        if let Ok(actual_settings) = settings {
-            if let Ok(cfg) = actual_settings.try_deserialize::<MemyConfig>() {
-                return cfg;
-            }
+fn toml_to_config_value(toml_val: &TomlValue) -> Value {
+    match toml_val {
+        TomlValue::String(s) => Value::from(s.clone()),
+        TomlValue::Array(arr) => {
+            let vec_vals = arr.iter().map(toml_to_config_value).collect::<Vec<_>>();
+            Value::from(vec_vals)
+        }
+        _ => {
+            unimplemented!("TOML parser can't support any other data type here")
         }
     }
-    debug!("Defaulting config");
-    MemyConfig::default()
 }
 
-static CACHED_CONFIG: LazyLock<MemyConfig> = LazyLock::new(load_config);
+fn parse_toml_value(s: &str) -> Result<Value, Box<dyn std::error::Error>> {
+    let toml_snippet = format!("value = {s}");
+    let parsed: TomlValue = toml::from_str(&toml_snippet)?;
+    let inner = parsed
+        .get("value")
+        .ok_or("Missing 'value' in parsed toml")?;
+    let config_value = toml_to_config_value(inner);
+
+    Ok(config_value)
+}
+
+pub fn load_config() -> MemyConfig {
+    let default_config = Config::builder()
+        .add_source(File::from_str(TEMPLATE_CONFIG, FileFormat::Toml))
+        .build()
+        .expect("Defaults didn't load");
+
+    let mut builder = Config::builder().add_source(default_config.clone());
+
+    let config_path: PathBuf = get_config_file_path();
+
+    if config_path.exists() {
+        builder = builder.add_source(File::from(config_path).format(FileFormat::Toml));
+    }
+
+    for (key, value_str) in CONFIG_OVERRIDES.get().expect("Overrides not loaded") {
+        if key == "denylist" {
+            let value = parse_toml_value(value_str)
+                .expect("Failed to parse TOML value for denylist override");
+            builder = builder
+                .set_override(key, value)
+                .expect("Failed to set override for denylist");
+        } else {
+            builder = builder
+                .set_override(key, value_str.as_str())
+                .expect("Failed to set override");
+        }
+    }
+
+    builder
+        .build()
+        .and_then(Config::try_deserialize::<MemyConfig>)
+        .unwrap_or_else(|e| {
+            log::warn!(
+                "Failed to build or deserialize final config, falling back to defaults: {e}"
+            );
+            default_config
+                .try_deserialize()
+                .expect("Default config invalid")
+        })
+}
+
+pub fn set_config_overrides(overrides: Vec<(String, String)>) {
+    CONFIG_OVERRIDES
+        .set(overrides)
+        .expect("Overrides could not be set");
+}
 
 pub fn generate_config(filename: Option<&str>) {
     let (config_path, check_exists) = filename.map_or_else(
