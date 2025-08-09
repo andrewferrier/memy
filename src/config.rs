@@ -19,6 +19,7 @@ pub enum DeniedFilesOnList {
 }
 
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct MemyConfig {
     pub denylist: Option<Vec<String>>,
     pub normalize_symlinks_on_note: Option<bool>,
@@ -107,6 +108,24 @@ fn parse_toml_value(s: &str) -> Result<Value, Box<dyn std::error::Error>> {
     Ok(config_value)
 }
 
+fn test_config_file_issues(config_path: &PathBuf) {
+    let config_content = match fs::read_to_string(config_path) {
+        Ok(content) => content,
+        Err(err) => {
+            error!("Failed to read configuration file: {err}");
+            std::process::exit(1);
+        }
+    };
+
+    match toml::from_str::<MemyConfig>(&config_content) {
+        Ok(_) => {}
+        Err(err) => {
+            error!("Failed to parse configuration file: {err}");
+            std::process::exit(1);
+        }
+    }
+}
+
 pub fn load_config() -> MemyConfig {
     let default_config = Config::builder()
         .add_source(File::from_str(TEMPLATE_CONFIG, FileFormat::Toml))
@@ -118,6 +137,7 @@ pub fn load_config() -> MemyConfig {
     let config_path: PathBuf = get_config_file_path();
 
     if config_path.exists() {
+        test_config_file_issues(&config_path);
         builder = builder.add_source(File::from(config_path).format(FileFormat::Toml));
     }
 
