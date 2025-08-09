@@ -7,7 +7,7 @@ use clap::{Args, Parser, Subcommand};
 #[command(about = "Track and recall frequently and recently used files or directories.")]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Cli {
-    /// Enable verbose (info) logging
+    /// Enable verbose logging
     #[arg(short, long, global = true)]
     pub verbose: bool,
 
