@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.6.0](https://github.com/andrewferrier/memy/compare/v0.5.0...v0.6.0) (2025-08-06)
+
+
+### Features
+
+* Add bash hook ([4575255](https://github.com/andrewferrier/memy/commit/457525515da14ef60a404b0dca28288ebcdcd8a4))
+* Add initial zsh hook ([0acf076](https://github.com/andrewferrier/memy/commit/0acf07623d199aac8adda11e49198864aa3c0eeb))
+* Add plugin capability ([5fb10a8](https://github.com/andrewferrier/memy/commit/5fb10a865a9e46bff205daff37d24b3bd7452607))
+* Build man pages - closes [#27](https://github.com/andrewferrier/memy/issues/27) ([319c404](https://github.com/andrewferrier/memy/commit/319c4046e86dfda4ab3ca1f9f47253cb0b6bc9a2))
+* New frecency algorithm & recency_bias option - closes [#29](https://github.com/andrewferrier/memy/issues/29) ([76d57ed](https://github.com/andrewferrier/memy/commit/76d57ed634c85d15e98029a3ba631b8363607b50))
+* Produce config file annotated with comments - closes [#28](https://github.com/andrewferrier/memy/issues/28) ([4af4154](https://github.com/andrewferrier/memy/commit/4af4154a7c67c0f2b5170bf52b4dac13a87f53f5))
+* Remove --include-frecency-score option ([1ec6d07](https://github.com/andrewferrier/memy/commit/1ec6d07acabded6fb0728c29d0b66fa6a74d6d67))
+
+
+### Bug Fixes
+
+* Expand tilde when noting - closes [#32](https://github.com/andrewferrier/memy/issues/32) ([4f71a24](https://github.com/andrewferrier/memy/commit/4f71a2470fde9b5e964bcca3dec74ad740666130))
+* Sort list of hooks ([1f4fe4f](https://github.com/andrewferrier/memy/commit/1f4fe4fc901294c0e91a28c66b80d408702b472c))
+
+
+### Performance Improvements
+
+* Reduce size of dependencies ([fb28641](https://github.com/andrewferrier/memy/commit/fb286412b27c8675a2b0757b34ad79ea170b016e))
+
 ## [0.5.0](https://github.com/andrewferrier/memy/compare/v0.4.0...v0.5.0) (2025-07-27)
 
 
