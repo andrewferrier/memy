@@ -24,6 +24,8 @@ jobs:
       with:
         fetch-depth: 0  # Required to make git describe work
 
+    - uses: actions-rust-lang/audit@v1
+
     - name: Build
       run: cargo build --verbose
 
