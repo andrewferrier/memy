@@ -178,34 +178,17 @@ pub fn set_config_overrides(overrides: Vec<(String, String)>) {
         .expect("Overrides could not be set");
 }
 
-pub fn generate_config(filename: Option<&str>) {
-    let (config_path, check_exists) = filename.map_or_else(
-        || (get_config_file_path(), true),
-        |fname| {
-            let path = std::path::Path::new(fname);
-            let has_parent = path.parent().is_some_and(|p| p != std::path::Path::new(""));
-            let final_path = if has_parent {
-                path.to_path_buf()
-            } else if let Ok(dir) = env::var("MEMY_CONFIG_DIR") {
-                let mut p = PathBuf::from(dir);
-                p.push(fname);
-                p
-            } else {
-                let mut p = env::current_dir().expect("Failed to get current directory");
-                p.push(fname);
-                p
-            };
-            (final_path, false)
-        },
-    );
+pub fn generate_config(filename: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
+    let filename_pathbuf: Option<PathBuf> = filename.map(PathBuf::from);
+    let final_filename = filename_pathbuf.unwrap_or_else(get_config_file_path);
 
-    if check_exists && config_path.exists() {
-        error!("Config file already exists at {}", config_path.display());
-        std::process::exit(1);
+    if final_filename.exists() {
+        return Err(format!("Config file already exists at {}", final_filename.display()).into());
     }
 
-    fs::write(&config_path, TEMPLATE_CONFIG).expect("Failed to write config file");
-    println!("Config file created at {}", config_path.display());
+    fs::write(&final_filename, TEMPLATE_CONFIG)?;
+    println!("Config file created at {}", final_filename.display());
+    Ok(())
 }
 
 pub fn get_denylist_matcher() -> Gitignore {

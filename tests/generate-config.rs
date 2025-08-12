@@ -46,7 +46,7 @@ fn test_generate_config_explicit_filename_even_if_default_exists() {
     let output = memy_cmd(
         &db_path,
         Some(&config_path),
-        &["generate-config", "custom_config.toml"],
+        &["generate-config", &explicit_file.to_string_lossy()],
     )
     .output()
     .expect("Failed to execute command");

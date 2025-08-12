@@ -269,7 +269,10 @@ fn main() {
             list_paths(&db_connection, &list_args);
         }
         Commands::GenerateConfig { filename } => {
-            config::generate_config(filename.as_deref());
+            if let Err(err) = config::generate_config(filename.as_deref()) {
+                error!("{err}");
+                std::process::exit(1);
+            }
         }
         Commands::Completions { shell } => {
             completions(shell);
