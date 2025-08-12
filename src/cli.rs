@@ -1,6 +1,6 @@
 use clap::{Args, Parser, Subcommand};
 
-#[derive(Parser)]
+#[derive(Parser, Debug)]
 #[command(name = "memy")]
 #[command(version = option_env!("GIT_VERSION"))]
 #[command(author = "Andrew Ferrier")]
@@ -19,7 +19,7 @@ pub struct Cli {
     pub command: Commands,
 }
 
-#[derive(Subcommand)]
+#[derive(Subcommand, Debug)]
 pub enum Commands {
     /// Note usage of one or more paths
     Note(NoteArgs),
@@ -44,14 +44,14 @@ pub enum Commands {
     },
 }
 
-#[derive(Args)]
+#[derive(Args, Debug)]
 pub struct NoteArgs {
     /// One or more paths to note
     #[arg(value_name = "PATHS")]
     pub paths: Vec<String>,
 }
 
-#[derive(Args)]
+#[derive(Args, Debug)]
 pub struct ListArgs {
     /// Show only files in the list
     #[arg(short, long)]

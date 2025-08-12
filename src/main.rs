@@ -1,7 +1,7 @@
 use clap::CommandFactory;
 use clap::Parser;
 use env_logger::{Builder, Env};
-use log::{error, info, warn, LevelFilter};
+use log::{debug, error, info, warn, LevelFilter};
 use rusqlite::{params, Connection, OptionalExtension};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -248,6 +248,8 @@ fn main() {
     let cli = Cli::parse();
 
     set_logging_level(&cli);
+
+    debug!("CLI params parsed: {cli:?}");
 
     match cli.command {
         Commands::Note(note_args) => {
