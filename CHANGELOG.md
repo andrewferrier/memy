@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.7.0](https://github.com/andrewferrier/memy/compare/v0.6.0...v0.7.0) (2025-08-12)
+
+
+### Features
+
+* Additional debugging for CLI ([4f61374](https://github.com/andrewferrier/memy/commit/4f61374d5305a402ccfa631c421981e681d2171c))
+* Additional debugging for config ([5eeeb3d](https://github.com/andrewferrier/memy/commit/5eeeb3d9434ff7563334380c177218a244eda887))
+* Implement --config - closes [#31](https://github.com/andrewferrier/memy/issues/31) ([301485b](https://github.com/andrewferrier/memy/commit/301485b47fee6401a418595b05f5d8ebda1a3555))
+* Improve option description ([98ac18c](https://github.com/andrewferrier/memy/commit/98ac18c3fd8f9521a885157a5cd67343e4d4f424))
+* Warn if no paths are passed in to note ([401ba2d](https://github.com/andrewferrier/memy/commit/401ba2d7b53d12244971256521a5643b9d56f2c4))
+
+
+### Bug Fixes
+
+* Add denied files ignore for bash too ([5d509d0](https://github.com/andrewferrier/memy/commit/5d509d0f333b36b35fcceaaea58b4348c56eceac))
+* Default PROMPT_COMMAND if not set - closes [#37](https://github.com/andrewferrier/memy/issues/37) ([a520adb](https://github.com/andrewferrier/memy/commit/a520adbd1d093911774fe67342554c81693426af))
+* Error on incorrect fields in config ([0885c8e](https://github.com/andrewferrier/memy/commit/0885c8e0651c9c546ffa54fd29ed7f03e515605c))
+* Warns when navigating to denied dirs - closes [#36](https://github.com/andrewferrier/memy/issues/36) ([30388e5](https://github.com/andrewferrier/memy/commit/30388e56fcae80977e3ca4dcd623733d86fc56d6))
+
 ## [0.6.0](https://github.com/andrewferrier/memy/compare/v0.5.0...v0.6.0) (2025-08-06)
 
 
