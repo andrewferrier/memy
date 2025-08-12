@@ -6,7 +6,7 @@ _memy_note_hook() {
   for word in "$@"; do
     # shellcheck disable=SC2154
     if [[ -e "$word" ]]; then
-      memy note "$word"
+      memy --config denied_files_warn_on_note=false note "$word"
     fi
   done
 }
