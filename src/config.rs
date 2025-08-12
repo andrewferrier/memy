@@ -1,6 +1,6 @@
 use config::{Config, File, FileFormat, Value};
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
-use log::error;
+use log::{debug, error};
 use serde::Deserialize;
 use std::env;
 use std::fs;
@@ -155,7 +155,7 @@ pub fn load_config() -> MemyConfig {
         }
     }
 
-    builder
+    let config = builder
         .build()
         .and_then(Config::try_deserialize::<MemyConfig>)
         .unwrap_or_else(|e| {
@@ -165,7 +165,11 @@ pub fn load_config() -> MemyConfig {
             default_config
                 .try_deserialize()
                 .expect("Default config invalid")
-        })
+        });
+
+    debug!("Config loaded: {config:?}");
+
+    config
 }
 
 pub fn set_config_overrides(overrides: Vec<(String, String)>) {
