@@ -80,8 +80,8 @@ fn get_config_file_path() -> PathBuf {
 
     let xdg_dirs = BaseDirectories::with_prefix("memy");
     xdg_dirs
-        .place_config_file("memy.toml")
-        .expect("Cannot determine config file path")
+        .get_config_file("memy.toml")
+        .expect("Couldn't calculate XDG path for config file")
 }
 
 fn toml_to_config_value(toml_val: &TomlValue) -> Value {
