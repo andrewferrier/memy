@@ -135,9 +135,11 @@ pub fn load_config() -> MemyConfig {
     let mut builder = Config::builder().add_source(default_config.clone());
 
     let config_path: PathBuf = get_config_file_path();
+    debug!("Config file path resolved to {}", config_path.display());
 
     if config_path.exists() {
         test_config_file_issues(&config_path);
+        debug!("Config file looks OK");
         builder = builder.add_source(File::from(config_path).format(FileFormat::Toml));
     }
 
