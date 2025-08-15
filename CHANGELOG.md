@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.8.0](https://github.com/andrewferrier/memy/compare/v0.7.0...v0.8.0) (2025-08-15)
+
+
+### Features
+
+* Add more debugging output ([2321559](https://github.com/andrewferrier/memy/commit/2321559dd599dedcfda6c0566d9c60ac618d62df))
+* Add NeoVim hook ([a984f02](https://github.com/andrewferrier/memy/commit/a984f0271b5be51045accaa165f3f927335ae52a))
+* Add Vim hook ([e9ed9db](https://github.com/andrewferrier/memy/commit/e9ed9db07b4c8ff4639cc35184efb3345f59e882))
+
+
+### Bug Fixes
+
+* Add missing function param ([4563ed7](https://github.com/andrewferrier/memy/commit/4563ed783a1349065ba9cb147de6d66f77ba8223))
+* Don't create memy XDG path if doesn't exist ([6ece3bc](https://github.com/andrewferrier/memy/commit/6ece3bceaabe1639e51e8879a0d0b8c561bb9d18))
+
 ## [0.7.0](https://github.com/andrewferrier/memy/compare/v0.6.0...v0.7.0) (2025-08-12)
 
 
