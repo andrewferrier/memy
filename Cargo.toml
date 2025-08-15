@@ -44,6 +44,28 @@ clap_mangen = "0.2.29"
 lto = true
 codegen-units = 1
 
+[package.metadata.deb]
+maintainer = "Andrew Ferrier <andrew.ferrier@example.com>"
+depends = ""
+license-file = ["LICENSE"]
+assets = [
+    [
+        "target/release/memy",
+        "/usr/bin/",
+        "755",
+    ],
+    [
+        "README.md",
+        "/usr/share/doc/memy/README.md",
+        "644",
+    ],
+    [
+        "CHANGELOG.md",
+        "/usr/share/doc/memy/CHANGELOG.md",
+        "644",
+    ],
+]
+
 [lints.clippy]
 cargo = { level = "warn", priority = -1 }
 complexity = { level = "warn", priority = -1 }

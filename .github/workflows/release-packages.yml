@@ -44,6 +44,10 @@ jobs:
         if: runner.os == 'Linux'
         run: cargo install cross --git https://github.com/cross-rs/cross
 
+      - name: Install cargo-deb (non-MUSL Linux only)
+        if: runner.os == 'Linux'
+        run: cargo install cargo-deb
+
       - name: Build binary
         run: |
           if [[ "$RUNNER_OS" == "Linux" ]]; then
@@ -61,6 +65,13 @@ jobs:
 
           cp "$SRC_PATH" "dist/$DEST_NAME"
           chmod +x "dist/$DEST_NAME"
+
+      - name: Build .deb package (non-MUSL Linux only)
+        if: runner.os == 'Linux' && !contains(matrix.target, 'musl')
+        run: |
+          cargo deb --no-build --target ${{ matrix.target }}
+          cp $(ls target/debian/*.deb) dist/
+
       - name: Upload binaries to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
