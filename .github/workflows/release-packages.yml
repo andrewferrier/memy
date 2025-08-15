@@ -69,8 +69,7 @@ jobs:
       - name: Build .deb package (non-MUSL Linux only)
         if: runner.os == 'Linux' && !contains(matrix.target, 'musl')
         run: |
-          CARGO_DEB_STRIP=false cargo deb --no-build --target ${{ matrix.target }}
-          cargo deb --no-build --target ${{ matrix.target }}
+          cargo deb --no-strip --no-build --target ${{ matrix.target }}
           cp $(ls target/debian/*.deb) dist/
 
       - name: Upload binaries to GitHub Release
