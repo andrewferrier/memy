@@ -1,5 +1,7 @@
 #![allow(clippy::unwrap_used)]
 
+use serde_json::Value;
+
 mod support;
 use support::*;
 
@@ -105,6 +107,45 @@ fn test_frecency_ordering() {
     assert_eq!(lines[0], dir_b.to_str().unwrap());
     assert_eq!(lines[1], dir_a.to_str().unwrap());
     assert_eq!(lines[2], dir_c.to_str().unwrap());
+}
+
+#[test]
+fn test_list_json_format() {
+    let (_db_temp, db_path) = temp_dir();
+    let (_working_temp, working_path) = temp_dir();
+
+    let dir_a = create_test_directory(&working_path, "dir_a");
+    let dir_b = create_test_directory(&working_path, "dir_b");
+
+    note_path(&db_path, None, dir_a.to_str().unwrap(), 1, &[], &[]);
+    note_path(&db_path, None, dir_b.to_str().unwrap(), 1, &[], &[]);
+
+    let output = memy_cmd(&db_path, None, &["list", "--format=json"])
+        .output()
+        .expect("Failed to execute command");
+
+    assert!(output.status.success());
+
+    let stdout = String::from_utf8(output.stdout).expect("Invalid UTF-8 in output");
+    let json: Value = serde_json::from_str(&stdout).expect("Output is not valid JSON");
+
+    assert!(json.is_array(), "Output JSON is not an array");
+    let array = json.as_array().unwrap();
+
+    for item in array {
+        assert!(item.is_object(), "Array item is not an object");
+        let obj = item.as_object().unwrap();
+        assert!(obj.contains_key("path"), "Object missing 'path' field");
+        assert!(
+            obj.contains_key("frecency"),
+            "Object missing 'frecency' field"
+        );
+        assert!(obj.contains_key("count"), "Object missing 'count' field");
+        assert!(
+            obj.contains_key("last_noted"),
+            "Object missing 'last_noted' field"
+        );
+    }
 }
 
 #[test]

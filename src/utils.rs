@@ -1,3 +1,4 @@
+use chrono::{DateTime, Local, TimeZone};
 use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -6,6 +7,18 @@ pub fn get_secs_since_epoch() -> u64 {
         .duration_since(UNIX_EPOCH)
         .expect("Couldn't get seconds since epoch")
         .as_secs()
+}
+
+pub fn timestamp_to_iso8601(timestamp: u64) -> String {
+    let datetime: DateTime<Local> = Local
+        .timestamp_opt(
+            timestamp
+                .try_into()
+                .expect("Can't convert timestamp to signed"),
+            0,
+        )
+        .unwrap();
+    datetime.to_rfc3339()
 }
 
 pub fn detect_shell() -> Option<clap_complete::Shell> {

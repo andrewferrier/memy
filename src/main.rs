@@ -144,7 +144,15 @@ fn get_oldest_timestamp_and_highest_count(conn: &Connection, now: u64) -> (u64, 
     (oldest_last_noted_timestamp, highest_count)
 }
 
-fn list_paths(conn: &Connection, args: &ListArgs) {
+#[derive(serde::Serialize)]
+struct PathFrecency {
+    path: String,
+    frecency: f64,
+    count: u64,
+    last_noted: String,
+}
+
+fn list_paths_calculate(conn: &Connection, args: &ListArgs) -> Vec<PathFrecency> {
     let mut stmt = conn
         .prepare("SELECT path, noted_count, last_noted_timestamp FROM paths")
         .expect("Select failed");
@@ -160,7 +168,7 @@ fn list_paths(conn: &Connection, args: &ListArgs) {
 
     let now = utils::get_secs_since_epoch();
 
-    let mut results: Vec<(String, f64)> = vec![];
+    let mut results: Vec<PathFrecency> = vec![];
 
     let list_denied_action = config::get_denied_files_on_list();
     let matcher = config::get_denylist_matcher();
@@ -210,12 +218,37 @@ fn list_paths(conn: &Connection, args: &ListArgs) {
             highest_count,
             oldest_last_noted_timestamp_hours,
         );
-        results.push((path, frecency));
+        results.push(PathFrecency {
+            path,
+            frecency,
+            count,
+            last_noted: utils::timestamp_to_iso8601(last_noted_timestamp),
+        });
     }
 
-    results.sort_by(|a, b| a.1.partial_cmp(&b.1).expect("Sort results failed"));
-    for (path, _) in results {
-        println!("{path}");
+    results.sort_by(|a, b| {
+        a.frecency
+            .partial_cmp(&b.frecency)
+            .expect("Sort results failed")
+    });
+
+    results
+}
+
+fn list_paths(conn: &Connection, args: &ListArgs) {
+    let results = list_paths_calculate(conn, args);
+
+    match args.format.as_str() {
+        "json" => {
+            let json_output = serde_json::to_string_pretty(&results)
+                .expect("Failed to serialize results to JSON");
+            println!("{json_output}");
+        }
+        _ => {
+            for result in results {
+                println!("{}", result.path);
+            }
+        }
     }
 }
 

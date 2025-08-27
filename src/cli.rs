@@ -80,4 +80,17 @@ pub struct ListArgs {
     /// Show only directories in the list
     #[arg(short, long)]
     pub directories_only: bool,
+
+    /// Output format: 'plain' or 'json'
+    #[arg(long, default_value = "plain", value_name = "FORMAT", value_parser = validate_format)]
+    pub format: String,
+}
+
+fn validate_format(value: &str) -> Result<String, String> {
+    match value {
+        "plain" | "json" => Ok(value.to_string()),
+        _ => Err(String::from(
+            "Invalid value for --format. Allowed values are 'plain' or 'json'.",
+        )),
+    }
 }
