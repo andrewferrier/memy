@@ -54,11 +54,21 @@ Many of these more advanced tricks would work well configured as [shell aliases]
 
 Hooks in memy are scripts or other configuration files provided with memy that can be embedded into other tools' configurations. These hooks allow you to automatically note files as they are used, opened, or interacted with, integrating memy seamlessly into your workflow.
 
-For example, you might use a hook to automatically note files opened in your text editor or accessed via the command line. Hooks are designed to be a starting point and can be customized to suit your specific needs and preferences.
+For example, you might use a hook to automatically note files opened in your text editor or accessed via the command line, or directories you change to in your shell. Hooks are designed to be a starting point only and can be customized to suit your specific needs and preferences. Over time, we plan to grow the list of hooks available. Any contributions to the predefined hooks available would be very welcome as issues or pull requests [on this repository](https://github.com/andrewferrier/memy).
 
-By leveraging hooks, you can ensure that memy keeps track of your most-used files and directories without requiring manual intervention, making it an even more powerful tool for managing your workflow.
+### Using Hooks
 
-TODO: Explain how to use hooks.
+To see the list of current hooks provided by memy, type `memy hook`.
+
+To see the contents of a hook, type `memy hook <hookname>`. In future, we'll provide an easier way to automatically install some hooks. For now, the provided hooks can be installed like this:
+
+| Hook Name  | How to Install                                                 |
+| ---------- | -------------------------------------------------------------- |
+| bash       | Add `eval $(memy hook bash)` to `~/.bashrc` or similar         |
+| lfrc       | Copy the contents of `memy hook lfrc` into `~/.config/lf/lfrc` |
+| neovim.lua | Run `memy hook neovim.lua > ~/.config/nvim/memy.lua`           |
+| vim.vim    | Run `memy hook vim.vim > ~/.vim/plugin/memy.vim`               |
+| zsh        | Add `source <(memy hook zsh)` to `~/.zshrc` or similar         |
 
 ## Installation
 
