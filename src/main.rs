@@ -244,6 +244,13 @@ fn list_paths(conn: &Connection, args: &ListArgs) {
                 .expect("Failed to serialize results to JSON");
             println!("{json_output}");
         }
+        "csv" => {
+            let mut wtr = csv::Writer::from_writer(std::io::stdout());
+            for result in results {
+                wtr.serialize(result).expect("Cannot serialize CSV");
+            }
+            wtr.flush().expect("Cannot flush CSV");
+        }
         _ => {
             for result in results {
                 println!("{}", result.path);

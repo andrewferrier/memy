@@ -149,6 +149,34 @@ fn test_list_json_format() {
 }
 
 #[test]
+fn test_list_csv_format() {
+    let (_db_temp, db_path) = temp_dir();
+    let (_working_temp, working_path) = temp_dir();
+
+    let dir_a = create_test_directory(&working_path, "dir_a");
+    let dir_b = create_test_directory(&working_path, "dir_b");
+
+    note_path(&db_path, None, dir_a.to_str().unwrap(), 1, &[], &[]);
+    note_path(&db_path, None, dir_b.to_str().unwrap(), 1, &[], &[]);
+
+    let output = memy_cmd(&db_path, None, &["list", "--format=csv"])
+        .output()
+        .expect("Failed to execute command");
+
+    assert!(output.status.success());
+
+    let stdout = String::from_utf8(output.stdout).expect("Invalid UTF-8 in output");
+    let lines: Vec<&str> = stdout.lines().collect();
+
+    assert!(!lines.is_empty(), "CSV output is empty");
+
+    for line in lines {
+        let fields = line.split(',').count();
+        assert_eq!(fields, 4, "CSV line does not have 4 fields");
+    }
+}
+
+#[test]
 fn test_help_flag() {
     let (_db_temp, db_path) = temp_dir();
 
