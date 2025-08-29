@@ -2,11 +2,11 @@
 
 ![Tests](https://github.com/andrewferrier/memy/actions/workflows/tests.yml/badge.svg)
 
-**memy** is a modern, fast, and simple command-line tool to help you track and recall the files and directories you use most often. Many similar tools support only directories, but memy supports files too. Inspired by [fasd](https://github.com/clvv/fasd), memy remembers the paths you interact with, lists them back to you by a combination of frequency and recency ("frecency"), and makes it easy to build a workflow around them using standard Linux/Unix tools.
+**memy** is a modern, fast, and simple command-line tool to help you track and recall the files and directories you use most often. Many similar tools support only directories, but memy supports files too. Inspired by [fasd](https://github.com/clvv/fasd), memy (with the aid of hooks into your favourite tools) remembers the paths you interact with, lists them back to you by a combination of frequency and recency ("frecency"), and makes it easy to build a workflow around them using standard Linux/Unix tools.
 
-Unlike tools such as [zoxide](https://github.com/ajeetdsouza/zoxide), memy is less focused on providing a direct "jump" command for navigating directories. Instead, memy is designed to be a flexible backend for tracking your usage, which you can combine with tools like `fzf` and `cd` to jump around directories if you wish. Crucially, memy also supports tracking files you use - not just directories - unlike most other tools in this space (except for `fasd`, which is no longer maintained).
+Unlike tools such as [zoxide](https://github.com/ajeetdsouza/zoxide), memy is less focused on providing a direct "jump" command for navigating directories. Instead, memy is designed to be a flexible backend for tracking your usage, which you can combine with tools like [`fzf`](https://github.com/junegunn/fzf) and `cd` to jump around directories if you wish. Crucially, memy also supports tracking files you use - not just directories - unlike most other tools in this space (except for `fasd`, which is no longer maintained).
 
-memy is ideal for developers, sysadmins, and anyone who works with many files and directories and wants a smarter way to recall them.
+memy is ideal for developers, sysadmins, CLI power users, and anyone who works with many files and directories and wants a smarter way to recall them.
 
 ## Quick Start
 
@@ -15,6 +15,8 @@ memy is ideal for developers, sysadmins, and anyone who works with many files an
   ```sh
   memy note <path>
   ```
+
+  You are free to note a path whenever you wish, although typically this is done by the supplied hooks (see more information below).
 
 - List all remembered paths (in frecency order):
 
@@ -36,8 +38,7 @@ Many of these more advanced tricks would work well configured as [shell aliases]
   cd $(memy list -d | grep -i download | tail -1)
   ```
 
-- Open a recently used file in your editor, selecting it using `fzf` (assuming
-  your editor is `vim`.
+- Open a recently used file in your editor, selecting it using `fzf` (assuming your editor is `vim`).
 
   ```sh
   vim "$(memy list -f | fzf)"
