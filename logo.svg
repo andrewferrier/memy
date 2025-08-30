@@ -52,6 +52,13 @@
     </linearGradient>
   </defs>
   <!-- White background -->
+  <rect
+     x="0"
+     y="0"
+     width="200"
+     height="175"
+     fill="#ffffff"
+     id="background"/>
   <!-- Folder -->
   <rect
      x="12.917341"
