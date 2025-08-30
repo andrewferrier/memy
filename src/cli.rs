@@ -47,7 +47,7 @@ pub enum Commands {
     Note(NoteArgs),
     /// List paths by frecency score
     List(ListArgs),
-    /// Generate a template memy.toml config file
+    /// Generate a default memy.toml config file
     GenerateConfig {
         /// Optional output filename for the generated config
         #[arg(value_name = "FILENAME")]
