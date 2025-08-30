@@ -18,3 +18,17 @@ vim.api.nvim_create_autocmd({ "BufReadPre", "BufWritePost" }, {
         end)
     end,
 })
+
+local fzf_ok, _ = pcall(require, "fzf-lua")
+if fzf_ok then
+    vim.api.nvim_create_user_command("MemyFZF", function(_)
+        require("fzf-lua").fzf_exec("memy list -f", {
+            actions = require("fzf-lua.config").globals.actions.files,
+            fzf_opts = {
+                ["--exact"] = "",
+                ["--no-sort"] = "",
+            },
+            previewer = "builtin",
+        })
+    end, {})
+end
