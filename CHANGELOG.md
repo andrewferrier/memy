@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.9.0](https://github.com/andrewferrier/memy/compare/v0.8.0...v0.9.0) (2025-08-30)
+
+
+### Features
+
+* Add CSV output support ([e18bab8](https://github.com/andrewferrier/memy/commit/e18bab8b04ecfcee5ecbba271f1b1c927d28d854))
+* Add fish and ranger hooks, and improve instructions ([9a0f3ab](https://github.com/andrewferrier/memy/commit/9a0f3ab084b42c1c5a4dfc514388e28f9b9ffe16))
+* JSON output - closes [#44](https://github.com/andrewferrier/memy/issues/44) ([7863d8b](https://github.com/andrewferrier/memy/commit/7863d8bfde908f4ff284736bf1134a07e64de641))
+
+
+### Bug Fixes
+
+* Sort list of hooks - closes [#48](https://github.com/andrewferrier/memy/issues/48) ([1ddc24c](https://github.com/andrewferrier/memy/commit/1ddc24c6ee1dddbb9cd2d5d6b142072bd9170af9))
+
 ## [0.8.0](https://github.com/andrewferrier/memy/compare/v0.7.0...v0.8.0) (2025-08-15)
 
 
