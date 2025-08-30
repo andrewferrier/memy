@@ -5,5 +5,7 @@ pub fn get_hook_content(name: &str) -> Option<&'static str> {
 }
 
 pub fn get_hook_list() -> Vec<&'static str> {
-    hooks_generated::HOOKS.keys().copied().collect()
+    let mut keys: Vec<&'static str> = hooks_generated::HOOKS.keys().copied().collect();
+    keys.sort_unstable();
+    keys
 }
