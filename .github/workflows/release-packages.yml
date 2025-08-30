@@ -70,7 +70,7 @@ jobs:
         if: runner.os == 'Linux' && !contains(matrix.target, 'musl')
         run: |
           cargo deb --no-strip --no-build --target ${{ matrix.target }}
-          cp $(ls target/debian/*.deb) dist/
+          cp $(ls target/debian/*.deb) dist/memy_latest_amd64.deb
 
       - name: Upload binaries to GitHub Release
         uses: softprops/action-gh-release@v2
