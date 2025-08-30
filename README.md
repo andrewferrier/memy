@@ -60,15 +60,17 @@ For example, you might use a hook to automatically note files opened in your tex
 
 To see the list of current hooks provided by memy, type `memy hook`.
 
-To see the contents of a hook, type `memy hook <hookname>`. In future, we'll provide an easier way to automatically install some hooks. For now, the provided hooks can be installed like this:
+To see the contents of a hook, type `memy hook <hookname>`. In future, we'll provide an easier way to automatically install some hooks. For now, the provided hooks can be installed like this (please be careful to make sure you backup any configuration files etc. before running these commands to avoid mishaps):
 
-| Hook Name  | How to Install                                                 |
-| ---------- | -------------------------------------------------------------- |
-| bash       | Add `eval $(memy hook bash)` to `~/.bashrc` or similar         |
-| lfrc       | Copy the contents of `memy hook lfrc` into `~/.config/lf/lfrc` |
-| neovim.lua | Run `memy hook neovim.lua > ~/.config/nvim/memy.lua`           |
-| vim.vim    | Run `memy hook vim.vim > ~/.vim/plugin/memy.vim`               |
-| zsh        | Add `source <(memy hook zsh)` to `~/.zshrc` or similar         |
+| Hook Name      | How to Install                                              |
+| -------------- | ----------------------------------------------------------- |
+| bash           | Add `eval $(memy hook bash)` to `~/.bashrc` or similar      |
+| fish.fish      | Run `memy hook fish.fish >> ~/.config/fish/config.fish`     |
+| lfrc           | Run `memy hook lfrc >> ~/.config/lf/lfrc`                   |
+| neovim.lua     | Run `memy hook neovim.lua > ~/.config/nvim/plugin/memy.lua` |
+| ranger.rc.conf | Run `memy hook ranger.rc.conf >> ~/.config/ranger/rc.conf`  |
+| vim.vim        | Run `memy hook vim.vim > ~/.vim/plugin/memy.vim`            |
+| zsh            | Add `source <(memy hook zsh)` to `~/.zshrc` or similar      |
 
 ## Installation
 
