@@ -11,7 +11,6 @@ keywords = ["cli", "file-tracking"]
 categories = ["Command line utilities"]
 
 [dependencies]
-atty = "0.2.14"
 chrono = "0.4.41"
 clap = { version = "4.5", default-features = false, features = [
     "derive",
