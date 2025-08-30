@@ -11,13 +11,9 @@ pub fn get_secs_since_epoch() -> u64 {
 
 pub fn timestamp_to_iso8601(timestamp: u64) -> String {
     let datetime: DateTime<Local> = Local
-        .timestamp_opt(
-            timestamp
-                .try_into()
-                .expect("Can't convert timestamp to signed"),
-            0,
-        )
-        .unwrap();
+        .timestamp_opt(timestamp.try_into().expect("Can't convert timestamp"), 0)
+        .single()
+        .expect("Can't convert timestamp");
     datetime.to_rfc3339()
 }
 
