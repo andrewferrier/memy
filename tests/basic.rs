@@ -278,3 +278,13 @@ fn test_directories_only_flag() {
 
     assert_eq!(lines[0], test_dir.to_str().unwrap());
 }
+
+#[test]
+fn test_graceful_when_db_missing() {
+    let (_db_temp, db_path) = temp_dir();
+
+    let output = memy_cmd(&db_path, None, &["list"])
+        .output()
+        .expect("Failed to run memy");
+    assert!(output.status.success());
+}
