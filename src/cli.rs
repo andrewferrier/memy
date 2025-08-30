@@ -5,7 +5,6 @@ use clap::{Args, Parser, Subcommand};
 #[command(version = option_env!("GIT_VERSION"))]
 #[command(author = "Andrew Ferrier")]
 #[command(about = "Track and recall frequently and recently used files or directories.")]
-#[allow(clippy::struct_excessive_bools)]
 pub struct Cli {
     /// Enable verbose logging
     #[arg(short, long, action = clap::ArgAction::Count, default_value_t = 0)]
@@ -19,7 +18,14 @@ pub struct Cli {
     pub command: Commands,
 }
 
-#[allow(clippy::unnecessary_wraps)]
+#[allow(
+    clippy::unnecessary_wraps,
+    reason = "The wrap is required by the clap framework"
+)]
+#[allow(
+    clippy::print_stderr,
+    reason = "This function is evaluated before logging framework is configured"
+)]
 fn parse_key_val(s: &str) -> Result<(String, String), String> {
     let pos = s.find('=').unwrap_or_else(|| {
         eprintln!("Invalid key=value pair: {s}");
@@ -84,7 +90,7 @@ pub struct ListArgs {
 
 fn validate_format(value: &str) -> Result<String, String> {
     match value {
-        "plain" | "csv" | "json" => Ok(value.to_string()),
+        "plain" | "csv" | "json" => Ok(value.to_owned()),
         _ => Err(String::from(
             "Invalid value for --format. Allowed values are 'plain', 'csv', or 'json'.",
         )),

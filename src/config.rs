@@ -1,7 +1,7 @@
 use config::{Config, File, FileFormat, Value};
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
 use log::{debug, error};
-use serde::Deserialize;
+use serde::Deserialize as _;
 use std::env;
 use std::fs;
 use std::path::PathBuf;

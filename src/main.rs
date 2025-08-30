@@ -6,13 +6,13 @@ mod hooks_generated;
 mod utils;
 
 use atty::Stream;
-use clap::CommandFactory;
-use clap::Parser;
+use clap::CommandFactory as _;
+use clap::Parser as _;
 use cli::{Cli, Commands, ListArgs};
 use config::DeniedFilesOnList;
 use home::home_dir;
 use log::{debug, error, info, warn};
-use rusqlite::{params, Connection, OptionalExtension};
+use rusqlite::{params, Connection, OptionalExtension as _};
 use std::fs;
 use std::path::{Path, PathBuf};
 use tracing::instrument;
@@ -282,7 +282,7 @@ fn completions(shell: Option<clap_complete::Shell>) {
         .or_else(utils::detect_shell)
         .expect("Could not determine shell. Specify one explicitly.");
     let mut cmd = Cli::command();
-    let bin_name = cmd.get_name().to_string();
+    let bin_name = cmd.get_name().to_owned();
     clap_complete::generate(actual_shell, &mut cmd, bin_name, &mut std::io::stdout());
 }
 
@@ -292,7 +292,7 @@ fn hook_show(hook_name: Option<String>) {
         if let Some(content) = hooks::get_hook_content(&actual_hook_name) {
             print!("{content}");
         } else {
-            eprintln!("Hook not found: {actual_hook_name}");
+            error!("Hook not found: {actual_hook_name}");
             std::process::exit(1);
         }
     } else {

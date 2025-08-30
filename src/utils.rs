@@ -1,4 +1,4 @@
-use chrono::{DateTime, Local, TimeZone};
+use chrono::{DateTime, Local, TimeZone as _};
 use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 

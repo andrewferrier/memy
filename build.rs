@@ -1,4 +1,4 @@
-use clap::CommandFactory;
+use clap::CommandFactory as _;
 use clap_mangen::Man;
 use std::fs::{create_dir_all, File};
 use std::io::BufWriter;
