@@ -2,7 +2,9 @@
 
 ![Tests](https://github.com/andrewferrier/memy/actions/workflows/tests.yml/badge.svg)
 
-![](./logo.svg)
+<p align="center">
+<img src="./logo.svg" />
+</p>
 
 **memy** is a modern, fast, and simple command-line tool to help you track and recall the files and directories you use most often. Many similar tools support only directories, but memy supports files too. Inspired by [fasd](https://github.com/clvv/fasd), memy (with the aid of hooks into your favourite tools) remembers the paths you interact with, lists them back to you by a combination of frequency and recency ("frecency"), and makes it easy to build a workflow around them using standard Linux/Unix tools.
 
