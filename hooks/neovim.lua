@@ -32,3 +32,13 @@ if fzf_ok then
         })
     end, {})
 end
+
+local minipick_ok, _ = pcall(require, "mini.pick")
+if minipick_ok then
+    vim.api.nvim_create_user_command("MemyMiniPick", function(_)
+        require("mini.pick").builtin.cli(
+            { command = { "memy", "list", "-f" } },
+            {}
+        )
+    end, {})
+end
