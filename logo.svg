@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
-   width="157.8125"
-   height="136.68596"
-   viewBox="0 0 101 87.479014"
+   width="200"
+   height="175"
+   viewBox="0 0 120.30071 105.26318"
    version="1.1"
    id="svg8"
    sodipodi:docname="logo.svg"
@@ -15,7 +15,7 @@
      id="namedview8"
      pagecolor="#ffffff"
      bordercolor="#000000"
-     borderopacity="0.25"
+     borderopacity="0"
      inkscape:showpageshadow="2"
      inkscape:pageopacity="0.0"
      inkscape:pagecheckerboard="0"
@@ -23,7 +23,7 @@
      showgrid="false"
      inkscape:zoom="3.735"
      inkscape:cx="76.305221"
-     inkscape:cy="56.626506"
+     inkscape:cy="92.503347"
      inkscape:window-width="1920"
      inkscape:window-height="1012"
      inkscape:window-x="0"
@@ -36,10 +36,10 @@
     <linearGradient
        id="folderGrad"
        x1="12.309777"
-       y1="37.774851"
+       y1="37.774853"
        x2="12.309777"
        y2="118.19873"
-       gradientTransform="matrix(1.2185436,0,0,0.82065181,-15,-31)"
+       gradientTransform="matrix(1.2185436,0,0,0.82065181,-3.0826583,-20.768801)"
        gradientUnits="userSpaceOnUse">
       <stop
          offset="0%"
@@ -54,8 +54,8 @@
   <!-- White background -->
   <!-- Folder -->
   <rect
-     x="1"
-     y="1"
+     x="12.917341"
+     y="11.231198"
      width="96"
      height="64"
      rx="8"
@@ -67,32 +67,32 @@
      style="fill:url(#folderGrad)" />
   <!-- Four muted bars inside folder -->
   <rect
-     x="13"
-     y="9.8800049"
+     x="24.917341"
+     y="20.111204"
      width="72"
      height="8"
      fill="#ff9999"
      id="rect4" />
   <!-- Red -->
   <rect
-     x="13"
-     y="19.880005"
+     x="24.917341"
+     y="30.111204"
      width="72"
      height="8"
      fill="#ffff99"
      id="rect5" />
   <!-- Yellow -->
   <rect
-     x="13"
-     y="29.880005"
+     x="24.917341"
+     y="40.111206"
      width="72"
      height="8"
      fill="#99ff99"
      id="rect6" />
   <!-- Green -->
   <rect
-     x="13"
-     y="39.880005"
+     x="24.917341"
+     y="50.111206"
      width="72"
      height="8"
      fill="#9999ff"
@@ -100,33 +100,33 @@
   <!-- Blue -->
   <!-- Clock icon with solid background and white hands -->
   <circle
-     cx="89"
-     cy="65"
+     cx="100.91734"
+     cy="75.231194"
      r="12"
      fill="#ff6f61"
      id="circle7" />
   <line
-     x1="89"
-     y1="65"
-     x2="89"
-     y2="59"
+     x1="100.91734"
+     y1="75.231194"
+     x2="100.91734"
+     y2="69.231194"
      stroke="#ffffff"
      stroke-width="2"
      stroke-linecap="round"
      id="line7" />
   <line
-     x1="89"
-     y1="65"
-     x2="95"
-     y2="69"
+     x1="100.91734"
+     y1="75.231194"
+     x2="106.91734"
+     y2="79.231194"
      stroke="#ffffff"
      stroke-width="2"
      stroke-linecap="round"
      id="line8" />
   <!-- Text "memy" in serif font -->
   <text
-     x="43.17403"
-     y="82.270264"
+     x="55.091373"
+     y="92.501457"
      font-family="Georgia, serif"
      font-size="14px"
      fill="#000000"
