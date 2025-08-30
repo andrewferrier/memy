@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.9.0](https://github.com/andrewferrier/memy/compare/v0.8.0...v0.9.0) (2025-08-30)
+
+
+### Features
+
+* 'default', not 'template' ([1ddbab5](https://github.com/andrewferrier/memy/commit/1ddbab5c2ecad64a41b508735c660c771d00bc11))
+* Add CSV output support ([e18bab8](https://github.com/andrewferrier/memy/commit/e18bab8b04ecfcee5ecbba271f1b1c927d28d854))
+* Add fish and ranger hooks, and improve instructions ([9a0f3ab](https://github.com/andrewferrier/memy/commit/9a0f3ab084b42c1c5a4dfc514388e28f9b9ffe16))
+* Add tracing support - closes [#45](https://github.com/andrewferrier/memy/issues/45) ([226ac4d](https://github.com/andrewferrier/memy/commit/226ac4d61a2eaa11540d58a10a63e05f48569b2a))
+* JSON output - closes [#44](https://github.com/andrewferrier/memy/issues/44) ([7863d8b](https://github.com/andrewferrier/memy/commit/7863d8bfde908f4ff284736bf1134a07e64de641))
+
+
+### Bug Fixes
+
+* Change Debian build logic to build consistent name ([4ea802c](https://github.com/andrewferrier/memy/commit/4ea802c577629e1bca3a7a647534ef478fe96945))
+* Remove use of unwrap() ([2e0a777](https://github.com/andrewferrier/memy/commit/2e0a777bb968290e771fd1ea3b8f887a008eb635))
+* Replace atty crate ([4966216](https://github.com/andrewferrier/memy/commit/496621685856c6b95675a830d33437c56b7a22bc))
+* Sort list of hooks - closes [#48](https://github.com/andrewferrier/memy/issues/48) ([1ddc24c](https://github.com/andrewferrier/memy/commit/1ddc24c6ee1dddbb9cd2d5d6b142072bd9170af9))
+
 ## [0.8.0](https://github.com/andrewferrier/memy/compare/v0.7.0...v0.8.0) (2025-08-15)
 
 
