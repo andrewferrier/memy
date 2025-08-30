@@ -62,7 +62,7 @@ For example, you might use a hook to automatically note files opened in your tex
 
 To see the list of current hooks provided by memy, type `memy hook`.
 
-To see the contents of a hook, type `memy hook <hookname>`. In future, we'll provide an easier way to automatically install some hooks. For now, the provided hooks can be installed like this (please be careful to make sure you backup any configuration files etc. before running these commands to avoid mishaps):
+To see the contents of a hook, type `memy hook <hookname>`. In future, we'll provide an easier way to [automatically install some hooks](https://github.com/andrewferrier/memy/issues/53). For now, the provided hooks can be installed like this (please be careful to make sure you backup any configuration files etc. before running these commands to avoid mishaps):
 
 | Hook Name      | How to Install                                              |
 | -------------- | ----------------------------------------------------------- |
