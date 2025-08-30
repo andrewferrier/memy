@@ -1,3 +1,32 @@
 cmd on-cd &{{
     memy note ${PWD} &
 }}
+
+# The following commands require fzf to be installed: https://github.com/junegunn/fzf
+
+cmd file-list-dir ${{
+    set -o noglob
+
+    DIR="$(FZF_TMUX_HEIGHT=100 memy list -d | fzf)"
+    if [ -n "$DIR" ]; then
+        DIR="$(printf '%s' "$DIR" | sed 's/\\/\\\\/g;s/"/\\"/g')"
+        lf -remote "send $id cd \"$DIR\""
+    fi
+}}
+
+cmd file-list-file ${{
+    set -o noglob
+
+    FILE="$(FZF_TMUX_HEIGHT=100 memy list -f | fzf)"
+    if [ -n "$FILE" ]; then
+        PARENT=$(dirname $FILE)
+        FILENAME=$(basename $FILE)
+        PARENT="$(printf '%s' "$PARENT" | sed 's/\\/\\\\/g;s/"/\\"/g')"
+        lf -remote "send $id cd \"$PARENT\""
+        FILENAME="$(printf '%s' "$FILENAME" | sed 's/\\/\\\\/g;s/"/\\"/g')"
+        lf -remote "send $id select \"$FILENAME\""
+    fi
+}}
+
+map <c-f> :file-list-file
+map <c-g> :file-list-dir
