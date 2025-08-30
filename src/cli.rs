@@ -8,12 +8,8 @@ use clap::{Args, Parser, Subcommand};
 #[allow(clippy::struct_excessive_bools)]
 pub struct Cli {
     /// Enable verbose logging
-    #[arg(short, long, global = true)]
-    pub verbose: bool,
-
-    /// Enable debug (very detailed) logging
-    #[arg(long, global = true)]
-    pub debug: bool,
+    #[arg(short, long, action = clap::ArgAction::Count, default_value_t = 0)]
+    pub verbose: u8,
 
     /// Override configuration options in config.toml
     #[arg(short, long, value_parser = parse_key_val, value_name("OPTION=VALUE"), number_of_values = 1)]

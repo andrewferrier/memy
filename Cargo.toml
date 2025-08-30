@@ -11,6 +11,7 @@ keywords = ["cli", "file-tracking"]
 categories = ["Command line utilities"]
 
 [dependencies]
+atty = "0.2.14"
 chrono = "0.4.41"
 clap = { version = "4.5", default-features = false, features = [
     "derive",
@@ -32,6 +33,9 @@ rusqlite = { version = "0.37", default-features = false, features = [
 serde = "1.0.219"
 serde_json = "1.0.143"
 toml = "0.9.2"
+tracing = "0.1.41"
+tracing-log = "0.2.0"
+tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
 xdg = { version = "3.0.0", default-features = false }
 
 [dev-dependencies]

@@ -1,35 +1,48 @@
-use clap::CommandFactory;
-use clap::Parser;
-use env_logger::{Builder, Env};
-use log::{debug, error, info, warn, LevelFilter};
-use rusqlite::{params, Connection, OptionalExtension};
-use std::fs;
-use std::path::{Path, PathBuf};
-
-mod config;
-use config::DeniedFilesOnList;
 mod cli;
+mod config;
 mod db;
 mod hooks;
 mod hooks_generated;
-use home::home_dir;
 mod utils;
-use crate::cli::{Cli, Commands, ListArgs};
 
-fn set_logging_level(cli: &Cli) {
-    let level;
+use atty::Stream;
+use clap::CommandFactory;
+use clap::Parser;
+use cli::{Cli, Commands, ListArgs};
+use config::DeniedFilesOnList;
+use home::home_dir;
+use log::{debug, error, info, warn};
+use rusqlite::{params, Connection, OptionalExtension};
+use std::fs;
+use std::path::{Path, PathBuf};
+use tracing::instrument;
+use tracing_log::LogTracer;
+use tracing_subscriber::{fmt, EnvFilter};
 
-    if cli.debug {
-        level = LevelFilter::Debug;
-    } else if cli.verbose {
-        level = LevelFilter::Info;
-    } else {
-        level = LevelFilter::Warn;
-    }
+fn configure_logging_and_tracing(cli: &Cli) {
+    LogTracer::init().expect("Failed to init LogTracer");
 
-    Builder::from_env(Env::default().default_filter_or(level.to_string()))
-        .target(env_logger::Target::Stderr)
-        .init();
+    let default_level = match cli.verbose {
+        0 => "warn",
+        1 => "info",
+        2 => "debug",
+        _ => "trace",
+    };
+
+    // RUST_LOG overrides --verbose if set
+    let env_filter =
+        EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new(default_level));
+
+    let subscriber = fmt::Subscriber::builder()
+        .with_env_filter(env_filter)
+        .with_ansi(atty::is(Stream::Stderr))
+        .with_span_events(fmt::format::FmtSpan::ENTER | fmt::format::FmtSpan::EXIT)
+        .event_format(fmt::format().compact())
+        .with_writer(std::io::stderr)
+        .without_time()
+        .finish();
+
+    tracing::subscriber::set_global_default(subscriber).expect("Failed to set subscriber");
 }
 
 fn expand_tilde(path: &str) -> PathBuf {
@@ -59,6 +72,7 @@ fn normalize_path_if_needed(path: &Path) -> String {
     }
 }
 
+#[instrument(level = "trace")]
 fn note_path(conn: &Connection, raw_path: &str) {
     let pathbuf = expand_tilde(raw_path);
     let path: &Path = pathbuf.as_path();
@@ -120,6 +134,7 @@ fn calculate_frecency(
     (1.0 - lambda).mul_add(freq_score, lambda * recency_score)
 }
 
+#[instrument(level = "trace")]
 fn get_oldest_timestamp_and_highest_count(conn: &Connection, now: u64) -> (u64, u64) {
     let oldest_last_noted_timestamp: u64 = conn
         .query_row(
@@ -152,6 +167,7 @@ struct PathFrecency {
     last_noted: String,
 }
 
+#[instrument(level = "trace")]
 fn list_paths_calculate(conn: &Connection, args: &ListArgs) -> Vec<PathFrecency> {
     let mut stmt = conn
         .prepare("SELECT path, noted_count, last_noted_timestamp FROM paths")
@@ -200,7 +216,7 @@ fn list_paths_calculate(conn: &Connection, args: &ListArgs) -> Vec<PathFrecency>
         let Ok(metadata) = fs::metadata(&path) else {
             conn.execute("DELETE FROM paths WHERE path = ?", params![path])
                 .expect("Delete failed");
-            info!("Path {path} no longer exists, deleted from database.");
+            warn!("Path {path} no longer exists, deleted from database.");
             continue;
         };
 
@@ -235,6 +251,7 @@ fn list_paths_calculate(conn: &Connection, args: &ListArgs) -> Vec<PathFrecency>
     results
 }
 
+#[instrument(level = "trace")]
 fn list_paths(conn: &Connection, args: &ListArgs) {
     let results = list_paths_calculate(conn, args);
 
@@ -259,6 +276,7 @@ fn list_paths(conn: &Connection, args: &ListArgs) {
     }
 }
 
+#[instrument(level = "trace")]
 fn completions(shell: Option<clap_complete::Shell>) {
     let actual_shell = shell
         .or_else(utils::detect_shell)
@@ -268,6 +286,7 @@ fn completions(shell: Option<clap_complete::Shell>) {
     clap_complete::generate(actual_shell, &mut cmd, bin_name, &mut std::io::stdout());
 }
 
+#[instrument(level = "trace")]
 fn hook_show(hook_name: Option<String>) {
     if let Some(actual_hook_name) = hook_name {
         if let Some(content) = hooks::get_hook_content(&actual_hook_name) {
@@ -288,8 +307,9 @@ fn main() {
     let cli = Cli::parse();
     config::set_config_overrides(cli.config.clone());
 
-    set_logging_level(&cli);
+    configure_logging_and_tracing(&cli);
 
+    debug!("Memy version {}", env!("GIT_VERSION"));
     debug!("CLI params parsed: {cli:?}");
 
     match cli.command {

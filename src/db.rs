@@ -2,12 +2,13 @@ use log::{debug, error};
 use rusqlite::Connection;
 use std::env;
 use std::path::PathBuf;
+use tracing::instrument;
 use xdg::BaseDirectories;
 
 const DB_VERSION: i32 = 1;
 
+#[instrument(level = "trace")]
 fn check_db_version(conn: &Connection) {
-    debug!("Checking database version...");
     let version: i32 = conn
         .query_row("PRAGMA user_version;", [], |row| row.get(0))
         .expect("Failed to read database version");
@@ -17,6 +18,7 @@ fn check_db_version(conn: &Connection) {
     }
 }
 
+#[instrument(level = "trace")]
 fn get_db_path() -> PathBuf {
     env::var("MEMY_DB_DIR").map_or_else(
         |_| {
@@ -29,8 +31,8 @@ fn get_db_path() -> PathBuf {
     )
 }
 
+#[instrument(level = "trace")]
 fn init_db(conn: &Connection) {
-    debug!("Initializing database...");
     conn.execute(
         "CREATE TABLE paths (
             path TEXT PRIMARY KEY,
@@ -42,9 +44,9 @@ fn init_db(conn: &Connection) {
     .expect("Failed to initialize database");
     conn.execute(&format!("PRAGMA user_version = {DB_VERSION};"), [])
         .expect("Failed to set database version");
-    debug!("Database initialized");
 }
 
+#[instrument(level = "trace")]
 pub fn open_db() -> Connection {
     let db_path = get_db_path();
     let db_path_str = db_path.to_string_lossy().to_string();
