@@ -82,7 +82,9 @@ To see the contents of a hook, type `memy hook <hookname>`. In future, we'll pro
 
 ### Download Debian / Ubuntu Package
 
-- [Linux (x86_64)](https://github.com/andrewferrier/memy/releases/latest/download/memy_latest_amd64.deb)
+- [Linux (x86_64/amd64)](https://github.com/andrewferrier/memy/releases/latest/download/memy_latest_amd64.deb)
+
+- [Linux (ARM64)](https://github.com/andrewferrier/memy/releases/latest/download/memy_latest_arm64.deb)
 
 [Install using dpkg or apt](https://unix.stackexchange.com/a/159114/18985). Currently, Debian packages are not in a signed repository.
 
