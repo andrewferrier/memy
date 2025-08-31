@@ -1,5 +1,7 @@
 use chrono::{DateTime, Local, TimeZone as _};
+use home::home_dir;
 use std::path::Path;
+use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub fn get_secs_since_epoch() -> u64 {
@@ -33,4 +35,13 @@ pub fn detect_shell() -> Option<clap_complete::Shell> {
             _ => None,
         }
     })
+}
+
+pub fn expand_tilde(path: &str) -> PathBuf {
+    if let Some(stripped) = path.strip_prefix("~") {
+        if let Some(home) = home_dir() {
+            return home.join(stripped);
+        }
+    }
+    PathBuf::from(path)
 }

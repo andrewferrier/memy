@@ -9,13 +9,12 @@ use clap::CommandFactory as _;
 use clap::Parser as _;
 use cli::{Cli, Commands, ListArgs};
 use config::DeniedFilesOnList;
-use home::home_dir;
 use log::{debug, error, info, warn};
 use rusqlite::{params, Connection, OptionalExtension as _};
 use std::fs;
 use std::io::stderr;
 use std::io::IsTerminal as _;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use tracing::instrument;
 use tracing_log::LogTracer;
 use tracing_subscriber::{fmt, EnvFilter};
@@ -46,20 +45,6 @@ fn configure_logging_and_tracing(cli: &Cli) {
     tracing::subscriber::set_global_default(subscriber).expect("Failed to set subscriber");
 }
 
-fn expand_tilde(path: &str) -> PathBuf {
-    if path == "~" {
-        if let Some(home) = home_dir() {
-            return home;
-        }
-    } else if let Some(stripped) = path.strip_prefix("~/") {
-        if let Some(home) = home_dir() {
-            return home.join(stripped);
-        }
-    }
-
-    PathBuf::from(path)
-}
-
 fn normalize_path_if_needed(path: &Path) -> String {
     let normalize = config::get_normalize_symlinks_on_note();
 
@@ -75,7 +60,7 @@ fn normalize_path_if_needed(path: &Path) -> String {
 
 #[instrument(level = "trace")]
 fn note_path(conn: &Connection, raw_path: &str) {
-    let pathbuf = expand_tilde(raw_path);
+    let pathbuf = utils::expand_tilde(raw_path);
     let path: &Path = pathbuf.as_path();
 
     if !path.exists() {
