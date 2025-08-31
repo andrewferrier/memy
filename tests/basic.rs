@@ -1,4 +1,4 @@
-#![allow(clippy::unwrap_used)]
+#![allow(clippy::unwrap_used, reason = "unwrap() OK inside tests")]
 
 use serde_json::Value;
 
@@ -62,7 +62,7 @@ fn test_note_and_list_paths_multiarg() {
     assert_eq!(lines.len(), 2);
     let paths: Vec<&str> = vec![dir_a.to_str().unwrap(), dir_b.to_str().unwrap()];
     for path in paths {
-        assert!(lines.contains(&path.to_string()), "Missing path: {path}");
+        assert!(lines.contains(&path.to_owned()), "Missing path: {path}");
     }
 }
 

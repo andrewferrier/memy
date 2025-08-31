@@ -1,4 +1,4 @@
-#![allow(clippy::unwrap_used)]
+#![allow(clippy::unwrap_used, reason = "unwrap() OK inside tests")]
 
 mod support;
 use support::*;

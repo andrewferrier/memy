@@ -1,15 +1,18 @@
-#![allow(clippy::unwrap_used)]
-#![allow(clippy::missing_panics_doc)]
-#![allow(clippy::must_use_candidate)]
+#![allow(clippy::unwrap_used, reason = "unwrap() OK inside tests")]
+#![allow(clippy::missing_panics_doc, reason = "Missing docs OK inside tests")]
+#![allow(
+    clippy::must_use_candidate,
+    reason = "Missing annotation OK inside tests"
+)]
+#![allow(dead_code, reason = "Dead code false +ves inside support.rs")]
 
 use assert_cmd::Command;
+use core::time::Duration;
 use std::fs;
 use std::path::PathBuf;
 use std::thread;
-use std::time::Duration;
 use tempfile::TempDir;
 
-#[must_use]
 pub fn temp_dir() -> (TempDir, PathBuf) {
     let temp_dir = TempDir::new().expect("failed to create temp dir");
     let path = temp_dir
@@ -19,14 +22,11 @@ pub fn temp_dir() -> (TempDir, PathBuf) {
     (temp_dir, path)
 }
 
-#[cfg_attr(test, allow(dead_code))]
 pub fn create_config_file(config_path: &std::path::Path, contents: &str) {
     let config_toml_path = config_path.join("memy.toml");
     fs::write(&config_toml_path, contents).expect("failed to write config");
 }
 
-#[cfg_attr(test, allow(dead_code))]
-#[must_use]
 pub fn create_test_file(
     dir: &std::path::Path,
     filename: &str,
@@ -37,15 +37,12 @@ pub fn create_test_file(
     file_path
 }
 
-#[cfg_attr(test, allow(dead_code))]
-#[must_use]
 pub fn create_test_directory(base: &std::path::Path, dirname: &str) -> std::path::PathBuf {
     let dir_path = base.join(dirname);
     std::fs::create_dir(&dir_path).expect("failed to create test directory");
     dir_path
 }
 
-#[must_use]
 pub fn memy_cmd(
     db_path: &std::path::Path,
     config_path: Option<&std::path::Path>,
@@ -67,12 +64,10 @@ pub fn memy_cmd(
     cmd
 }
 
-#[cfg_attr(test, allow(dead_code))]
 pub fn sleep(millis: u64) {
     thread::sleep(Duration::from_millis(millis));
 }
 
-#[cfg_attr(test, allow(dead_code))]
 pub fn note_path(
     db_path: &std::path::Path,
     config_path: Option<&std::path::Path>,
@@ -99,7 +94,6 @@ pub fn note_path(
     last_cmd.expect("note_path called with count == 0")
 }
 
-#[cfg_attr(test, allow(dead_code))]
 pub fn list_paths(
     db_path: &std::path::Path,
     config_path: Option<&std::path::Path>,
@@ -115,7 +109,7 @@ pub fn list_paths(
         .output()
         .expect("failed to run memy");
 
-    assert!(output.status.success());
+    assert!(output.status.success(), "memy list failed.");
 
     String::from_utf8_lossy(&output.stdout)
         .lines()

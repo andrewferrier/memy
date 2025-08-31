@@ -1,10 +1,10 @@
-#![allow(clippy::unwrap_used)]
+#![allow(clippy::unwrap_used, reason = "unwrap() OK inside tests")]
 
 mod support;
 use support::*;
 
+use core::time::Duration;
 use std::thread::sleep;
-use std::time::Duration;
 
 #[test]
 fn test_config_override_float() {

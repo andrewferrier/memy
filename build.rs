@@ -81,7 +81,7 @@ fn build_man_pages() -> std::io::Result<()> {
         let file = File::create(man_dir.join("memy.1"))?;
         let mut writer = BufWriter::new(file);
         Man::new(main_cmd.clone()).render(&mut writer)?;
-    }
+    };
 
     for subcmd in main_cmd.get_subcommands() {
         let file = File::create(man_dir.join(format!("memy-{}.1", subcmd.get_name())))?;

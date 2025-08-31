@@ -75,8 +75,7 @@ recency_bias = 0.5
 #[instrument(level = "trace")]
 fn get_config_file_path() -> PathBuf {
     if let Ok(dir) = env::var("MEMY_CONFIG_DIR") {
-        let mut path = PathBuf::from(dir);
-        path.push("memy.toml");
+        let path = PathBuf::from(dir).join("memy.toml");
         return path;
     }
 
@@ -99,7 +98,7 @@ fn toml_to_config_value(toml_val: &TomlValue) -> Value {
     }
 }
 
-fn parse_toml_value(s: &str) -> Result<Value, Box<dyn std::error::Error>> {
+fn parse_toml_value(s: &str) -> Result<Value, Box<dyn core::error::Error>> {
     let toml_snippet = format!("value = {s}");
     let parsed: TomlValue = toml::from_str(&toml_snippet)?;
     let inner = parsed
@@ -184,7 +183,7 @@ pub fn set_config_overrides(overrides: Vec<(String, String)>) {
 }
 
 #[instrument(level = "trace")]
-pub fn generate_config(filename: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
+pub fn generate_config(filename: Option<&str>) -> Result<(), Box<dyn core::error::Error>> {
     let filename_pathbuf: Option<PathBuf> = filename.map(PathBuf::from);
     let final_filename = filename_pathbuf.unwrap_or_else(get_config_file_path);
 
@@ -201,7 +200,9 @@ pub fn get_denylist_matcher() -> Gitignore {
     let config = &*CACHED_CONFIG;
     let mut builder = GitignoreBuilder::new("");
     for pat in config.denylist.clone().unwrap_or_default() {
-        let _ = builder.add_line(None, &pat);
+        builder
+            .add_line(None, &pat)
+            .unwrap_or_else(|_| panic!("Pattern {pat} not valid."));
     }
     builder.build().expect("Failed to build denylist matcher")
 }
