@@ -4,22 +4,19 @@ use std::fs::{create_dir_all, File};
 use std::io::BufWriter;
 use std::path::PathBuf;
 use std::process::Command;
-use std::{fs, io, path::Path};
+use std::{fs, path::Path};
 
 include!("src/cli.rs");
 
-fn read_dir_sorted<P: AsRef<Path>>(path: P) -> io::Result<Vec<fs::DirEntry>> {
-    let mut entries: Vec<fs::DirEntry> = fs::read_dir(path)?.filter_map(Result::ok).collect();
-    entries.sort_by_key(std::fs::DirEntry::file_name);
-    Ok(entries)
-}
-
 fn embed_hooks() {
-    let hooks_dir = Path::new("hooks");
-
     let mut entries = Vec::new();
 
-    for entry in read_dir_sorted(hooks_dir).expect("Cannot read hook dir") {
+    let read_dir: Vec<fs::DirEntry> = fs::read_dir(Path::new("hooks"))
+        .expect("Can't read hooks dir")
+        .filter_map(Result::ok)
+        .collect();
+
+    for entry in read_dir {
         let path = entry.path();
         if path.is_file() {
             let filename = path
@@ -63,6 +60,18 @@ fn get_git_version() {
     println!("cargo:rerun-if-changed=.git/refs/");
 }
 
+fn write_man_page(
+    man_dir: &Path,
+    file_base_name: String,
+    cmd: clap::Command,
+) -> std::io::Result<()> {
+    let file = File::create(man_dir.join(file_base_name))?;
+    let mut writer = BufWriter::new(file);
+    Man::new(cmd).render(&mut writer)?;
+
+    Ok(())
+}
+
 fn build_man_pages() -> std::io::Result<()> {
     let build_root_dir = std::env::var("CARGO_MANIFEST_DIR")
         .ok() // converts Result -> Option
@@ -77,20 +86,14 @@ fn build_man_pages() -> std::io::Result<()> {
 
     let main_cmd = Cli::command();
 
-    {
-        let file = File::create(man_dir.join("memy.1"))?;
-        let mut writer = BufWriter::new(file);
-        Man::new(main_cmd.clone()).render(&mut writer)?;
-    };
+    write_man_page(&man_dir, "memy.1".to_owned(), main_cmd.clone())?;
 
     for subcmd in main_cmd.get_subcommands() {
-        let file = File::create(man_dir.join(format!("memy-{}.1", subcmd.get_name())))?;
-        let mut writer = BufWriter::new(file);
         let sub = main_cmd
             .find_subcommand(subcmd.get_name())
             .expect("Subcommand not found")
             .clone();
-        Man::new(sub).render(&mut writer)?;
+        write_man_page(&man_dir, format!("memy-{}.1", subcmd.get_name()), sub)?;
     }
 
     Ok(())
