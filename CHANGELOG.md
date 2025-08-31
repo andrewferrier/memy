@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.10.0](https://github.com/andrewferrier/memy/compare/v0.9.0...v0.10.0) (2025-08-31)
+
+
+### Features
+
+* Add MemyFZF command to NeoVim hook ([53ab064](https://github.com/andrewferrier/memy/commit/53ab064c46c9b706287e30e87a11268a15063c27))
+* Add MemyMiniPick to NeoVim hook ([dca5442](https://github.com/andrewferrier/memy/commit/dca54427db69741b42ce033bad44709491d0a6b7))
+* Provide switch dir/file command for lf - closes [#49](https://github.com/andrewferrier/memy/issues/49) ([51112dd](https://github.com/andrewferrier/memy/commit/51112dd678cc65194ad66043040191ab9276ff64))
+
 ## [0.9.0](https://github.com/andrewferrier/memy/compare/v0.8.0...v0.9.0) (2025-08-30)
 
 
