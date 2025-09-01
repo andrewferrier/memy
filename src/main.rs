@@ -10,7 +10,7 @@ use clap::Parser as _;
 use cli::{Cli, Commands, ListArgs};
 use config::DeniedFilesOnList;
 use log::{debug, error, info, warn};
-use rusqlite::{params, Connection, OptionalExtension as _};
+use rusqlite::{params, Connection, OptionalExtension as _, Transaction};
 use std::fs;
 use std::io::stderr;
 use std::io::IsTerminal as _;
@@ -59,7 +59,7 @@ fn normalize_path_if_needed(path: &Path) -> String {
 }
 
 #[instrument(level = "trace")]
-fn note_path(conn: &Connection, raw_path: &str) {
+fn note_path(tx: &Transaction, raw_path: &str) {
     let pathbuf = utils::expand_tilde(raw_path);
     let path = pathbuf.as_path();
 
@@ -78,11 +78,12 @@ fn note_path(conn: &Connection, raw_path: &str) {
         if config::get_denied_files_warn_on_note() {
             warn!("Path denied by denylist pattern.");
         }
+
         return;
     }
 
     let now = utils::get_secs_since_epoch();
-    conn.execute(
+    tx.execute(
         "INSERT INTO paths (path, noted_count, last_noted_timestamp) VALUES (?1, 1, ?2) \
             ON CONFLICT(path) DO UPDATE SET \
                 noted_count = noted_count + 1, \
@@ -299,15 +300,21 @@ fn main() {
 
     match cli.command {
         Commands::Note(note_args) => {
-            let db_connection = db::open_db();
-
             if note_args.paths.is_empty() {
                 error!("You must specify some paths to note");
                 std::process::exit(1);
             }
+
+            let mut db_connection = db::open_db();
+            let tx = db_connection
+                .transaction()
+                .expect("Cannot start DB transaction");
+
             for path in note_args.paths {
-                note_path(&db_connection, &path);
+                note_path(&tx, &path);
             }
+
+            tx.commit().expect("Cannot commit transaction");
         }
         Commands::List(list_args) => {
             let db_connection = db::open_db();
