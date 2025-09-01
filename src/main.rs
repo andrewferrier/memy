@@ -228,7 +228,7 @@ fn list_paths_calculate(conn: &Connection, args: &ListArgs) -> Vec<PathFrecency>
         });
     }
 
-    results.sort_by(|a, b| {
+    results.sort_unstable_by(|a, b| {
         a.frecency
             .partial_cmp(&b.frecency)
             .expect("Sort results failed")
