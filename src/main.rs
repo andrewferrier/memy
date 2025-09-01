@@ -61,7 +61,7 @@ fn normalize_path_if_needed(path: &Path) -> String {
 #[instrument(level = "trace")]
 fn note_path(conn: &Connection, raw_path: &str) {
     let pathbuf = utils::expand_tilde(raw_path);
-    let path: &Path = pathbuf.as_path();
+    let path = pathbuf.as_path();
 
     if !path.exists() {
         if config::get_missing_files_warn_on_note() {
@@ -93,7 +93,7 @@ fn note_path(conn: &Connection, raw_path: &str) {
     info!("Path {clean_path} noted");
 }
 
-fn timestamp_to_age_hours(now: u64, timestamp: u64) -> f64 {
+fn timestamp_age_hours(now: u64, timestamp: u64) -> f64 {
     let age_seconds = now - timestamp;
     age_seconds as f64 / 3600.0
 }
@@ -177,8 +177,7 @@ fn list_paths_calculate(conn: &Connection, args: &ListArgs) -> Vec<PathFrecency>
 
     let (oldest_last_noted_timestamp, highest_count) =
         get_oldest_timestamp_and_highest_count(conn, now);
-    let oldest_last_noted_timestamp_hours =
-        timestamp_to_age_hours(now, oldest_last_noted_timestamp);
+    let oldest_last_noted_timestamp_hours = timestamp_age_hours(now, oldest_last_noted_timestamp);
 
     for (path, count, last_noted_timestamp) in rows.into_iter().flatten() {
         if let ignore::Match::Ignore(_matched_pat) = matcher.matched(&path, false) {
@@ -216,7 +215,7 @@ fn list_paths_calculate(conn: &Connection, args: &ListArgs) -> Vec<PathFrecency>
 
         let frecency = calculate_frecency(
             count,
-            timestamp_to_age_hours(now, last_noted_timestamp),
+            timestamp_age_hours(now, last_noted_timestamp),
             highest_count,
             oldest_last_noted_timestamp_hours,
         );
