@@ -73,6 +73,21 @@ assets = [
     ]
 ]
 
+[package.metadata.generate-rpm]
+summary = "Track and recall frequently and recently used files or directories."
+description = "memy is a modern, fast, and simple command-line tool to help you track and recall the files and directories you use most often. Many similar tools support only directories, but memy supports files too. Inspired by fasd, memy (with the aid of hooks into your favourite tools) remembers the paths you interact with, lists them back to you by a combination of frequency and recency ('frecency'), and makes it easy to build a workflow around them using standard Linux/Unix tools."
+license = "MIT"
+vendor = "Andrew Ferrier <andrew.ferrier@example.com>"
+url = "https://github.com/andrewferrier/memy"
+changelog = "CHANGELOG.md"
+assets = [
+    { source = "target/release/memy", dest = "/usr/bin/", mode = "755" },
+    { source = "README.md", dest = "/usr/share/doc/memy/README.md", mode = "644" },
+    { source = "LICENSE", dest = "/usr/share/doc/memy/LICENSE", mode = "644" },
+    { source = "CHANGELOG.md", dest = "/usr/share/doc/memy/CHANGELOG.md", mode = "644" },
+    { source = "target/man/*", dest = "/usr/share/man/man1", mode = "644" },
+]
+
 [lints.clippy]
 cargo = { level = "warn", priority = -1 }
 complexity = { level = "warn", priority = -1 }
