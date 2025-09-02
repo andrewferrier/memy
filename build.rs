@@ -89,10 +89,14 @@ fn build_man_pages() -> std::io::Result<()> {
     write_man_page(&man_dir, "memy.1".to_owned(), main_cmd.clone())?;
 
     for subcmd in main_cmd.get_subcommands() {
+        let full_subcmd_name = format!("memy {}", subcmd.get_name());
+
         let sub = main_cmd
             .find_subcommand(subcmd.get_name())
             .expect("Subcommand not found")
-            .clone();
+            .clone()
+            .display_name(&full_subcmd_name)
+            .bin_name(&full_subcmd_name);
         write_man_page(&man_dir, format!("memy-{}.1", subcmd.get_name()), sub)?;
     }
 
