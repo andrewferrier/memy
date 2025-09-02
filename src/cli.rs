@@ -10,7 +10,7 @@ pub struct Cli {
     #[arg(short, long, action = clap::ArgAction::Count, default_value_t = 0)]
     pub verbose: u8,
 
-    /// Override configuration options in config.toml
+    /// Override configuration options in memy.toml
     #[arg(short, long, value_parser = parse_key_val, value_name("OPTION=VALUE"), number_of_values = 1)]
     pub config: Vec<(String, String)>,
 
