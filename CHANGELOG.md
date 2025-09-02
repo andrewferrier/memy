@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.11.0](https://github.com/andrewferrier/memy/compare/v0.10.0...v0.11.0) (2025-09-02)
+
+
+### Features
+
+* Add man pages to Debian package - closes [#60](https://github.com/andrewferrier/memy/issues/60) ([b0e7f6a](https://github.com/andrewferrier/memy/commit/b0e7f6ab0ab2b07ac471a42befb4b5ecb829e691))
+
+
+### Bug Fixes
+
+* Include full subcommand in man pages ([f986ca9](https://github.com/andrewferrier/memy/commit/f986ca9e4ad8e90ec003deb4a973a0ebfe2cca59))
+* Make expand_tilde more robust ([c490234](https://github.com/andrewferrier/memy/commit/c490234c123ac09373f9cc07de4c7cab1acbd3c5))
+
+
+### Performance Improvements
+
+* Use transaction for note_path to speed up ([a470725](https://github.com/andrewferrier/memy/commit/a470725ef20531206bd70ea4ad8c866877fb510a))
+* Use unstable sort ([97fe8b2](https://github.com/andrewferrier/memy/commit/97fe8b2c67ac322c21dfc7c8212b7fcb1c9150a1))
+
 ## [0.10.0](https://github.com/andrewferrier/memy/compare/v0.9.0...v0.10.0) (2025-08-31)
 
 
