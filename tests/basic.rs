@@ -5,7 +5,7 @@ use serde_json::Value;
 mod support;
 use support::*;
 
-use home::home_dir;
+use std::env::home_dir;
 use std::fs;
 use std::os::unix::fs::symlink;
 

@@ -1,7 +1,6 @@
 use chrono::{DateTime, Local, TimeZone as _};
-use home::home_dir;
-use std::path::Path;
-use std::path::PathBuf;
+use std::env::home_dir;
+use std::path::{Component, Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub fn get_secs_since_epoch() -> u64 {
@@ -37,11 +36,35 @@ pub fn detect_shell() -> Option<clap_complete::Shell> {
     })
 }
 
-pub fn expand_tilde(path: &str) -> PathBuf {
-    if let Some(stripped) = path.strip_prefix("~") {
-        if let Some(home) = home_dir() {
-            return home.join(stripped);
+pub fn expand_tilde<P: AsRef<Path>>(path: P) -> PathBuf {
+    let p = path.as_ref();
+
+    if let Some(Component::Normal(first)) = p.components().next() {
+        if first == "~" {
+            if let Some(home) = home_dir() {
+                let mut comps = p.components();
+                comps.next();
+                return home.join(comps.as_path());
+            }
         }
     }
-    PathBuf::from(path)
+
+    p.to_path_buf()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_expand_tilde() {
+        let home = home_dir().expect("Could not get home dir");
+        assert_eq!(expand_tilde("~"), home);
+        assert_eq!(expand_tilde("~/"), home);
+        assert_eq!(expand_tilde("~/memy"), home.join("memy"));
+        assert_eq!(expand_tilde("~/memy/"), home.join("memy"));
+        assert_eq!(expand_tilde("/etc/hosts"), PathBuf::from("/etc/hosts"));
+        assert_eq!(expand_tilde("etc/hosts"), PathBuf::from("etc/hosts"));
+        assert_eq!(expand_tilde("hosts"), PathBuf::from("hosts"));
+    }
 }
