@@ -65,6 +65,25 @@ fn note_path(tx: &Transaction, raw_path: &str) {
     info!("Path {clean_path} noted");
 }
 
+#[instrument(level = "trace")]
+fn note_paths(note_args: cli::NoteArgs) {
+    if note_args.paths.is_empty() {
+        error!("You must specify some paths to note");
+        std::process::exit(1);
+    }
+
+    let mut db_connection = db::open_db();
+    let tx = db_connection
+        .transaction()
+        .expect("Cannot start DB transaction");
+
+    for path in note_args.paths {
+        note_path(&tx, &path);
+    }
+
+    tx.commit().expect("Cannot commit transaction");
+}
+
 fn timestamp_age_hours(now: u64, timestamp: u64) -> f64 {
     let age_seconds = now - timestamp;
     age_seconds as f64 / 3600.0
@@ -262,31 +281,15 @@ fn hook_show(hook_name: Option<String>) {
 
 fn main() {
     let cli = Cli::parse();
-    config::set_config_overrides(cli.config.clone());
 
+    config::set_config_overrides(cli.config.clone());
     logging::configure_logging_and_tracing(cli.verbose);
 
     debug!("Memy version {}", env!("GIT_VERSION"));
     debug!("CLI params parsed: {cli:?}");
 
     match cli.command {
-        Commands::Note(note_args) => {
-            if note_args.paths.is_empty() {
-                error!("You must specify some paths to note");
-                std::process::exit(1);
-            }
-
-            let mut db_connection = db::open_db();
-            let tx = db_connection
-                .transaction()
-                .expect("Cannot start DB transaction");
-
-            for path in note_args.paths {
-                note_path(&tx, &path);
-            }
-
-            tx.commit().expect("Cannot commit transaction");
-        }
+        Commands::Note(note_args) => note_paths(note_args),
         Commands::List(list_args) => {
             let db_connection = db::open_db();
             list_paths(&db_connection, &list_args);
@@ -297,11 +300,7 @@ fn main() {
                 std::process::exit(1);
             }
         }
-        Commands::Completions { shell } => {
-            completions(shell);
-        }
-        Commands::Hook { hook_name } => {
-            hook_show(hook_name);
-        }
+        Commands::Completions { shell } => completions(shell),
+        Commands::Hook { hook_name } => hook_show(hook_name),
     }
 }
