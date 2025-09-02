@@ -50,6 +50,10 @@ jobs:
         if: runner.os == 'Linux' && !contains(matrix.target, 'musl')
         run: cargo install cargo-deb
 
+      - name: Install cargo-generate-rpm (non-MUSL Linux only)
+        if: runner.os == 'Linux' && !contains(matrix.target, 'musl')
+        run: cargo install cargo-generate-rpm
+
       - name: Build binary
         run: |
           if [[ "$RUNNER_OS" == "Linux" ]]; then
