@@ -3,6 +3,7 @@ mod config;
 mod db;
 mod hooks;
 mod hooks_generated;
+mod logging;
 mod utils;
 
 use clap::CommandFactory as _;
@@ -12,38 +13,8 @@ use config::DeniedFilesOnList;
 use log::{debug, error, info, warn};
 use rusqlite::{params, Connection, OptionalExtension as _, Transaction};
 use std::fs;
-use std::io::stderr;
-use std::io::IsTerminal as _;
 use std::path::Path;
 use tracing::instrument;
-use tracing_log::LogTracer;
-use tracing_subscriber::{fmt, EnvFilter};
-
-fn configure_logging_and_tracing(cli: &Cli) {
-    LogTracer::init().expect("Failed to init LogTracer");
-
-    let default_level = match cli.verbose {
-        0 => "warn",
-        1 => "info",
-        2 => "debug",
-        _ => "trace",
-    };
-
-    // RUST_LOG overrides --verbose if set
-    let env_filter =
-        EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new(default_level));
-
-    let subscriber = fmt::Subscriber::builder()
-        .with_env_filter(env_filter)
-        .with_ansi(stderr().is_terminal())
-        .with_span_events(fmt::format::FmtSpan::ENTER | fmt::format::FmtSpan::EXIT)
-        .event_format(fmt::format().compact())
-        .with_writer(std::io::stderr)
-        .without_time()
-        .finish();
-
-    tracing::subscriber::set_global_default(subscriber).expect("Failed to set subscriber");
-}
 
 fn normalize_path_if_needed(path: &Path) -> String {
     let normalize = config::get_normalize_symlinks_on_note();
@@ -293,7 +264,7 @@ fn main() {
     let cli = Cli::parse();
     config::set_config_overrides(cli.config.clone());
 
-    configure_logging_and_tracing(&cli);
+    logging::configure_logging_and_tracing(cli.verbose);
 
     debug!("Memy version {}", env!("GIT_VERSION"));
     debug!("CLI params parsed: {cli:?}");
