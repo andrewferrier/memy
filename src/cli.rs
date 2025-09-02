@@ -6,7 +6,7 @@ use clap::{Args, Parser, Subcommand};
 #[command(author = "Andrew Ferrier")]
 #[command(about = "Track and recall frequently and recently used files or directories.")]
 pub struct Cli {
-    /// Enable verbose logging
+    /// Enable verbose logging (can be added multiple times to add more verbosity)
     #[arg(short, long, action = clap::ArgAction::Count, default_value_t = 0)]
     pub verbose: u8,
 
