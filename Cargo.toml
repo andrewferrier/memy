@@ -71,6 +71,11 @@ assets = [
         "/usr/share/man/man1",
         "644",
     ],
+    [
+        "hooks/*",
+        "/usr/share/memy/hooks",
+        "644",
+    ],
 ]
 
 [package.metadata.generate-rpm]
@@ -86,6 +91,7 @@ assets = [
     { source = "LICENSE", dest = "/usr/share/doc/memy/LICENSE", mode = "644" },
     { source = "CHANGELOG.md", dest = "/usr/share/doc/memy/CHANGELOG.md", mode = "644" },
     { source = "target/man/*", dest = "/usr/share/man/man1", mode = "644" },
+    { source = "hooks/*", dest = "/usr/share/memy/hooks", mode = "644" }
 ]
 
 [lints.clippy]
