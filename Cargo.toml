@@ -69,8 +69,8 @@ assets = [
     [
         "target/man/*",
         "/usr/share/man/man1",
-        "644"
-    ]
+        "644",
+    ],
 ]
 
 [package.metadata.generate-rpm]
