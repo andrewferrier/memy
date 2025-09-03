@@ -86,6 +86,19 @@ pub struct ListArgs {
     /// Output format: 'plain', 'csv', or 'json'
     #[arg(long, default_value = "plain", value_name = "FORMAT", value_parser = validate_format)]
     pub format: String,
+
+    /// Output colorization: 'always', 'automatic', or 'never'
+    #[arg(long, default_value = "automatic", value_name = "WHEN", value_parser = validate_color)]
+    pub color: String,
+}
+
+fn validate_color(value: &str) -> Result<String, String> {
+    match value {
+        "always" | "automatic" | "never" => Ok(value.to_owned()),
+        _ => Err(String::from(
+            "Invalid value for --color. Allowed values are 'always', 'automatic', 'never'.",
+        )),
+    }
 }
 
 fn validate_format(value: &str) -> Result<String, String> {

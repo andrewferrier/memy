@@ -10,9 +10,11 @@ use clap::CommandFactory as _;
 use clap::Parser as _;
 use cli::{Cli, Commands, ListArgs};
 use config::DeniedFilesOnList;
+use is_terminal::IsTerminal as _;
 use log::{debug, error, info, warn};
 use rusqlite::{params, Connection, OptionalExtension as _, Transaction};
 use std::fs;
+use std::io::stdout;
 use std::path::Path;
 use tracing::instrument;
 
@@ -231,6 +233,16 @@ fn list_paths_calculate(conn: &Connection, args: &ListArgs) -> Vec<PathFrecency>
 fn list_paths(conn: &Connection, args: &ListArgs) {
     let results = list_paths_calculate(conn, args);
 
+    let use_color = match args.color.as_str() {
+        "always" => true,
+        "never" => false,
+        "automatic" => stdout().is_terminal(),
+        _ => {
+            error!("Invalid value for color: {}", args.color);
+            std::process::exit(1);
+        }
+    };
+
     match args.format.as_str() {
         "json" => {
             let json_output = serde_json::to_string_pretty(&results)
@@ -246,7 +258,16 @@ fn list_paths(conn: &Connection, args: &ListArgs) {
         }
         _ => {
             for result in results {
-                println!("{}", result.path);
+                if use_color {
+                    let path_parts: Vec<&str> = result.path.rsplitn(2, '/').collect();
+                    if path_parts.len() == 2 {
+                        println!("{}/\x1b[34m{}\x1b[0m", path_parts[1], path_parts[0]);
+                    } else {
+                        println!("\x1b[34m{}\x1b[0m", result.path);
+                    }
+                } else {
+                    println!("{}", result.path);
+                }
             }
         }
     }
