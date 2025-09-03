@@ -48,29 +48,7 @@ where
 static CACHED_CONFIG: LazyLock<MemyConfig> = LazyLock::new(load_config);
 static CONFIG_OVERRIDES: OnceLock<Vec<(String, String)>> = OnceLock::new();
 
-const TEMPLATE_CONFIG: &str = r#"# This is a configuration file for memy - the values below are the defaults.
-# **************************************
-
-# List of paths that won't be saved to the memy database even if they are noted - these follow the same syntax as gitignore rules: https://git-scm.com/docs/gitignore
-# Example: denylist = ['*.log', '*.out']
-denylist = []
-
-# When noting symlinks using memy, should the symlink be saved, or the file the symlink points at?
-normalize_symlinks_on_note = true
-
-# When noting files that aren't there, should a warning be emitted?
-missing_files_warn_on_note = true
-
-# When noting files that are in the denylist, should a warning be emitted?
-denied_files_warn_on_note = true
-
-# When listing files that are in the denylist (they've been added to the denylist after being noted),
-# what should happen? Valid values are "skip-silently", "warn", "delete"
-denied_files_on_list = "delete"
-
-# When listing, how much should *recency of file noting* dominate over *frequency of noting* in the sort? 0.0 means pure frequency; 1.0 means pure recency.
-recency_bias = 0.5
-"#;
+const TEMPLATE_CONFIG: &str = include_str!("../config/template-memy.toml");
 
 #[instrument(level = "trace")]
 fn get_config_file_path() -> PathBuf {
