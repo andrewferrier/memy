@@ -55,7 +55,6 @@ fn get_git_version() {
     let git_version = String::from_utf8(output.stdout).expect("Cannot get git version");
     println!("cargo:rustc-env=GIT_VERSION={}", git_version.trim());
 
-    // Invalidate the build if HEAD changes
     println!("cargo:rerun-if-changed=.git/HEAD");
     println!("cargo:rerun-if-changed=.git/refs/");
 }
@@ -81,7 +80,6 @@ fn build_man_pages() -> std::io::Result<()> {
         );
 
     let man_dir = build_root_dir.join("target/man");
-
     create_dir_all(&man_dir)?;
 
     let main_cmd = Cli::command();
@@ -99,6 +97,8 @@ fn build_man_pages() -> std::io::Result<()> {
             .bin_name(&full_subcmd_name);
         write_man_page(&man_dir, format!("memy-{}.1", subcmd.get_name()), sub)?;
     }
+
+    println!("cargo:rerun-if-changed=src/cli.rs");
 
     Ok(())
 }
