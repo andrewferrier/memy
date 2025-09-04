@@ -59,6 +59,29 @@ fn get_git_version() {
     println!("cargo:rerun-if-changed=.git/refs/");
 }
 
+fn write_config_man_page(man_dir: &Path) {
+    let config_contents = include_str!("config/template-memy.toml");
+
+    let preamble = r#".TH memy 5 "" "memy Manual"
+.SH NAME
+memy.toml \- configuration file for memy
+
+.SH DESCRIPTION
+The configuration file for memy is written in TOML format and by default is read from ~/.config/memy/memy.toml.
+Below is a template with all available options and their defaults.
+You can use this as a starting point to create your own configuration.
+
+"#;
+
+    let body = format!(".SH CONFIGURATION TEMPLATE\n.nf\n{config_contents}\n.fi\n");
+    let manpage = format!("{preamble}{body}");
+
+    let manpage_path = man_dir.join("memy.toml.5");
+    fs::write(&manpage_path, manpage).expect("Failed to write manpage");
+
+    println!("cargo:rerun-if-changed=config/template-memy.toml");
+}
+
 fn write_man_page(
     man_dir: &Path,
     file_base_name: String,
@@ -97,6 +120,8 @@ fn build_man_pages() -> std::io::Result<()> {
             .bin_name(&full_subcmd_name);
         write_man_page(&man_dir, format!("memy-{}.1", subcmd.get_name()), sub)?;
     }
+
+    write_config_man_page(&man_dir);
 
     println!("cargo:rerun-if-changed=src/cli.rs");
 
