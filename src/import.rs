@@ -2,11 +2,15 @@ use core::str::FromStr;
 use rusqlite::Connection;
 use std::fs;
 
+use crate::types::UnixTimestamp;
+
+pub type FasdScore = f64;
+
 #[derive(Debug)]
 pub struct FasdEntry {
     pub filename: String,
-    pub score: f64,
-    pub timestamp: u64,
+    pub score: FasdScore,
+    pub timestamp: UnixTimestamp,
 }
 
 impl FromStr for FasdEntry {
@@ -20,7 +24,7 @@ impl FromStr for FasdEntry {
 
         let filename = parts[0].to_owned();
         let score = parts[1]
-            .parse::<f64>()
+            .parse::<FasdScore>()
             .map_err(|e| format!("Invalid score: {e}"))?;
 
         if score < 0.0 {
@@ -28,7 +32,7 @@ impl FromStr for FasdEntry {
         }
 
         let timestamp = parts[2]
-            .parse::<u64>()
+            .parse::<UnixTimestamp>()
             .map_err(|e| format!("Invalid timestamp: {e}"))?;
 
         Ok(Self {

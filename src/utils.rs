@@ -3,14 +3,16 @@ use std::env::home_dir;
 use std::path::{Component, Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-pub fn get_secs_since_epoch() -> u64 {
+use crate::types::UnixTimestamp;
+
+pub fn get_unix_timestamp() -> UnixTimestamp {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .expect("Couldn't get seconds since epoch")
         .as_secs()
 }
 
-pub fn timestamp_to_iso8601(timestamp: u64) -> String {
+pub fn timestamp_to_iso8601(timestamp: UnixTimestamp) -> String {
     let datetime: DateTime<Local> = Local
         .timestamp_opt(timestamp.try_into().expect("Can't convert timestamp"), 0)
         .single()

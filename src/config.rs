@@ -12,6 +12,8 @@ use toml::Value as TomlValue;
 use tracing::instrument;
 use xdg::BaseDirectories;
 
+pub type RecencyBias = f64;
+
 #[derive(Debug, serde::Deserialize, serde::Serialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub enum DeniedFilesOnList {
@@ -30,14 +32,14 @@ pub struct MemyConfig {
     pub denied_files_warn_on_note: Option<bool>,
     pub denied_files_on_list: Option<DeniedFilesOnList>,
     #[serde(default, deserialize_with = "validate_recency_bias")]
-    pub recency_bias: Option<f64>,
+    pub recency_bias: Option<RecencyBias>,
 }
 
-fn validate_recency_bias<'de, D>(deserializer: D) -> Result<Option<f64>, D::Error>
+fn validate_recency_bias<'de, D>(deserializer: D) -> Result<Option<RecencyBias>, D::Error>
 where
     D: serde::Deserializer<'de>,
 {
-    let value: Option<f64> = Option::deserialize(deserializer)?;
+    let value: Option<RecencyBias> = Option::deserialize(deserializer)?;
     if let Some(v) = value {
         if !(0.0..=1.0).contains(&v) {
             error!("recency_bias configuration option must be between 0 and 1");
@@ -206,6 +208,6 @@ pub fn get_denied_files_on_list() -> DeniedFilesOnList {
         .unwrap_or(DeniedFilesOnList::Delete)
 }
 
-pub fn get_recency_bias() -> f64 {
+pub fn get_recency_bias() -> RecencyBias {
     CACHED_CONFIG.recency_bias.unwrap_or(0.5)
 }

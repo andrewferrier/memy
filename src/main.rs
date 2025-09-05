@@ -5,6 +5,7 @@ mod hooks;
 mod hooks_generated;
 mod import;
 mod logging;
+mod types;
 mod utils;
 
 use clap::CommandFactory as _;
@@ -19,6 +20,11 @@ use std::fs;
 use std::io::stdout;
 use std::path::Path;
 use tracing::instrument;
+
+use types::Frecency;
+use types::NotedCount;
+use types::UnixTimestamp;
+use types::UnixTimestampHours;
 
 fn normalize_path_if_needed(path: &Path) -> String {
     let normalize = config::get_normalize_symlinks_on_note();
@@ -57,7 +63,7 @@ fn note_path(tx: &Transaction, raw_path: &str) {
         return;
     }
 
-    let now = utils::get_secs_since_epoch();
+    let now = utils::get_unix_timestamp();
     tx.execute(
         "INSERT INTO paths (path, noted_count, last_noted_timestamp) VALUES (?1, 1, ?2) \
             ON CONFLICT(path) DO UPDATE SET \
@@ -89,17 +95,17 @@ fn note_paths(note_args: cli::NoteArgs) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn timestamp_age_hours(now: u64, timestamp: u64) -> f64 {
+fn timestamp_age_hours(now: UnixTimestamp, timestamp: UnixTimestamp) -> UnixTimestampHours {
     let age_seconds = now - timestamp;
     age_seconds as f64 / 3600.0
 }
 
 fn calculate_frecency(
-    count: u64,
-    last_noted_timestamp_hours: f64,
-    highest_count: u64,
-    oldest_last_noted_timestamp_hours: f64,
-) -> f64 {
+    count: NotedCount,
+    last_noted_timestamp_hours: UnixTimestampHours,
+    highest_count: NotedCount,
+    oldest_last_noted_timestamp_hours: UnixTimestampHours,
+) -> Frecency {
     let freq_score = if highest_count > 0 {
         count as f64 / highest_count as f64
     } else {
@@ -117,8 +123,11 @@ fn calculate_frecency(
 }
 
 #[instrument(level = "trace")]
-fn get_oldest_timestamp_and_highest_count(conn: &Connection, now: u64) -> (u64, u64) {
-    let oldest_last_noted_timestamp: u64 = conn
+fn get_oldest_timestamp_and_highest_count(
+    conn: &Connection,
+    now: UnixTimestamp,
+) -> (UnixTimestamp, NotedCount) {
+    let oldest_last_noted_timestamp: UnixTimestamp = conn
         .query_row(
             "SELECT last_noted_timestamp FROM paths ORDER BY last_noted_timestamp ASC LIMIT 1",
             [],
@@ -128,7 +137,7 @@ fn get_oldest_timestamp_and_highest_count(conn: &Connection, now: u64) -> (u64, 
         .expect("Cannot get oldest timestamp")
         .unwrap_or(now);
 
-    let highest_count: u64 = conn
+    let highest_count: NotedCount = conn
         .query_row(
             "SELECT noted_count FROM paths ORDER BY noted_count DESC LIMIT 1",
             [],
@@ -144,8 +153,8 @@ fn get_oldest_timestamp_and_highest_count(conn: &Connection, now: u64) -> (u64, 
 #[derive(serde::Serialize)]
 struct PathFrecency {
     path: String,
-    frecency: f64,
-    count: u64,
+    frecency: Frecency,
+    count: NotedCount,
     last_noted: String,
 }
 
@@ -158,13 +167,13 @@ fn list_paths_calculate(conn: &Connection, args: &ListArgs) -> Vec<PathFrecency>
     let rows = stmt
         .query_map([], |row| {
             let path: String = row.get(0)?;
-            let count: u64 = row.get(1)?;
-            let last_noted_timestamp: u64 = row.get(2)?;
+            let count: NotedCount = row.get(1)?;
+            let last_noted_timestamp: UnixTimestamp = row.get(2)?;
             Ok((path, count, last_noted_timestamp))
         })
         .expect("query_map failed");
 
-    let now = utils::get_secs_since_epoch();
+    let now = utils::get_unix_timestamp();
 
     let mut results: Vec<PathFrecency> = vec![];
 
