@@ -1,7 +1,8 @@
 use super::config;
 use super::import;
 
-use log::{debug, error, info};
+use core::error::Error;
+use log::{debug, info};
 use rusqlite::Connection;
 use std::env;
 use std::path::PathBuf;
@@ -11,14 +12,16 @@ use xdg::BaseDirectories;
 const DB_VERSION: i32 = 1;
 
 #[instrument(level = "trace")]
-fn check_db_version(conn: &Connection) {
+fn check_db_version(conn: &Connection) -> Result<(), Box<dyn Error>> {
     let version: i32 = conn
         .query_row("PRAGMA user_version;", [], |row| row.get(0))
         .expect("Failed to read database version");
+
     if version != DB_VERSION {
-        error!("Database version mismatch: expected {DB_VERSION}, found {version}. Please delete your database.");
-        std::process::exit(1);
+        return Err(format!("Database version mismatch: expected {DB_VERSION}, found {version}. Please delete your database.").into());
     }
+
+    Ok(())
 }
 
 #[instrument(level = "trace")]
@@ -64,7 +67,7 @@ fn handle_post_init_checks(conn: &Connection) {
 }
 
 #[instrument(level = "trace")]
-pub fn open_db() -> Result<Connection, String> {
+pub fn open_db() -> Result<Connection, Box<dyn Error>> {
     let db_path = get_db_path();
 
     if db_path.exists() {
@@ -74,7 +77,7 @@ pub fn open_db() -> Result<Connection, String> {
 
         if db_path_exists {
             debug!("Database at {} does exist", db_file.to_string_lossy());
-            check_db_version(&conn);
+            check_db_version(&conn)?;
         } else {
             debug!("Database at {} does not exist", db_file.to_string_lossy());
             init_db(&conn);
@@ -87,9 +90,6 @@ pub fn open_db() -> Result<Connection, String> {
         debug!("Database opened");
         Ok(conn)
     } else {
-        Err(format!(
-            "Database path {} doesn't exist.",
-            db_path.to_string_lossy()
-        ))
+        Err(format!("Database path {} doesn't exist.", db_path.to_string_lossy()).into())
     }
 }

@@ -1,4 +1,5 @@
 use config::{Config, File, FileFormat, Value};
+use core::error::Error;
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
 use log::{debug, error};
 use serde::Deserialize as _;
@@ -77,7 +78,7 @@ fn toml_to_config_value(toml_val: &TomlValue) -> Value {
     }
 }
 
-fn parse_toml_value(s: &str) -> Result<Value, Box<dyn core::error::Error>> {
+fn parse_toml_value(s: &str) -> Result<Value, Box<dyn Error>> {
     let toml_snippet = format!("value = {s}");
     let parsed: TomlValue = toml::from_str(&toml_snippet)?;
     let inner = parsed
@@ -88,21 +89,17 @@ fn parse_toml_value(s: &str) -> Result<Value, Box<dyn core::error::Error>> {
     Ok(config_value)
 }
 
-fn test_config_file_issues(config_path: &PathBuf) {
+fn test_config_file_issues(config_path: &PathBuf) -> Result<(), Box<dyn Error>> {
     let config_content = match fs::read_to_string(config_path) {
         Ok(content) => content,
         Err(err) => {
-            error!("Failed to read configuration file: {err}");
-            std::process::exit(1);
+            return Err(format!("Failed to read configuration file: {err}").into());
         }
     };
 
     match toml::from_str::<MemyConfig>(&config_content) {
-        Ok(_) => {}
-        Err(err) => {
-            error!("Failed to parse configuration file: {err}");
-            std::process::exit(1);
-        }
+        Ok(_) => Ok(()),
+        Err(err) => Err(format!("Failed to parse configuration file: {err}").into()),
     }
 }
 
@@ -119,7 +116,11 @@ pub fn load_config() -> MemyConfig {
     debug!("Config file path resolved to {}", config_path.display());
 
     if config_path.exists() {
-        test_config_file_issues(&config_path);
+        if let Err(err) = test_config_file_issues(&config_path) {
+            error!("{err}");
+            std::process::exit(1);
+        }
+
         debug!("Config file looks OK");
         builder = builder.add_source(File::from(config_path).format(FileFormat::Toml));
     }
@@ -162,7 +163,7 @@ pub fn set_config_overrides(overrides: Vec<(String, String)>) {
 }
 
 #[instrument(level = "trace")]
-pub fn generate_config(filename: Option<&str>) -> Result<(), Box<dyn core::error::Error>> {
+pub fn generate_config(filename: Option<&str>) -> Result<(), Box<dyn Error>> {
     let filename_pathbuf: Option<PathBuf> = filename.map(PathBuf::from);
     let final_filename = filename_pathbuf.unwrap_or_else(get_config_file_path);
 

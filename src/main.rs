@@ -11,6 +11,7 @@ use clap::CommandFactory as _;
 use clap::Parser as _;
 use cli::{Cli, Commands, ListArgs};
 use config::DeniedFilesOnList;
+use core::error::Error;
 use is_terminal::IsTerminal as _;
 use log::{debug, error, info, warn};
 use rusqlite::{params, Connection, OptionalExtension as _, Transaction};
@@ -69,10 +70,9 @@ fn note_path(tx: &Transaction, raw_path: &str) {
 }
 
 #[instrument(level = "trace")]
-fn note_paths(note_args: cli::NoteArgs) -> Result<(), Box<dyn core::error::Error>> {
+fn note_paths(note_args: cli::NoteArgs) -> Result<(), Box<dyn Error>> {
     if note_args.paths.is_empty() {
-        error!("You must specify some paths to note");
-        std::process::exit(1);
+        return Err("You must specify some paths to note".into());
     }
 
     let mut db_connection = db::open_db()?;
@@ -233,8 +233,9 @@ fn list_paths_calculate(conn: &Connection, args: &ListArgs) -> Vec<PathFrecency>
 }
 
 #[instrument(level = "trace")]
-fn list_paths(conn: &Connection, args: &ListArgs) {
-    let results = list_paths_calculate(conn, args);
+fn list_paths(args: &ListArgs) -> Result<(), Box<dyn Error>> {
+    let db_connection = db::open_db()?;
+    let results = list_paths_calculate(&db_connection, args);
 
     let use_color = match args.color.as_str() {
         "always" => true,
@@ -274,6 +275,8 @@ fn list_paths(conn: &Connection, args: &ListArgs) {
             }
         }
     }
+
+    Ok(())
 }
 
 #[instrument(level = "trace")]
@@ -287,19 +290,37 @@ fn completions(shell: Option<clap_complete::Shell>) {
 }
 
 #[instrument(level = "trace")]
-fn hook_show(hook_name: Option<String>) {
+fn hook_show(
+    hook_name: Option<String>,
+) -> core::result::Result<(), std::boxed::Box<(dyn Error + 'static)>> {
     if let Some(actual_hook_name) = hook_name {
         if let Some(content) = hooks::get_hook_content(&actual_hook_name) {
             print!("{content}");
         } else {
-            error!("Hook not found: {actual_hook_name}");
-            std::process::exit(1);
+            return Err(format!("Hook not found: {actual_hook_name}").into());
         }
     } else {
         println!("Available hooks:");
         for hook in hooks::get_hook_list() {
             println!("{hook}");
         }
+    }
+
+    Ok(())
+}
+
+fn handle_cli_command(
+    command: Commands,
+) -> core::result::Result<(), std::boxed::Box<(dyn Error + 'static)>> {
+    match command {
+        Commands::Note(note_args) => Ok(note_paths(note_args)?),
+        Commands::List(list_args) => Ok(list_paths(&list_args)?),
+        Commands::GenerateConfig { filename } => config::generate_config(filename.as_deref()),
+        Commands::Completions { shell } => {
+            completions(shell);
+            Ok(())
+        }
+        Commands::Hook { hook_name } => Ok(hook_show(hook_name)?),
     }
 }
 
@@ -312,30 +333,11 @@ fn main() {
     debug!("Memy version {}", env!("GIT_VERSION"));
     debug!("CLI params parsed: {cli:?}");
 
-    match cli.command {
-        Commands::Note(note_args) => match note_paths(note_args) {
-            Ok(()) => {}
-            Err(err) => {
-                error!("{err}");
-                std::process::exit(1);
-            }
-        },
-        Commands::List(list_args) => match db::open_db() {
-            Ok(db_connection) => {
-                list_paths(&db_connection, &list_args);
-            }
-            Err(err) => {
-                error!("{err}");
-                std::process::exit(1);
-            }
-        },
-        Commands::GenerateConfig { filename } => {
-            if let Err(err) = config::generate_config(filename.as_deref()) {
-                error!("{err}");
-                std::process::exit(1);
-            }
+    match handle_cli_command(cli.command) {
+        Ok(()) => {}
+        Err(err) => {
+            error!("{err}");
+            std::process::exit(1);
         }
-        Commands::Completions { shell } => completions(shell),
-        Commands::Hook { hook_name } => hook_show(hook_name),
     }
 }
