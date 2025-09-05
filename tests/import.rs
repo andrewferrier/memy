@@ -16,6 +16,8 @@ fn test_import_fasd_state_file() {
     let test_file_path_2 = create_test_file(&working_path, "test_file2", "test content");
 
     env::set_var("XDG_CACHE_HOME", cache_path.to_str().unwrap());
+    // This makes sure the test does't accidentally import from the zoxide state
+    env::set_var("_ZO_DATA_DIR", cache_path.to_str().unwrap());
 
     let fasd_state_file = cache_path.join("fasd");
     let fasd_contents = format!(

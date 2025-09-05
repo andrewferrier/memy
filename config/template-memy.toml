@@ -1,7 +1,7 @@
 # This is a configuration file for memy - the values below are the defaults
 # *************************************************************************
 
-# When the database is initialized for the first time, should fasd (https://github.com/clvv/fasd) state files be imported automatically?
+# When the database is initialized for the first time, should fasd (https://github.com/clvv/fasd) state files or zoxide state be imported automatically?
 import_on_first_use = true
 
 # List of paths that won't be saved to the memy database even if they are noted - these follow the same syntax as gitignore rules: https://git-scm.com/docs/gitignore

@@ -2,7 +2,7 @@ use super::config;
 use super::import;
 
 use core::error::Error;
-use log::{debug, info};
+use log::debug;
 use rusqlite::Connection;
 use std::env;
 use std::path::PathBuf;
@@ -62,8 +62,9 @@ fn handle_post_init_checks(conn: &Connection) {
     if fasd_state_path.exists() {
         import::process_fasd_file(fasd_state_path_str, conn)
             .expect("Failed to process fasd state file");
-        info!("Imported {}", &fasd_state_path_str);
     }
+
+    import::process_zoxide_query(conn);
 }
 
 #[instrument(level = "trace")]

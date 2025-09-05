@@ -1,57 +1,83 @@
-use core::str::FromStr;
+use core::error::Error;
+use log::{debug, info};
 use rusqlite::Connection;
 use std::fs;
 
+use crate::types::NotedCount;
 use crate::types::UnixTimestamp;
+use crate::utils;
 
 pub type FasdScore = f64;
 
 #[derive(Debug)]
-pub struct FasdEntry {
+pub struct MemyEntry {
     pub filename: String,
-    pub score: FasdScore,
+    pub count: NotedCount,
     pub timestamp: UnixTimestamp,
 }
 
-impl FromStr for FasdEntry {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let parts: Vec<&str> = s.split('|').collect();
-        if parts.len() != 3 {
-            return Err(format!("Invalid entry: {s}"));
-        }
-
-        let filename = parts[0].to_owned();
-        let score = parts[1]
-            .parse::<FasdScore>()
-            .map_err(|e| format!("Invalid score: {e}"))?;
-
-        if score < 0.0 {
-            return Err(format!("Score cannot be negative: {score}"));
-        }
-
-        let timestamp = parts[2]
-            .parse::<UnixTimestamp>()
-            .map_err(|e| format!("Invalid timestamp: {e}"))?;
-
-        Ok(Self {
-            filename,
-            score,
-            timestamp,
-        })
+fn from_fasd_str(s: &str) -> Result<MemyEntry, Box<dyn Error>> {
+    let parts: Vec<&str> = s.split('|').collect();
+    if parts.len() != 3 {
+        return Err(format!("Invalid entry: {s}").into());
     }
+
+    let filename = parts[0].to_owned();
+    let score = parts[1]
+        .parse::<FasdScore>()
+        .map_err(|e| format!("Invalid score: {e}"))?;
+
+    if score < 0.0 {
+        return Err(format!("Score cannot be negative: {score}").into());
+    }
+
+    let timestamp = parts[2]
+        .parse::<UnixTimestamp>()
+        .map_err(|e| format!("Invalid timestamp: {e}"))?;
+
+    #[allow(clippy::cast_possible_truncation, reason = "Round is intentional")]
+    #[allow(clippy::cast_sign_loss, reason = "Round is intentional")]
+    Ok(MemyEntry {
+        filename,
+        count: score.round() as NotedCount,
+        timestamp,
+    })
 }
 
-fn parse_fasd_state(contents: &str) -> Result<Vec<FasdEntry>, String> {
-    contents.lines().map(str::parse::<FasdEntry>).collect()
+fn from_zoxide_str(s: &str) -> Result<MemyEntry, Box<dyn Error>> {
+    let parts: Vec<&str> = s.split_whitespace().collect();
+    if parts.len() != 2 {
+        return Err(format!("Invalid entry: {s}").into());
+    }
+
+    let count = parts[0]
+        .parse::<f64>()
+        .map_err(|e| format!("Invalid count: {e}"))?;
+    let path = parts[1].to_owned();
+    let timestamp = utils::get_unix_timestamp();
+
+    if count < 0.0 {
+        return Err(format!("Count cannot be negative: {count}").into());
+    }
+
+    Ok(MemyEntry {
+        filename: path,
+        #[allow(clippy::cast_possible_truncation, reason = "Round is intentional")]
+        #[allow(clippy::cast_sign_loss, reason = "Round is intentional")]
+        count: count.round() as u64,
+        timestamp,
+    })
 }
 
-pub fn process_fasd_file(file_path: &str, conn: &Connection) -> Result<(), String> {
-    let contents = fs::read_to_string(file_path)
-        .map_err(|e| format!("Failed to read file {file_path}: {e}"))?;
-    let entries = parse_fasd_state(&contents)?;
+fn parse_fasd_state(contents: &str) -> Result<Vec<MemyEntry>, Box<dyn Error>> {
+    contents.lines().map(from_fasd_str).collect()
+}
 
+fn parse_zoxide_state(contents: &str) -> Result<Vec<MemyEntry>, Box<dyn Error>> {
+    contents.lines().map(from_zoxide_str).collect()
+}
+
+fn insert_into_db(conn: &Connection, entries: Vec<MemyEntry>) -> Result<(), Box<dyn Error>> {
     for entry in entries {
         #[allow(
             clippy::cast_possible_truncation,
@@ -61,7 +87,7 @@ pub fn process_fasd_file(file_path: &str, conn: &Connection) -> Result<(), Strin
             clippy::cast_sign_loss,
             reason = "We expect this score will always fit in a u64"
         )]
-        let rounded_score = entry.score.round() as u64;
+        let rounded_score = entry.count;
         conn.execute(
             "INSERT INTO paths (path, noted_count, last_noted_timestamp) VALUES (?1, ?2, ?3)
              ON CONFLICT(path) DO UPDATE SET
@@ -74,9 +100,48 @@ pub fn process_fasd_file(file_path: &str, conn: &Connection) -> Result<(), Strin
             ],
         )
         .map_err(|e| format!("Failed to insert or update entry into database: {e}"))?;
+        debug!("Imported {}", entry.filename);
     }
 
     Ok(())
+}
+
+pub fn process_fasd_file(file_path: &str, conn: &Connection) -> Result<(), Box<dyn Error>> {
+    let contents = fs::read_to_string(file_path)?;
+    let entries = parse_fasd_state(&contents)?;
+
+    insert_into_db(conn, entries)?;
+
+    info!("Imported {file_path}");
+
+    Ok(())
+}
+
+pub fn process_zoxide_query(conn: &Connection) {
+    let Ok(output) = std::process::Command::new("zoxide")
+        .args(["query", "--list", "--all", "--score"])
+        .output()
+    else {
+        return;
+    };
+
+    if !output.status.success() {
+        return;
+    }
+
+    let Ok(stdout) = String::from_utf8(output.stdout) else {
+        return;
+    };
+
+    let Ok(entries) = parse_zoxide_state(&stdout) else {
+        return;
+    };
+
+    let Ok(()) = insert_into_db(conn, entries) else {
+        return;
+    };
+
+    info!("Imported zoxide state");
 }
 
 #[cfg(test)]
@@ -91,10 +156,10 @@ mod tests {
 
         assert_eq!(result.len(), 2);
         assert_eq!(result[0].filename, "file1.txt");
-        assert_eq!(result[0].score, 10.5);
+        assert_eq!(result[0].count, 11);
         assert_eq!(result[0].timestamp, 1_633_036_800);
         assert_eq!(result[1].filename, "file2.txt");
-        assert_eq!(result[1].score, 20.0);
+        assert_eq!(result[1].count, 20);
         assert_eq!(result[1].timestamp, 1_633_123_200);
     }
 
@@ -134,6 +199,48 @@ mod tests {
     fn test_parse_fasd_state_negative_timestamp() {
         let input = "file1.txt|10.5|-5";
         let result = parse_fasd_state(input);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    #[allow(clippy::float_cmp, reason = "Exact comparisons are desirable here")]
+    fn test_parse_zoxide_state_valid_input() {
+        let input = "   12.0    /home/user/docs\n2.0 /tmp\n0.5 /home/user/.local/share";
+        let result = parse_zoxide_state(input).expect("Couldn't parse zoxide state");
+
+        assert_eq!(result.len(), 3);
+        assert_eq!(result[0].filename, "/home/user/docs");
+        assert_eq!(result[0].count, 12);
+        assert!(result[0].timestamp > 0);
+        assert_eq!(result[1].filename, "/tmp");
+        assert_eq!(result[1].count, 2);
+        assert!(result[1].timestamp > 0);
+        assert_eq!(result[2].filename, "/home/user/.local/share");
+        assert_eq!(result[2].count, 1);
+        assert!(result[2].timestamp > 0);
+    }
+
+    #[test]
+    fn test_parse_zoxide_state_missing_fields() {
+        let input = "12.0";
+        let result = parse_zoxide_state(input);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_zoxide_state_invalid_count() {
+        let input = "invalid_count /home/docs/paperwork";
+        let result = parse_zoxide_state(input);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_zoxide_state_negative_count() {
+        let input = "-12.0 /home/docs";
+        let result = parse_zoxide_state(input);
 
         assert!(result.is_err());
     }
