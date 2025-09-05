@@ -64,10 +64,24 @@ pub fn memy_cmd(
     cmd
 }
 
+pub fn memy_cmd_test_defaults(
+    db_path: &std::path::Path,
+    config_path: Option<&std::path::Path>,
+    args: &[&str],
+) -> Command {
+    let mut args2 = Vec::new();
+    args2.push("--config");
+    args2.push("import_on_first_use=false");
+    args2.extend(args);
+
+    memy_cmd(db_path, config_path, &args2)
+}
+
 pub fn sleep(millis: u64) {
     thread::sleep(Duration::from_millis(millis));
 }
 
+// TODO: Consider changing default to return Output
 pub fn note_path(
     db_path: &std::path::Path,
     config_path: Option<&std::path::Path>,
@@ -85,7 +99,7 @@ pub fn note_path(
         args.extend(note_args);
         args.push(path);
 
-        let mut cmd = memy_cmd(db_path, config_path, &args);
+        let mut cmd = memy_cmd_test_defaults(db_path, config_path, &args);
         cmd.assert().success();
         last_cmd = Some(cmd);
         sleep(100);
@@ -105,7 +119,7 @@ pub fn list_paths(
     args.push("list");
     args.extend(list_args);
 
-    let output = memy_cmd(db_path, config_path, &args)
+    let output = memy_cmd_test_defaults(db_path, config_path, &args)
         .output()
         .expect("failed to run memy");
 

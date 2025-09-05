@@ -1,4 +1,7 @@
-use log::{debug, error};
+use super::config;
+use super::import;
+
+use log::{debug, error, info};
 use rusqlite::Connection;
 use std::env;
 use std::path::PathBuf;
@@ -45,6 +48,22 @@ fn init_db(conn: &Connection) {
 }
 
 #[instrument(level = "trace")]
+fn handle_post_init_checks(conn: &Connection) {
+    let fasd_state_path = BaseDirectories::new()
+        .find_cache_file("fasd")
+        .expect("Cannot find cache file");
+    let fasd_state_path_str = fasd_state_path
+        .to_str()
+        .expect("Cannot convert PathBuf to str");
+
+    if fasd_state_path.exists() {
+        import::process_fasd_file(fasd_state_path_str, conn)
+            .expect("Failed to process fasd state file");
+        info!("Imported {}", &fasd_state_path_str);
+    }
+}
+
+#[instrument(level = "trace")]
 pub fn open_db() -> Result<Connection, String> {
     let db_path = get_db_path();
 
@@ -59,6 +78,10 @@ pub fn open_db() -> Result<Connection, String> {
         } else {
             debug!("Database at {} does not exist", db_file.to_string_lossy());
             init_db(&conn);
+
+            if config::get_import_on_first_use() {
+                handle_post_init_checks(&conn);
+            }
         }
 
         debug!("Database opened");

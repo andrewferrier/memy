@@ -236,7 +236,7 @@ fn test_denied_files_on_list_delete_behavior() {
         format!("denylist = [\"{deny_pattern}\"]\ndenied_files_on_list = \"delete\"\n");
     create_config_file(&config_path, &config_contents);
 
-    let output_list = memy_cmd(&db_path, Some(&config_path), &["list"])
+    let output_list = memy_cmd_test_defaults(&db_path, Some(&config_path), &["list"])
         .output()
         .expect("Failed to execute command");
 
@@ -284,7 +284,7 @@ fn test_denied_files_on_list_warn_behavior() {
         format!("denylist = [\"{deny_pattern}\"]\ndenied_files_on_list = \"warn\"\n");
     create_config_file(&config_path, &config_contents);
 
-    let output_list = memy_cmd(&db_path, Some(&config_path), &["list"])
+    let output_list = memy_cmd_test_defaults(&db_path, Some(&config_path), &["list"])
         .output()
         .expect("Failed to execute command");
 
@@ -329,7 +329,7 @@ fn test_denied_files_on_list_skip_silently_behavior() {
     let stderr_note = String::from_utf8_lossy(&output_note.stderr);
     assert!(stderr_note.is_empty()); // No warning on note
 
-    let output_list = memy_cmd(&db_path, Some(&config_path), &["list"])
+    let output_list = memy_cmd_test_defaults(&db_path, Some(&config_path), &["list"])
         .output()
         .expect("Failed to execute command");
 

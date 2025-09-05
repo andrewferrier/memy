@@ -3,6 +3,7 @@ mod config;
 mod db;
 mod hooks;
 mod hooks_generated;
+mod import;
 mod logging;
 mod utils;
 

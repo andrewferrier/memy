@@ -56,6 +56,8 @@ Many of these more advanced tricks would work well configured as [shell aliases]
   xdg-open "$(memy list -d | fzf)"
   ```
 
+`memy` will import your database from `fasd`, if there is one, on first run (this behaviour can be changed in the configuration file).
+
 ## Noting files automatically using hooks
 
 Hooks in memy are scripts or other configuration files provided with memy that can be embedded into other tools' configurations. These hooks allow you to automatically note files as they are used, opened, or interacted with, integrating memy seamlessly into your workflow.

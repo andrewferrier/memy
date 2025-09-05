@@ -22,6 +22,7 @@ pub enum DeniedFilesOnList {
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct MemyConfig {
+    pub import_on_first_use: Option<bool>,
     pub denylist: Option<Vec<String>>,
     pub normalize_symlinks_on_note: Option<bool>,
     pub missing_files_warn_on_note: Option<bool>,
@@ -172,6 +173,10 @@ pub fn generate_config(filename: Option<&str>) -> Result<(), Box<dyn core::error
     fs::write(&final_filename, TEMPLATE_CONFIG)?;
     println!("Config file created at {}", final_filename.display());
     Ok(())
+}
+
+pub fn get_import_on_first_use() -> bool {
+    CACHED_CONFIG.import_on_first_use.unwrap_or(true)
 }
 
 pub fn get_denylist_matcher() -> Gitignore {

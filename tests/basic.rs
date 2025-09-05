@@ -50,7 +50,7 @@ fn test_note_and_list_paths_multiarg() {
     let dir_b = create_test_directory(&working_path, "dir_b");
 
     // Note both paths in a single memy_cmd call
-    let output = memy_cmd(
+    let output = memy_cmd_test_defaults(
         &db_path,
         None,
         &["note", dir_a.to_str().unwrap(), dir_b.to_str().unwrap()],
@@ -121,7 +121,7 @@ fn test_list_json_format() {
     note_path(&db_path, None, dir_a.to_str().unwrap(), 1, &[], &[]);
     note_path(&db_path, None, dir_b.to_str().unwrap(), 1, &[], &[]);
 
-    let output = memy_cmd(&db_path, None, &["list", "--format=json"])
+    let output = memy_cmd_test_defaults(&db_path, None, &["list", "--format=json"])
         .output()
         .expect("Failed to execute command");
 
@@ -160,7 +160,7 @@ fn test_list_csv_format() {
     note_path(&db_path, None, dir_a.to_str().unwrap(), 1, &[], &[]);
     note_path(&db_path, None, dir_b.to_str().unwrap(), 1, &[], &[]);
 
-    let output = memy_cmd(&db_path, None, &["list", "--format=csv"])
+    let output = memy_cmd_test_defaults(&db_path, None, &["list", "--format=csv"])
         .output()
         .expect("Failed to execute command");
 
@@ -181,7 +181,7 @@ fn test_list_csv_format() {
 fn test_help_flag() {
     let (_db_temp, db_path) = temp_dir();
 
-    let output = memy_cmd(&db_path, None, &["--help"])
+    let output = memy_cmd_test_defaults(&db_path, None, &["--help"])
         .output()
         .expect("Failed to execute command");
 
@@ -284,15 +284,16 @@ fn test_directories_only_flag() {
 fn test_graceful_when_db_missing() {
     let (_db_temp, db_path) = temp_dir();
 
-    let output = memy_cmd(&db_path, None, &["list"])
+    let output = memy_cmd_test_defaults(&db_path, None, &["list"])
         .output()
         .expect("Failed to run memy");
+
     assert!(output.status.success());
 }
 
 #[test]
 fn test_graceful_when_dbdir_missing() {
-    let output = memy_cmd(Path::new("/tmp/definitelydoesntexist"), None, &["list"])
+    let output = memy_cmd_test_defaults(Path::new("/tmp/definitelydoesntexist"), None, &["list"])
         .output()
         .expect("Failed to run memy");
     assert!(!output.status.success());
@@ -307,7 +308,7 @@ fn test_graceful_when_configdir_missing() {
 
     let (_db_temp, db_path) = temp_dir();
 
-    let output = memy_cmd(
+    let output = memy_cmd_test_defaults(
         &db_path,
         Some(Path::new("/tmp/definitelydoesntexist")),
         &["list"],
