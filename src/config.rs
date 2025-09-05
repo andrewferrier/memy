@@ -110,7 +110,7 @@ pub fn load_config() -> MemyConfig {
         .build()
         .expect("Defaults didn't load");
 
-    let mut builder = Config::builder().add_source(default_config.clone());
+    let mut builder = Config::builder().add_source(default_config);
 
     let config_path: PathBuf = get_config_file_path();
     debug!("Config file path resolved to {}", config_path.display());
@@ -143,12 +143,8 @@ pub fn load_config() -> MemyConfig {
         .build()
         .and_then(Config::try_deserialize::<MemyConfig>)
         .unwrap_or_else(|e| {
-            log::warn!(
-                "Failed to build or deserialize final config, falling back to defaults: {e}"
-            );
-            default_config
-                .try_deserialize()
-                .expect("Default config invalid")
+            error!("Failed to build or deserialize final config, falling back to defaults: {e}");
+            std::process::exit(1);
         });
 
     debug!("Config loaded: {config:?}");

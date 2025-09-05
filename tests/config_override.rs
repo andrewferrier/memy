@@ -174,7 +174,7 @@ fn test_invalid_param() {
         .output()
         .unwrap();
 
-    assert!(output.status.success());
+    assert!(!output.status.success());
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(stderr.contains("unknown field `foo`, expected one of"));
 }
@@ -191,7 +191,7 @@ fn test_incorrect_type() {
     .output()
     .unwrap();
 
-    assert!(output.status.success());
+    assert!(!output.status.success());
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(stderr.contains("invalid type: string"));
     assert!(stderr.contains("expected a boolean"));
