@@ -1,6 +1,7 @@
 #![allow(clippy::unwrap_used, reason = "unwrap() OK inside tests")]
 
 use serde_json::Value;
+use std::path::Path;
 
 mod support;
 use support::*;
@@ -286,5 +287,32 @@ fn test_graceful_when_db_missing() {
     let output = memy_cmd(&db_path, None, &["list"])
         .output()
         .expect("Failed to run memy");
+    assert!(output.status.success());
+}
+
+#[test]
+fn test_graceful_when_dbdir_missing() {
+    let output = memy_cmd(Path::new("/tmp/definitelydoesntexist"), None, &["list"])
+        .output()
+        .expect("Failed to run memy");
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("Database path /tmp/definitelydoesntexist doesn't exist"));
+}
+
+#[test]
+fn test_graceful_when_configdir_missing() {
+    // If the config path doesn't exist we just silently ignore it, it's the user's responsibility
+    // to make sure the config file is there.
+
+    let (_db_temp, db_path) = temp_dir();
+
+    let output = memy_cmd(
+        &db_path,
+        Some(Path::new("/tmp/definitelydoesntexist")),
+        &["list"],
+    )
+    .output()
+    .expect("Failed to run memy");
     assert!(output.status.success());
 }

@@ -68,13 +68,13 @@ fn note_path(tx: &Transaction, raw_path: &str) {
 }
 
 #[instrument(level = "trace")]
-fn note_paths(note_args: cli::NoteArgs) {
+fn note_paths(note_args: cli::NoteArgs) -> Result<(), Box<dyn core::error::Error>> {
     if note_args.paths.is_empty() {
         error!("You must specify some paths to note");
         std::process::exit(1);
     }
 
-    let mut db_connection = db::open_db();
+    let mut db_connection = db::open_db()?;
     let tx = db_connection
         .transaction()
         .expect("Cannot start DB transaction");
@@ -84,6 +84,8 @@ fn note_paths(note_args: cli::NoteArgs) {
     }
 
     tx.commit().expect("Cannot commit transaction");
+
+    Ok(())
 }
 
 fn timestamp_age_hours(now: u64, timestamp: u64) -> f64 {
@@ -310,11 +312,22 @@ fn main() {
     debug!("CLI params parsed: {cli:?}");
 
     match cli.command {
-        Commands::Note(note_args) => note_paths(note_args),
-        Commands::List(list_args) => {
-            let db_connection = db::open_db();
-            list_paths(&db_connection, &list_args);
-        }
+        Commands::Note(note_args) => match note_paths(note_args) {
+            Ok(()) => {}
+            Err(err) => {
+                error!("{err}");
+                std::process::exit(1);
+            }
+        },
+        Commands::List(list_args) => match db::open_db() {
+            Ok(db_connection) => {
+                list_paths(&db_connection, &list_args);
+            }
+            Err(err) => {
+                error!("{err}");
+                std::process::exit(1);
+            }
+        },
         Commands::GenerateConfig { filename } => {
             if let Err(err) = config::generate_config(filename.as_deref()) {
                 error!("{err}");

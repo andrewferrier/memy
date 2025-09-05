@@ -23,11 +23,9 @@ fn get_db_path() -> PathBuf {
     env::var("MEMY_DB_DIR").map_or_else(
         |_| {
             let xdg_dirs = BaseDirectories::with_prefix("memy");
-            xdg_dirs
-                .place_state_file("memy.sqlite3")
-                .expect("Cannot determine state file path")
+            xdg_dirs.get_state_home().expect("Cannot get XDG home")
         },
-        |env_path| PathBuf::from(env_path).join("memy.sqlite3"),
+        PathBuf::from,
     )
 }
 
@@ -47,20 +45,28 @@ fn init_db(conn: &Connection) {
 }
 
 #[instrument(level = "trace")]
-pub fn open_db() -> Connection {
+pub fn open_db() -> Result<Connection, String> {
     let db_path = get_db_path();
-    let db_path_str = db_path.to_string_lossy().to_string();
-    let db_path_exists = db_path.exists();
-    let conn = Connection::open(&db_path).expect("Failed to open memy database");
 
-    if db_path_exists {
-        debug!("Database at {db_path_str} does exist");
-        check_db_version(&conn);
+    if db_path.exists() {
+        let db_file = db_path.join("memy.sqlite3");
+        let db_path_exists = db_file.exists();
+        let conn = Connection::open(&db_file).expect("Failed to open memy database");
+
+        if db_path_exists {
+            debug!("Database at {} does exist", db_file.to_string_lossy());
+            check_db_version(&conn);
+        } else {
+            debug!("Database at {} does not exist", db_file.to_string_lossy());
+            init_db(&conn);
+        }
+
+        debug!("Database opened");
+        Ok(conn)
     } else {
-        debug!("Database at {db_path_str} does not exist");
-        init_db(&conn);
+        Err(format!(
+            "Database path {} doesn't exist.",
+            db_path.to_string_lossy()
+        ))
     }
-
-    debug!("Database opened");
-    conn
 }
