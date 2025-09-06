@@ -1,3 +1,4 @@
+use clap::builder::PossibleValuesParser;
 use clap::{Args, Parser, Subcommand};
 
 #[derive(Parser, Debug)]
@@ -83,29 +84,11 @@ pub struct ListArgs {
     #[arg(short, long)]
     pub directories_only: bool,
 
-    /// Output format: 'plain', 'csv', or 'json'
-    #[arg(long, default_value = "plain", value_name = "FORMAT", value_parser = validate_format)]
+    /// Output format
+    #[arg(long, default_value = "plain", value_name = "FORMAT", value_parser = PossibleValuesParser::new(["plain", "csv", "json"]))]
     pub format: String,
 
-    /// Output colorization: 'always', 'automatic', or 'never'
-    #[arg(long, default_value = "automatic", value_name = "WHEN", value_parser = validate_color)]
+    /// Output colorization
+    #[arg(long, default_value = "automatic", value_name = "WHEN", alias="colour", value_parser = PossibleValuesParser::new(["always", "automatic", "never"]))]
     pub color: String,
-}
-
-fn validate_color(value: &str) -> Result<String, String> {
-    match value {
-        "always" | "automatic" | "never" => Ok(value.to_owned()),
-        _ => Err(String::from(
-            "Invalid value for --color. Allowed values are 'always', 'automatic', 'never'.",
-        )),
-    }
-}
-
-fn validate_format(value: &str) -> Result<String, String> {
-    match value {
-        "plain" | "csv" | "json" => Ok(value.to_owned()),
-        _ => Err(String::from(
-            "Invalid value for --format. Allowed values are 'plain', 'csv', or 'json'.",
-        )),
-    }
 }
