@@ -158,6 +158,18 @@ struct PathFrecency {
     last_noted: String,
 }
 
+fn should_use_color(color: &String) -> bool {
+    match color.as_str() {
+        "always" => true,
+        "never" => false,
+        "automatic" => stdout().is_terminal(),
+        _ => {
+            error!("Invalid value for color: {color}");
+            std::process::exit(1);
+        }
+    }
+}
+
 #[instrument(level = "trace")]
 fn list_paths_calculate(conn: &Connection, args: &ListArgs) -> Vec<PathFrecency> {
     let mut stmt = conn
@@ -246,16 +258,6 @@ fn list_paths(args: &ListArgs) -> Result<(), Box<dyn Error>> {
     let db_connection = db::open_db()?;
     let results = list_paths_calculate(&db_connection, args);
 
-    let use_color = match args.color.as_str() {
-        "always" => true,
-        "never" => false,
-        "automatic" => stdout().is_terminal(),
-        _ => {
-            error!("Invalid value for color: {}", args.color);
-            std::process::exit(1);
-        }
-    };
-
     match args.format.as_str() {
         "json" => {
             let json_output = serde_json::to_string_pretty(&results)
@@ -270,6 +272,7 @@ fn list_paths(args: &ListArgs) -> Result<(), Box<dyn Error>> {
             wtr.flush().expect("Cannot flush CSV");
         }
         _ => {
+            let use_color = should_use_color(&args.color);
             for result in results {
                 if use_color {
                     let path_parts: Vec<&str> = result.path.rsplitn(2, '/').collect();
