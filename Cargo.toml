@@ -39,7 +39,9 @@ xdg = { version = "3.0.0", default-features = false }
 
 [dev-dependencies]
 assert_cmd = "2"
+criterion = "0.7.0"
 tempfile = "3"
+walkdir = "2.5.0"
 
 [build-dependencies]
 clap = { version = "4.5", features = ["derive"] }
@@ -49,6 +51,10 @@ clap_mangen = "0.2.29"
 [profile.release]
 lto = true
 codegen-units = 1
+
+[[bench]]
+name = "benches"
+harness = false
 
 [package.metadata.deb]
 maintainer = "Andrew Ferrier <andrew.ferrier@example.com>"
