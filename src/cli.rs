@@ -8,11 +8,11 @@ use clap::{Args, Parser, Subcommand};
 #[command(about = "Track and recall frequently and recently used files or directories.")]
 pub struct Cli {
     /// Enable verbose logging (can be added multiple times to add more verbosity)
-    #[arg(short, long, global = true, action = clap::ArgAction::Count, default_value_t = 0)]
+    #[arg(display_order = 100, short, long, global = true, action = clap::ArgAction::Count, default_value_t = 0)]
     pub verbose: u8,
 
     /// Override advanced configuration options normally set in memy.toml
-    #[arg(short, long, global = true, value_parser = parse_key_val, value_name("OPTION=VALUE"), number_of_values = 1)]
+    #[arg(display_order = 101, short, long, global = true, value_parser = parse_key_val, value_name("OPTION=VALUE"), number_of_values = 1)]
     pub config: Vec<(String, String)>,
 
     #[command(subcommand)]
