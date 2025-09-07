@@ -327,7 +327,10 @@ fn handle_cli_command(
     match command {
         Commands::Note(note_args) => Ok(note_paths(note_args)?),
         Commands::List(list_args) => Ok(list_paths(&list_args)?),
-        Commands::GenerateConfig { filename } => config::generate_config(filename.as_deref()),
+        Commands::GenerateConfig {} => {
+            config::output_template_config();
+            Ok(())
+        }
         Commands::Completions { shell } => {
             completions(shell);
             Ok(())

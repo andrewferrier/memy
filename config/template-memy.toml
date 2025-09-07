@@ -1,5 +1,7 @@
 # This is a template configuration file for memy
-# (https://github.com/andrewferrier/memy/) - the values below are the defaults
+# (https://github.com/andrewferrier/memy/) - the values below are the defaults.
+#
+# By default memy looks for its config file in ~/.config/memy/memy.toml.
 # ****************************************************************************
 
 # When the database is initialized for the first time, should fasd

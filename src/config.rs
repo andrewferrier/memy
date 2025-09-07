@@ -160,18 +160,8 @@ pub fn set_config_overrides(overrides: Vec<(String, String)>) {
         .expect("Overrides could not be set");
 }
 
-#[instrument(level = "trace")]
-pub fn generate_config(filename: Option<&str>) -> Result<(), Box<dyn Error>> {
-    let filename_pathbuf: Option<PathBuf> = filename.map(PathBuf::from);
-    let final_filename = filename_pathbuf.unwrap_or_else(get_config_file_path);
-
-    if final_filename.exists() {
-        return Err(format!("Config file already exists at {}", final_filename.display()).into());
-    }
-
-    fs::write(&final_filename, TEMPLATE_CONFIG)?;
-    println!("Config file created at {}", final_filename.display());
-    Ok(())
+pub fn output_template_config() {
+    print!("{TEMPLATE_CONFIG}");
 }
 
 pub fn get_import_on_first_use() -> bool {

@@ -48,12 +48,8 @@ pub enum Commands {
     Note(NoteArgs),
     /// List paths by frecency score
     List(ListArgs),
-    /// Generate a default memy.toml config file
-    GenerateConfig {
-        /// Optional output filename for the generated config
-        #[arg(value_name = "FILENAME")]
-        filename: Option<String>,
-    },
+    /// Generate a default memy.toml config file on stdout
+    GenerateConfig {},
     /// Generate shell completion scripts
     Completions {
         /// The shell to generate completions for (e.g. bash, zsh)
