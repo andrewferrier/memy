@@ -22,11 +22,6 @@ pub fn temp_dir() -> (TempDir, PathBuf) {
     (temp_dir, path)
 }
 
-pub fn create_config_file(config_path: &std::path::Path, contents: &str) {
-    let config_toml_path = config_path.join("memy.toml");
-    fs::write(&config_toml_path, contents).expect("failed to write config");
-}
-
 pub fn create_test_file(
     dir: &std::path::Path,
     filename: &str,
@@ -35,6 +30,10 @@ pub fn create_test_file(
     let file_path = dir.join(filename);
     fs::write(&file_path, contents).expect("failed to create test file");
     file_path
+}
+
+pub fn create_config_file(config_path: &std::path::Path, contents: &str) {
+    create_test_file(config_path, "memy.toml", contents);
 }
 
 pub fn create_test_directory(base: &std::path::Path, dirname: &str) -> std::path::PathBuf {
@@ -51,12 +50,10 @@ pub fn memy_cmd(
     let mut cmd = Command::cargo_bin("memy").expect("Cannot set up memy command");
     cmd.env("MEMY_DB_DIR", db_path);
 
-    let _temp_config_dir;
     if let Some(config) = config_path {
         cmd.env("MEMY_CONFIG_DIR", config);
     } else {
-        let (temp_dir, temp_path) = temp_dir();
-        _temp_config_dir = temp_dir;
+        let (_temp_dir, temp_path) = temp_dir();
         cmd.env("MEMY_CONFIG_DIR", &temp_path);
     }
 
@@ -67,14 +64,14 @@ pub fn memy_cmd(
 pub fn memy_cmd_test_defaults(
     db_path: &std::path::Path,
     config_path: Option<&std::path::Path>,
-    args: &[&str],
+    original_args: &[&str],
 ) -> Command {
-    let mut args2 = Vec::new();
-    args2.push("--config");
-    args2.push("import_on_first_use=false");
-    args2.extend(args);
+    let mut args = Vec::new();
+    args.push("--config");
+    args.push("import_on_first_use=false");
+    args.extend(original_args);
 
-    memy_cmd(db_path, config_path, &args2)
+    memy_cmd(db_path, config_path, &args)
 }
 
 pub fn sleep(millis: u64) {

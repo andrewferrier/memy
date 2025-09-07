@@ -5,6 +5,24 @@ use std::os::unix::fs::symlink;
 use support::*;
 
 #[test]
+fn test_note_symlink_resolves_to_target() {
+    let (_db_temp, db_path) = temp_dir();
+    let (_working_temp, working_path) = temp_dir();
+
+    let dummy_file_path = create_test_file(&working_path, "dummy_file_A", "dummy content");
+
+    let symlink_path = working_path.join("symlink_B");
+    symlink(&dummy_file_path, &symlink_path).expect("failed to create symlink");
+
+    note_path(&db_path, None, symlink_path.to_str().unwrap(), 1, &[], &[]);
+
+    let lines = list_paths(&db_path, None, &[], &[]);
+
+    assert_eq!(lines.len(), 1);
+    assert_eq!(lines[0], dummy_file_path.to_str().unwrap());
+}
+
+#[test]
 fn test_note_symlink_with_no_normalize_option() {
     let (_db_temp, db_path) = temp_dir();
     let (_working_temp, working_path) = temp_dir();
