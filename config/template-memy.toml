@@ -1,14 +1,19 @@
-# This is a configuration file for memy - the values below are the defaults
-# *************************************************************************
+# This is a template configuration file for memy
+# (https://github.com/andrewferrier/memy/) - the values below are the defaults
+# ****************************************************************************
 
-# When the database is initialized for the first time, should fasd (https://github.com/clvv/fasd) state files or zoxide state be imported automatically?
+# When the database is initialized for the first time, should fasd
+# (https://github.com/clvv/fasd) state files or zoxide state be imported
+# automatically?
 import_on_first_use = true
 
-# List of paths that won't be saved to the memy database even if they are noted - these follow the same syntax as gitignore rules: https://git-scm.com/docs/gitignore
-# Example: denylist = ['*.log', '*.out']
+# List of paths that won't be saved to the memy database even if they are noted
+# - these follow the same syntax as gitignore rules:
+# https://git-scm.com/docs/gitignore. Example: denylist = ['*.log', '*.out']
 denylist = []
 
-# When noting symlinks using memy, should the symlink be saved, or the file the symlink points at?
+# When noting symlinks using memy, should the symlink be saved, or the file the
+# symlink points at?
 normalize_symlinks_on_note = true
 
 # When noting files that aren't there, should a warning be emitted?
@@ -17,9 +22,12 @@ missing_files_warn_on_note = true
 # When noting files that are in the denylist, should a warning be emitted?
 denied_files_warn_on_note = true
 
-# When listing files that are in the denylist (they've been added to the denylist after being noted),
-# what should happen? Valid values are "skip-silently", "warn", "delete"
+# When listing files that are in the denylist (they've been added to the
+# denylist after being noted), what should happen? Valid values are
+# "skip-silently", "warn", "delete"
 denied_files_on_list = "delete"
 
-# When listing, how much should *recency of file noting* dominate over *frequency of noting* in the sort? 0.0 means pure frequency; 1.0 means pure recency.
+# When listing, how much should *recency of file noting* dominate over
+# *frequency of noting* in the sort? 0.0 means pure frequency; 1.0 means pure
+# recency.
 recency_bias = 0.5
