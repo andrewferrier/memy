@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.12.0](https://github.com/andrewferrier/memy/compare/v0.11.0...v0.12.0) (2025-09-07)
+
+
+### Features
+
+* Add color support - closes [#55](https://github.com/andrewferrier/memy/issues/55) ([f27a1c6](https://github.com/andrewferrier/memy/commit/f27a1c6fc1f0017960509c68192ea026e52935b8))
+* Add hooks to deb/rpm packages ([ba872c2](https://github.com/andrewferrier/memy/commit/ba872c20d543f2f7c22c0da8b43402b65a8554f6))
+* Add zoxide importer - closes [#47](https://github.com/andrewferrier/memy/issues/47) ([31adec9](https://github.com/andrewferrier/memy/commit/31adec9f1fd1f11dcd6ced929c0d59dc6c9567a2))
+* Import fasd DB if DB is empty - closes [#63](https://github.com/andrewferrier/memy/issues/63) ([f380d7c](https://github.com/andrewferrier/memy/commit/f380d7ca34697d9f7ae651e5f143857a748c8d75))
+* Improve formatting of template config ([89cc41c](https://github.com/andrewferrier/memy/commit/89cc41c93c74325b8053a7af72014c8e7baba4c8))
+* Make global opts actually global ([944414e](https://github.com/andrewferrier/memy/commit/944414ed8c245abb65d074a0190313bea743949f))
+* Simplify generate-config to output on stdout ([9189ccd](https://github.com/andrewferrier/memy/commit/9189ccd12030e039eef6f4bcc017415862efc6ad))
+* Write a manpage for config file ([8b214b7](https://github.com/andrewferrier/memy/commit/8b214b7880f22f72ddb2d10d457b84683f85f862))
+
+
+### Bug Fixes
+
+* Don't allow any invalid config ([e241cb8](https://github.com/andrewferrier/memy/commit/e241cb86edcfb82ec32be81f58bb76e06e25e1cd))
+* Handle gracefully missing DB/config path ([b51b20e](https://github.com/andrewferrier/memy/commit/b51b20e620d5a1868395c395eb1668bc4b904b23))
+
+
+### Performance Improvements
+
+* Add benchmark for noting ([795ea8a](https://github.com/andrewferrier/memy/commit/795ea8ad5c00283e68947b11396472de65c050d9))
+* Optimize cargo rebuild ([800b0bc](https://github.com/andrewferrier/memy/commit/800b0bc0c7cfedf3c35f63a4a928cc9704fce5e6))
+
 ## [0.11.0](https://github.com/andrewferrier/memy/compare/v0.10.0...v0.11.0) (2025-09-02)
 
 
