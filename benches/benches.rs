@@ -5,12 +5,7 @@ use std::path::Path;
 use std::time::Instant;
 use tempfile::tempdir;
 
-fn benchmark_note_command(c: &mut Criterion) {
-    let mut group = c.benchmark_group("benchmark_note_command");
-    group.warm_up_time(Duration::from_secs(10));
-    group.measurement_time(Duration::from_secs(60));
-    group.sample_size(10);
-
+fn find_x_real_files(x: usize) -> Vec<String> {
     let mut file_list = Vec::new();
     let usr_dir = Path::new("/usr");
     let mut count = 0;
@@ -23,16 +18,36 @@ fn benchmark_note_command(c: &mut Criterion) {
             if entry.file_type().is_file() {
                 file_list.push(entry.path().to_string_lossy().to_string());
                 count += 1;
-                if count >= 5000 {
+                if count >= x {
                     break;
                 }
             }
         }
     }
 
-    assert_eq!(file_list.len(), 5000, "Must have 5000 files ready");
+    assert_eq!(file_list.len(), x, "Cannot find {x} real files");
 
-    group.bench_function("memy note 5000 files", |b| {
+    file_list
+}
+
+fn get_entries_in_sqlite(db_dir: &Path) -> usize {
+    let conn = rusqlite::Connection::open(db_dir.join("memy.sqlite3"))
+        .expect("Failed to open SQLite database");
+    conn.query_row("SELECT COUNT(*) FROM paths;", [], |row| row.get(0))
+        .expect("Failed to query paths table")
+}
+
+fn benchmark_note_command(c: &mut Criterion) {
+    let file_count = 5000;
+
+    let mut group = c.benchmark_group("benchmark_note_command");
+    group.warm_up_time(Duration::from_secs(10));
+    group.measurement_time(Duration::from_secs(60));
+    group.sample_size(10);
+
+    let file_list = find_x_real_files(file_count);
+
+    group.bench_function(format!("memy note {file_count} files"), |b| {
         b.iter(|| {
             let temp_dir = tempdir().expect("Failed to create temp dir");
             let db_dir = temp_dir.path();
@@ -50,14 +65,10 @@ fn benchmark_note_command(c: &mut Criterion) {
             let elapsed = start.elapsed();
             // STOP TIMING
 
-            let conn = rusqlite::Connection::open(db_dir.join("memy.sqlite3"))
-                .expect("Failed to open SQLite database");
-            let final_count: i64 = conn
-                .query_row("SELECT COUNT(*) FROM paths;", [], |row| row.get(0))
-                .expect("Failed to query paths table");
+            let entry_count = get_entries_in_sqlite(db_dir);
             assert_eq!(
-                final_count, 5000,
-                "Expected 5000 records in paths table, but found {final_count}"
+                entry_count, file_count,
+                "Expected {file_count} records in paths table, but found {entry_count}"
             );
 
             temp_dir.close().expect("Failed to clean up temp dir");
