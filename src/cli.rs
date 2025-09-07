@@ -52,7 +52,7 @@ pub enum Commands {
     GenerateConfig {},
     /// Generate shell completion scripts
     Completions {
-        /// The shell to generate completions for (e.g. bash, zsh)
+        /// The shell to generate completions for
         #[arg(value_enum)]
         shell: Option<clap_complete::Shell>,
     },
