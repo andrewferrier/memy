@@ -73,11 +73,11 @@ pub struct NoteArgs {
 #[derive(Args, Debug)]
 pub struct ListArgs {
     /// Show only files in the list
-    #[arg(short, long)]
+    #[arg(short, long, conflicts_with = "directories_only")]
     pub files_only: bool,
 
     /// Show only directories in the list
-    #[arg(short, long)]
+    #[arg(short, long, conflicts_with = "files_only")]
     pub directories_only: bool,
 
     /// Output format
