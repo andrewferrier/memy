@@ -109,7 +109,7 @@ vendor = "Andrew Ferrier <andrew.ferrier@example.com>"
 url = "https://github.com/andrewferrier/memy"
 changelog = "CHANGELOG.md"
 assets = [
-    { source = "target/release/memy", dest = "/usr/bin/", mode = "755" },
+    { source = "target/release/memy", dest = "/usr/bin/memy", mode = "755" },
     { source = "README.md", dest = "/usr/share/doc/memy/README.md", mode = "644" },
     { source = "LICENSE", dest = "/usr/share/doc/memy/LICENSE", mode = "644" },
     { source = "CHANGELOG.md", dest = "/usr/share/doc/memy/CHANGELOG.md", mode = "644" },
