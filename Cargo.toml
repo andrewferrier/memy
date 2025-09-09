@@ -62,6 +62,7 @@ extended-description = "memy is a modern, fast, and simple command-line tool to 
 depends = ""
 license-file = ["LICENSE"]
 changelog = "CHANGELOG.md"
+section = "utils"
 assets = [
     [
         "target/release/memy",
