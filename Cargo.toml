@@ -11,13 +11,13 @@ keywords = ["cli", "file-tracking"]
 categories = ["Command line utilities"]
 
 [dependencies]
-chrono = "0.4.42"
+chrono = "0.4.41"
 clap = { version = "4.5", default-features = false, features = [
     "derive",
     "help",
 ] }
-clap_complete = "4.5.57"
-config = { version = "0.15.15", default-features = false, features = [
+clap_complete = "4.5.55"
+config = { version = "0.15.13", default-features = false, features = [
     "json5",
     "toml",
 ] }
@@ -25,13 +25,13 @@ csv = "1.3.1"
 env_logger = { version = "0.11", default-features = false }
 ignore = "0.4"
 is-terminal = "0.4.16"
-log = "0.4.28"
+log = "0.4.27"
 rusqlite = { version = "0.37", default-features = false, features = [
     "bundled",
 ] }
 serde = "1.0.219"
 serde_json = "1.0.143"
-toml = "0.9.5"
+toml = "0.9.2"
 tracing = "0.1.41"
 tracing-log = "0.2.0"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
@@ -45,7 +45,7 @@ walkdir = "2.5.0"
 
 [build-dependencies]
 clap = { version = "4.5", features = ["derive"] }
-clap_complete = "4.5.57"
+clap_complete = "4.5.55"
 clap_mangen = "0.2.29"
 
 [profile.release]
