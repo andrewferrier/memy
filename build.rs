@@ -1,4 +1,8 @@
 use clap::CommandFactory as _;
+use clap_complete::{
+    generate_to,
+    shells::{Bash, Fish, Zsh},
+};
 use clap_mangen::Man;
 use std::fs::{create_dir_all, File};
 use std::io::BufWriter;
@@ -59,6 +63,21 @@ fn get_git_version() {
     println!("cargo:rerun-if-changed=.git/refs/");
 }
 
+fn generate_completions(build_root_dir: &Path) -> std::io::Result<()> {
+    let completions_dir = build_root_dir.join("target/completions");
+    create_dir_all(&completions_dir)?;
+
+    let mut cmd = Cli::command();
+
+    generate_to(Bash, &mut cmd, "memy", &completions_dir)?;
+    generate_to(Zsh, &mut cmd, "memy", &completions_dir)?;
+    generate_to(Fish, &mut cmd, "memy", &completions_dir)?;
+
+    println!("cargo:rerun-if-changed=target/completions");
+
+    Ok(())
+}
+
 fn write_config_man_page(man_dir: &Path) {
     let config_contents = include_str!("config/template-memy.toml");
 
@@ -94,14 +113,7 @@ fn write_man_page(
     Ok(())
 }
 
-fn build_man_pages() -> std::io::Result<()> {
-    let build_root_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .ok() // converts Result -> Option
-        .map_or_else(
-            || std::env::current_dir().expect("Failed to get current dir"),
-            PathBuf::from,
-        );
-
+fn build_man_pages(build_root_dir: &Path) -> std::io::Result<()> {
     let man_dir = build_root_dir.join("target/man");
     create_dir_all(&man_dir)?;
 
@@ -129,7 +141,13 @@ fn build_man_pages() -> std::io::Result<()> {
 }
 
 fn main() {
+    let build_root_dir = std::env::var("CARGO_MANIFEST_DIR").ok().map_or_else(
+        || std::env::current_dir().expect("Failed to get current dir"),
+        PathBuf::from,
+    );
+
     get_git_version();
     embed_hooks();
-    build_man_pages().expect("Failed to build man page");
+    build_man_pages(&build_root_dir).expect("Failed to build man page");
+    generate_completions(&build_root_dir).expect("Failed to generate shell completions");
 }
