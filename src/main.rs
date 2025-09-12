@@ -216,9 +216,15 @@ fn list_paths_calculate(conn: &Connection, args: &ListArgs) -> Vec<PathFrecency>
         }
 
         let Ok(metadata) = fs::metadata(&path) else {
-            conn.execute("DELETE FROM paths WHERE path = ?", params![path])
-                .expect("Delete failed");
-            warn!("Path {path} no longer exists, deleted from database.");
+            let missing_files_delete_after_days = config::get_missing_files_delete_from_db_after();
+            let last_noted_age_days = (now - last_noted_timestamp) / 86_400; // Convert seconds to days
+            if last_noted_age_days > missing_files_delete_after_days {
+                conn.execute("DELETE FROM paths WHERE path = ?", params![path])
+                    .expect("Delete failed");
+                warn!("Path {path} no longer exists and is older than the configured threshold, deleted from database.");
+            } else {
+                info!("Path {path} no longer exists but is within the configured threshold, retained in database.");
+            }
             continue;
         };
 

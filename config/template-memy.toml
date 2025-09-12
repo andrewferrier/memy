@@ -33,3 +33,7 @@ denied_files_on_list = "delete"
 # *frequency of noting* in the sort? 0.0 means pure frequency; 1.0 means pure
 # recency.
 recency_bias = 0.5
+
+# The number of days after which missing files are deleted from the database.
+# If a file has been missing for longer than this duration, it will be removed.
+missing_files_delete_from_db_after = 30

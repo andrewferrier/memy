@@ -33,6 +33,7 @@ pub struct MemyConfig {
     pub denied_files_on_list: Option<DeniedFilesOnList>,
     #[serde(default, deserialize_with = "validate_recency_bias")]
     pub recency_bias: Option<RecencyBias>,
+    pub missing_files_delete_from_db_after: Option<u64>,
 }
 
 fn validate_recency_bias<'de, D>(deserializer: D) -> Result<Option<RecencyBias>, D::Error>
@@ -200,4 +201,10 @@ pub fn get_denied_files_on_list() -> DeniedFilesOnList {
 
 pub fn get_recency_bias() -> RecencyBias {
     CACHED_CONFIG.recency_bias.unwrap_or(0.5)
+}
+
+pub fn get_missing_files_delete_from_db_after() -> u64 {
+    CACHED_CONFIG
+        .missing_files_delete_from_db_after
+        .unwrap_or(30)
 }

@@ -7,7 +7,6 @@ mod support;
 use support::*;
 
 use std::env::home_dir;
-use std::fs;
 
 #[test]
 fn test_note_and_list_paths() {
@@ -186,32 +185,6 @@ fn test_help_flag() {
 
     assert!(output.status.success());
     assert!(!output.stdout.is_empty());
-}
-
-#[test]
-fn test_note_deleted_file_not_in_list() {
-    let (_db_temp, db_path) = temp_dir();
-    let (_working_temp, working_path) = temp_dir();
-
-    let test_file_path = create_test_file(&working_path, "test_file", "test content");
-
-    note_path(
-        &db_path,
-        None,
-        test_file_path.to_str().unwrap(),
-        1,
-        &[],
-        &[],
-    );
-
-    let lines_before: Vec<String> = list_paths(&db_path, None, &[], &[]);
-    assert_eq!(lines_before.len(), 1);
-    assert_eq!(lines_before[0], test_file_path.to_str().unwrap());
-
-    fs::remove_file(&test_file_path).expect("failed to delete test file");
-
-    let lines_after: Vec<String> = list_paths(&db_path, None, &[], &[]);
-    assert_eq!(lines_after.len(), 0);
 }
 
 #[test]

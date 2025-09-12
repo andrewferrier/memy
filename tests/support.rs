@@ -78,6 +78,14 @@ pub fn sleep(millis: u64) {
     thread::sleep(Duration::from_millis(millis));
 }
 
+pub fn execute_sql(db_path: &std::path::Path, sql: &str) {
+    let db_file = db_path.join("memy.sqlite3");
+    let connection = rusqlite::Connection::open(db_file).expect("failed to open database");
+    connection
+        .execute(sql, [])
+        .expect("failed to execute SQL command");
+}
+
 // TODO: Consider changing default to return Output
 pub fn note_path(
     db_path: &std::path::Path,
