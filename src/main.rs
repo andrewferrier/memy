@@ -55,9 +55,11 @@ fn note_path(tx: &Transaction, raw_path: &str) {
     let clean_path = normalize_path_if_needed(path);
 
     let matcher = config::get_denylist_matcher();
-    if let ignore::Match::Ignore(_matched_pat) = matcher.matched(&clean_path, false) {
+    if let ignore::Match::Ignore(_matched_pat) =
+        matcher.matched_path_or_any_parents(&clean_path, false)
+    {
         if config::get_denied_files_warn_on_note() {
-            warn!("Path denied by denylist pattern.");
+            warn!("Path {clean_path} denied by denylist pattern.");
         }
 
         return;
@@ -72,6 +74,7 @@ fn note_path(tx: &Transaction, raw_path: &str) {
         params![clean_path, now],
     )
     .expect("Insert failed");
+
     info!("Path {clean_path} noted");
 }
 
@@ -197,7 +200,23 @@ fn list_paths_calculate(conn: &Connection, args: &ListArgs) -> Vec<PathFrecency>
     let oldest_last_noted_timestamp_hours = timestamp_age_hours(now, oldest_last_noted_timestamp);
 
     for (path, count, last_noted_timestamp) in rows.into_iter().flatten() {
-        if let ignore::Match::Ignore(_matched_pat) = matcher.matched(&path, false) {
+        let Ok(metadata) = fs::metadata(&path) else {
+            let missing_files_delete_after_days = config::get_missing_files_delete_from_db_after();
+            let last_noted_age_days = (now - last_noted_timestamp) / 86_400; // Convert seconds to days
+            if last_noted_age_days > missing_files_delete_after_days {
+                conn.execute("DELETE FROM paths WHERE path = ?", params![path])
+                    .expect("Delete failed");
+                warn!("Path {path} no longer exists; older than get_missing_files_delete_from_db_after, removed from database.");
+            } else {
+                info!("Path {path} no longer exists; within get_missing_files_delete_from_db_after, retained but skipped.");
+            }
+
+            continue;
+        };
+
+        if let ignore::Match::Ignore(_matched_pat) =
+            matcher.matched_path_or_any_parents(&path, metadata.is_dir())
+        {
             match list_denied_action {
                 DeniedFilesOnList::SkipSilently => {
                     continue;
@@ -214,19 +233,6 @@ fn list_paths_calculate(conn: &Connection, args: &ListArgs) -> Vec<PathFrecency>
                 }
             }
         }
-
-        let Ok(metadata) = fs::metadata(&path) else {
-            let missing_files_delete_after_days = config::get_missing_files_delete_from_db_after();
-            let last_noted_age_days = (now - last_noted_timestamp) / 86_400; // Convert seconds to days
-            if last_noted_age_days > missing_files_delete_after_days {
-                conn.execute("DELETE FROM paths WHERE path = ?", params![path])
-                    .expect("Delete failed");
-                warn!("Path {path} no longer exists and is older than the configured threshold, deleted from database.");
-            } else {
-                info!("Path {path} no longer exists but is within the configured threshold, retained in database.");
-            }
-            continue;
-        };
 
         if args.files_only && !metadata.is_file() {
             continue;

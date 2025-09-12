@@ -171,7 +171,7 @@ pub fn get_import_on_first_use() -> bool {
 
 pub fn get_denylist_matcher() -> Gitignore {
     let config = &*CACHED_CONFIG;
-    let mut builder = GitignoreBuilder::new("");
+    let mut builder = GitignoreBuilder::new("/");
     for pat in config.denylist.clone().unwrap_or_default() {
         builder
             .add_line(None, &pat)
