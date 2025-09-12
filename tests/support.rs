@@ -10,6 +10,7 @@ use assert_cmd::Command;
 use core::time::Duration;
 use std::fs;
 use std::path::PathBuf;
+use std::process::Output;
 use std::thread;
 use tempfile::TempDir;
 
@@ -86,7 +87,6 @@ pub fn execute_sql(db_path: &std::path::Path, sql: &str) {
         .expect("failed to execute SQL command");
 }
 
-// TODO: Consider changing default to return Output
 pub fn note_path(
     db_path: &std::path::Path,
     config_path: Option<&std::path::Path>,
@@ -94,7 +94,7 @@ pub fn note_path(
     count: usize,
     common_args: &[&str],
     note_args: &[&str],
-) -> assert_cmd::Command {
+) -> Output {
     let mut last_cmd = None;
 
     for _ in 0..count {
@@ -110,7 +110,10 @@ pub fn note_path(
         sleep(100);
     }
 
-    last_cmd.expect("note_path called with count == 0")
+    last_cmd
+        .expect("note_path called with count == 0")
+        .output()
+        .expect("Couldn't get output")
 }
 
 pub fn list_paths(
@@ -124,11 +127,10 @@ pub fn list_paths(
     args.push("list");
     args.extend(list_args);
 
-    let output = memy_cmd_test_defaults(db_path, config_path, &args)
-        .output()
-        .expect("failed to run memy");
+    let mut cmd = memy_cmd_test_defaults(db_path, config_path, &args);
+    cmd.assert().success();
 
-    assert!(output.status.success(), "memy list failed.");
+    let output = cmd.output().expect("Couldn't get output");
 
     String::from_utf8_lossy(&output.stdout)
         .lines()

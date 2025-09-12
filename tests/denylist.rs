@@ -24,9 +24,7 @@ fn test_denylist_excludes_file() {
         1,
         &[],
         &[],
-    )
-    .output()
-    .expect("Failed to execute command");
+    );
 
     assert!(output.status.success());
     let stderr = String::from_utf8_lossy(&output.stderr);
@@ -56,9 +54,7 @@ fn test_denylist_excludes_file_with_subdir_glob() {
         1,
         &[],
         &[],
-    )
-    .output()
-    .expect("Failed to execute command");
+    );
     assert!(output.status.success());
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(stderr.contains("denied"));
@@ -87,9 +83,7 @@ fn test_denylist_excludes_file_with_double_star_glob() {
         1,
         &[],
         &[],
-    )
-    .output()
-    .expect("Failed to execute command");
+    );
 
     assert!(output.status.success());
     let stderr = String::from_utf8_lossy(&output.stderr);
@@ -122,9 +116,7 @@ fn test_denylist_excludes_multiple_patterns() {
         1,
         &[],
         &[],
-    )
-    .output()
-    .expect("Failed to execute command");
+    );
 
     assert!(output1.status.success());
     let stderr1 = String::from_utf8_lossy(&output1.stderr);
@@ -137,9 +129,7 @@ fn test_denylist_excludes_multiple_patterns() {
         1,
         &[],
         &[],
-    )
-    .output()
-    .expect("Failed to execute command");
+    );
 
     assert!(output2.status.success());
     let stderr2 = String::from_utf8_lossy(&output2.stderr);
@@ -167,9 +157,7 @@ fn test_denylist_pattern_with_leading_double_star() {
         1,
         &[],
         &[],
-    )
-    .output()
-    .expect("Failed to execute command");
+    );
     assert!(output.status.success());
 
     let stderr = String::from_utf8_lossy(&output.stderr);
@@ -199,9 +187,7 @@ fn test_denylist_excludes_file_no_warning_when_warn_disabled() {
         1,
         &[],
         &[],
-    )
-    .output()
-    .expect("Failed to execute command");
+    );
 
     assert!(output.status.success());
     let stderr = String::from_utf8_lossy(&output.stderr);
@@ -226,9 +212,7 @@ fn test_denied_files_on_list_delete_behavior() {
         1,
         &[],
         &[],
-    )
-    .output()
-    .expect("Failed to execute command");
+    );
     assert!(output.status.success());
 
     let deny_pattern = deny_file.to_str().unwrap();
@@ -274,9 +258,7 @@ fn test_denied_files_on_list_warn_behavior() {
         1,
         &[],
         &[],
-    )
-    .output()
-    .expect("Failed to execute command");
+    );
     assert!(output_note.status.success());
 
     let deny_pattern = deny_file.to_str().unwrap();
@@ -316,9 +298,7 @@ fn test_denied_files_on_list_skip_silently_behavior() {
         1,
         &[],
         &[],
-    )
-    .output()
-    .expect("Failed to execute command");
+    );
     assert!(output_note.status.success());
 
     let deny_pattern = deny_file.to_str().unwrap();

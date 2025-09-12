@@ -11,9 +11,7 @@ fn test_note_nonexistent_file_ignore_silently() {
     create_config_file(&config_path, config_contents);
 
     let test_path = "/tmp/this_file_should_not_exist_ignore_silently";
-    let output = note_path(&db_path, Some(&config_path), test_path, 1, &[], &[])
-        .output()
-        .expect("Failed to execute command");
+    let output = note_path(&db_path, Some(&config_path), test_path, 1, &[], &[]);
 
     assert!(output.status.success());
     let stderr = String::from_utf8_lossy(&output.stderr);
@@ -30,9 +28,7 @@ fn test_note_nonexistent_file_ignore_with_warning() {
     create_config_file(&config_path, config_contents);
 
     let test_path = "/tmp/this_file_should_not_exist_ignore_with_warning";
-    let output = note_path(&db_path, Some(&config_path), test_path, 1, &[], &[])
-        .output()
-        .expect("Failed to execute command");
+    let output = note_path(&db_path, Some(&config_path), test_path, 1, &[], &[]);
 
     assert!(output.status.success());
     let stderr = String::from_utf8_lossy(&output.stderr);

@@ -123,9 +123,7 @@ fn test_denylist_excludes_file_override_quoted_filenames() {
         1,
         &["--config", &format!("denylist=['a.txt', '{deny_pattern}']")],
         &[],
-    )
-    .output()
-    .expect("Failed to execute command");
+    );
 
     assert!(output.status.success());
     let stderr = String::from_utf8_lossy(&output.stderr);
@@ -154,9 +152,7 @@ fn test_denylist_excludes_file_override_quoted_value() {
             &format!("denylist=\"['a.txt', '{deny_pattern}']\""),
         ],
         &[],
-    )
-    .output()
-    .expect("Failed to execute command");
+    );
 
     assert!(output.status.success());
     let stderr = String::from_utf8_lossy(&output.stderr);
