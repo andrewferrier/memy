@@ -77,7 +77,9 @@ fn parse_zoxide_state(contents: &str) -> Result<Vec<MemyEntry>, Box<dyn Error>> 
     contents.lines().map(from_zoxide_str).collect()
 }
 
-fn insert_into_db(conn: &Connection, entries: Vec<MemyEntry>) -> Result<(), Box<dyn Error>> {
+fn insert_into_db(conn: &mut Connection, entries: Vec<MemyEntry>) -> Result<(), Box<dyn Error>> {
+    let tx = conn.transaction().expect("Cannot start DB transaction");
+
     for entry in entries {
         #[allow(
             clippy::cast_possible_truncation,
@@ -88,7 +90,7 @@ fn insert_into_db(conn: &Connection, entries: Vec<MemyEntry>) -> Result<(), Box<
             reason = "We expect this score will always fit in a u64"
         )]
         let rounded_score = entry.count;
-        conn.execute(
+        tx.execute(
             "INSERT INTO paths (path, noted_count, last_noted_timestamp) VALUES (?1, ?2, ?3)
              ON CONFLICT(path) DO UPDATE SET
              noted_count = noted_count + excluded.noted_count,
@@ -103,10 +105,12 @@ fn insert_into_db(conn: &Connection, entries: Vec<MemyEntry>) -> Result<(), Box<
         debug!("Imported {}", entry.filename);
     }
 
+    tx.commit().expect("Cannot commit transaction");
+
     Ok(())
 }
 
-pub fn process_fasd_file(file_path: &str, conn: &Connection) -> Result<(), Box<dyn Error>> {
+pub fn process_fasd_file(file_path: &str, conn: &mut Connection) -> Result<(), Box<dyn Error>> {
     let contents = fs::read_to_string(file_path)?;
     let entries = parse_fasd_state(&contents)?;
 
@@ -117,7 +121,7 @@ pub fn process_fasd_file(file_path: &str, conn: &Connection) -> Result<(), Box<d
     Ok(())
 }
 
-pub fn process_zoxide_query(conn: &Connection) {
+pub fn process_zoxide_query(conn: &mut Connection) {
     let Ok(output) = std::process::Command::new("zoxide")
         .args(["query", "--list", "--all", "--score"])
         .output()

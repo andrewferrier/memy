@@ -84,7 +84,7 @@ fn note_paths(note_args: cli::NoteArgs) -> Result<(), Box<dyn Error>> {
         return Err("You must specify some paths to note".into());
     }
 
-    let mut db_connection = db::open_db()?;
+    let mut db_connection = db::open_db().expect("Could not open memy database");
     let tx = db_connection
         .transaction()
         .expect("Cannot start DB transaction");

@@ -51,7 +51,7 @@ fn init_db(conn: &Connection) {
 }
 
 #[instrument(level = "trace")]
-fn handle_post_init_checks(conn: &Connection) {
+fn handle_post_init_checks(conn: &mut Connection) {
     let fasd_state_path = BaseDirectories::new()
         .find_cache_file("fasd")
         .expect("Cannot find cache file");
@@ -74,7 +74,7 @@ pub fn open_db() -> Result<Connection, Box<dyn Error>> {
     if db_path.exists() {
         let db_file = db_path.join("memy.sqlite3");
         let db_path_exists = db_file.exists();
-        let conn = Connection::open(&db_file).expect("Failed to open memy database");
+        let mut conn = Connection::open(&db_file).expect("Failed to open memy database");
 
         if db_path_exists {
             debug!("Database at {} does exist", db_file.to_string_lossy());
@@ -84,7 +84,7 @@ pub fn open_db() -> Result<Connection, Box<dyn Error>> {
             init_db(&conn);
 
             if config::get_import_on_first_use() {
-                handle_post_init_checks(&conn);
+                handle_post_init_checks(&mut conn);
             }
         }
 
