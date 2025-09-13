@@ -19,19 +19,10 @@ pub struct Cli {
     pub command: Commands,
 }
 
-#[allow(
-    clippy::unnecessary_wraps,
-    reason = "The wrap is required by the clap framework"
-)]
-#[allow(
-    clippy::print_stderr,
-    reason = "This function is evaluated before logging framework is configured"
-)]
 fn parse_key_val(s: &str) -> Result<(String, String), String> {
-    let pos = s.find('=').unwrap_or_else(|| {
-        eprintln!("Invalid key=value pair: {s}");
-        std::process::exit(1);
-    });
+    let pos = s
+        .find('=')
+        .ok_or_else(|| format!("Invalid key=value pair: {s}"))?;
     let key = s[..pos].to_string();
     let mut value = s[pos + 1..].to_string();
     if (value.starts_with('"') && value.ends_with('"'))
