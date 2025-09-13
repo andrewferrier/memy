@@ -40,45 +40,51 @@ fn get_entries_in_sqlite(db_dir: &Path) -> usize {
 fn benchmark_note_command(c: &mut Criterion) {
     let file_count = 5000;
 
-    let mut group = c.benchmark_group("benchmark_note_command");
-    group.warm_up_time(Duration::from_secs(10));
-    group.measurement_time(Duration::from_secs(60));
-    group.sample_size(10);
-
     let file_list = find_x_real_files(file_count);
 
-    group.bench_function(format!("memy note {file_count} files"), |b| {
-        b.iter(|| {
-            let temp_dir = tempdir().expect("Failed to create temp dir");
-            let db_dir = temp_dir.path();
+    c.bench_function(format!("memy note {file_count} files").as_str(), |b| {
+        b.iter_custom(|iters| {
+            let mut total = Duration::ZERO;
 
-            // START TIMING
-            let start = Instant::now();
-            let mut cmd = Command::cargo_bin("memy").expect("Failed to find memy binary");
-            cmd.arg("note")
-                .arg("--config")
-                .arg("import_on_first_use=false")
-                .args(&file_list)
-                .env("MEMY_DB_DIR", db_dir)
-                .assert()
-                .success();
-            let elapsed = start.elapsed();
-            // STOP TIMING
+            for _ in 0..iters {
+                let temp_dir = tempdir().expect("Failed to create temp dir");
+                let db_dir = temp_dir.path();
 
-            let entry_count = get_entries_in_sqlite(db_dir);
-            assert_eq!(
-                entry_count, file_count,
-                "Expected {file_count} records in paths table, but found {entry_count}"
-            );
+                // START TIMING
+                let start = Instant::now();
+                let mut cmd = Command::cargo_bin("memy").expect("Failed to find memy binary");
+                cmd.arg("note")
+                    .arg("--config")
+                    .arg("import_on_first_use=false")
+                    .args(&file_list)
+                    .env("MEMY_DB_DIR", db_dir)
+                    .assert()
+                    .success();
+                let elapsed = start.elapsed();
+                // STOP TIMING
 
-            temp_dir.close().expect("Failed to clean up temp dir");
+                let entry_count = get_entries_in_sqlite(db_dir);
+                assert_eq!(
+                    entry_count, file_count,
+                    "Expected {file_count} records in paths table, but found {entry_count}"
+                );
 
-            elapsed
+                temp_dir.close().expect("Failed to clean up temp dir");
+
+                total += elapsed;
+            }
+            total
         });
     });
-
-    group.finish();
 }
 
-criterion_group!(benches, benchmark_note_command);
+criterion_group! {
+    name = benches;
+    config = Criterion::default()
+        .warm_up_time(Duration::from_secs(10))
+        .measurement_time(Duration::from_secs(60))
+        .sample_size(10);
+    targets = benchmark_note_command
+}
+
 criterion_main!(benches);
