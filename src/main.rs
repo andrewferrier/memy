@@ -17,7 +17,7 @@ use is_terminal::IsTerminal as _;
 use log::{debug, error, info, warn};
 use rusqlite::{params, Connection, OptionalExtension as _, Transaction};
 use std::fs;
-use std::io::stdout;
+use std::io::{self, stdout, Write as _};
 use std::path::Path;
 use tracing::instrument;
 
@@ -270,18 +270,20 @@ fn list_paths(args: &ListArgs) -> Result<(), Box<dyn Error>> {
     let db_connection = db::open_db()?;
     let results = list_paths_calculate(&db_connection, args);
 
+    let mut stdout_handle = stdout().lock();
+
     match args.format.as_str() {
         "json" => {
             let json_output = serde_json::to_string_pretty(&results)
                 .expect("Failed to serialize results to JSON");
-            println!("{json_output}");
+            writeln!(stdout_handle, "{json_output}")?;
         }
         "csv" => {
-            let mut wtr = csv::Writer::from_writer(std::io::stdout());
+            let mut wtr = csv::Writer::from_writer(stdout());
             for result in results {
-                wtr.serialize(result).expect("Cannot serialize CSV");
+                wtr.serialize(result)?;
             }
-            wtr.flush().expect("Cannot flush CSV");
+            wtr.flush()?;
         }
         _ => {
             let use_color = should_use_color(&args.color);
@@ -289,12 +291,16 @@ fn list_paths(args: &ListArgs) -> Result<(), Box<dyn Error>> {
                 if use_color {
                     let path_parts: Vec<&str> = result.path.rsplitn(2, '/').collect();
                     if path_parts.len() == 2 {
-                        println!("{}/\x1b[34m{}\x1b[0m", path_parts[1], path_parts[0]);
+                        writeln!(
+                            stdout_handle,
+                            "{}/\x1b[34m{}\x1b[0m",
+                            path_parts[1], path_parts[0]
+                        )?;
                     } else {
-                        println!("\x1b[34m{}\x1b[0m", result.path);
+                        writeln!(stdout_handle, "\x1b[34m{}\x1b[0m", result.path)?;
                     }
                 } else {
-                    println!("{}", result.path);
+                    writeln!(stdout_handle, "{}", result.path)?;
                 }
             }
         }
@@ -310,23 +316,25 @@ fn completions(shell: Option<clap_complete::Shell>) {
         .expect("Could not determine shell. Specify one explicitly.");
     let mut cmd = Cli::command();
     let bin_name = cmd.get_name().to_owned();
-    clap_complete::generate(actual_shell, &mut cmd, bin_name, &mut std::io::stdout());
+    clap_complete::generate(actual_shell, &mut cmd, bin_name, &mut stdout());
 }
 
 #[instrument(level = "trace")]
 fn hook_show(
     hook_name: Option<String>,
 ) -> core::result::Result<(), std::boxed::Box<(dyn Error + 'static)>> {
+    let mut stdout_handle = io::stdout().lock();
+
     if let Some(actual_hook_name) = hook_name {
         if let Some(content) = hooks::get_hook_content(&actual_hook_name) {
-            print!("{content}");
+            write!(stdout_handle, "{content}")?;
         } else {
             return Err(format!("Hook not found: {actual_hook_name}").into());
         }
     } else {
-        println!("Available hooks:");
+        writeln!(stdout_handle, "Available hooks:")?;
         for hook in hooks::get_hook_list() {
-            println!("{hook}");
+            writeln!(stdout_handle, "{hook}")?;
         }
     }
 
@@ -339,10 +347,7 @@ fn handle_cli_command(
     match command {
         Commands::Note(note_args) => Ok(note_paths(note_args)?),
         Commands::List(list_args) => Ok(list_paths(&list_args)?),
-        Commands::GenerateConfig {} => {
-            config::output_template_config();
-            Ok(())
-        }
+        Commands::GenerateConfig {} => Ok(config::output_template_config()?),
         Commands::Completions { shell } => {
             completions(shell);
             Ok(())

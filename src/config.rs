@@ -5,6 +5,7 @@ use log::{debug, error};
 use serde::Deserialize as _;
 use std::env;
 use std::fs;
+use std::io::{stdout, Write as _};
 use std::path::PathBuf;
 use std::sync::LazyLock;
 use std::sync::OnceLock;
@@ -161,8 +162,9 @@ pub fn set_config_overrides(overrides: Vec<(String, String)>) {
         .expect("Overrides could not be set");
 }
 
-pub fn output_template_config() {
-    print!("{TEMPLATE_CONFIG}");
+pub fn output_template_config() -> Result<(), Box<dyn Error>> {
+    write!(stdout(), "{TEMPLATE_CONFIG}")?;
+    Ok(())
 }
 
 pub fn get_import_on_first_use() -> bool {
