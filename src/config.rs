@@ -1,3 +1,5 @@
+use super::denylist_default;
+
 use config::{Config, File, FileFormat, Value};
 use core::error::Error;
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
@@ -183,7 +185,16 @@ fn build_gitignore(patterns: Vec<String>) -> Gitignore {
 
 pub fn get_denylist_matcher() -> Gitignore {
     let config = &*CACHED_CONFIG;
-    build_gitignore(config.denylist.clone().unwrap_or_default())
+
+    let mut combined_denylist: Vec<String> = denylist_default::DEFAULT_DENYLIST
+        .iter()
+        .map(std::string::ToString::to_string)
+        .collect();
+    combined_denylist.append(&mut config.denylist.clone().unwrap_or_default());
+
+    debug!("Combined denylist: {combined_denylist:?}");
+
+    build_gitignore(combined_denylist)
 }
 
 pub fn get_normalize_symlinks_on_note() -> bool {

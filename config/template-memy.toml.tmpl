@@ -9,9 +9,21 @@
 # automatically?
 import_on_first_use = true
 
-# List of paths that won't be saved to the memy database even if they are noted
-# - these follow the same syntax as gitignore rules:
-# https://git-scm.com/docs/gitignore. Example: denylist = ['*.log', '*.out']
+# List of paths that won't be saved to the memy database even when noted - these
+# follow the same syntax as gitignore rules: https://git-scm.com/docs/gitignore.
+#
+# Example: denylist = ['*.log', '*.out']
+#
+# There are the default patterns which are included with memy:
+#
+{%- for pat in builtins %}
+#   - {{ pat }}
+{%- endfor %}
+#
+# If you don't like any of the defaults, you can individually remove them by
+# prefixing with '!':
+#
+# Example: denylist = ['!/dev', 'someotherpattern*.txt']
 denylist = []
 
 # When noting symlinks using memy, should the symlink be saved, or the file the

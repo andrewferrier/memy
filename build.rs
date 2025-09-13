@@ -9,8 +9,10 @@ use std::io::BufWriter;
 use std::path::PathBuf;
 use std::process::Command;
 use std::{fs, path::Path};
+use tera::{Context, Tera};
 
 include!("src/cli.rs");
+include!("src/denylist_default.rs");
 
 fn embed_hooks() {
     let mut entries = Vec::new();
@@ -79,7 +81,8 @@ fn generate_completions(build_root_dir: &Path) -> std::io::Result<()> {
 }
 
 fn write_config_man_page(man_dir: &Path) {
-    let config_contents = include_str!("config/template-memy.toml");
+    let config_contents =
+        fs::read_to_string("config/template-memy.toml").expect("Can't read rendered template");
 
     let preamble = r#".TH memy 5 "" "memy Manual"
 .SH NAME
@@ -140,6 +143,29 @@ fn build_man_pages(build_root_dir: &Path) -> std::io::Result<()> {
     Ok(())
 }
 
+fn render_config_template() -> Result<(), Box<dyn core::error::Error>> {
+    let template_path = "config/template-memy.toml.tmpl";
+    let output_path = "config/template-memy.toml";
+
+    let mut tera = Tera::default();
+    tera.add_template_file(template_path, Some("memy"))?;
+
+    let mut ctx = Context::new();
+    ctx.insert("builtins", &DEFAULT_DENYLIST);
+
+    let rendered = tera.render("memy", &ctx)?;
+
+    if let Some(parent) = Path::new(output_path).parent() {
+        fs::create_dir_all(parent)?;
+    }
+
+    fs::write(output_path, rendered)?;
+
+    println!("cargo:rerun-if-changed={template_path}");
+
+    Ok(())
+}
+
 fn main() {
     let build_root_dir = std::env::var("CARGO_MANIFEST_DIR").ok().map_or_else(
         || std::env::current_dir().expect("Failed to get current dir"),
@@ -147,6 +173,7 @@ fn main() {
     );
 
     get_git_version();
+    render_config_template().expect("Failed to render config template");
     embed_hooks();
     build_man_pages(&build_root_dir).expect("Failed to build man page");
     generate_completions(&build_root_dir).expect("Failed to generate shell completions");

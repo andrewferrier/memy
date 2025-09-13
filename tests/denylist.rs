@@ -306,3 +306,32 @@ fn test_denied_files_on_list_skip_silently_behavior() {
     assert!(stdout_list.is_empty());
     assert!(stderr_list.is_empty()); // No warning or info on list
 }
+
+#[test]
+fn test_denylist_excludes_builtin() {
+    let (_db_temp, db_path) = temp_dir();
+
+    let output = note_path(&db_path, None, "/dev", 1, &[], &[]);
+
+    assert!(output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("denied"));
+
+    let lines: Vec<String> = list_paths(&db_path, None, &[], &[]);
+    assert_eq!(lines.len(), 0);
+}
+
+#[test]
+fn test_denylist_dontexclude_notbuiltin() {
+    let (_db_temp, db_path) = temp_dir();
+
+    let output = note_path(&db_path, None, "/etc", 1, &[], &[]);
+
+    assert!(output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.is_empty());
+
+    let lines: Vec<String> = list_paths(&db_path, None, &[], &[]);
+    assert_eq!(lines.len(), 1);
+    assert_eq!(lines[0], "/etc");
+}

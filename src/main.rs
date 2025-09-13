@@ -1,6 +1,7 @@
 mod cli;
 mod config;
 mod db;
+mod denylist_default;
 mod hooks;
 mod hooks_generated;
 mod import;
