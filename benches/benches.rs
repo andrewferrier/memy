@@ -108,39 +108,42 @@ fn benchmark_import_fasd(c: &mut Criterion) {
     fs::write(&fasd_state_file, fasd_entries.join("\n"))
         .expect("Failed to write mock fasd state file");
 
-    c.bench_function("import_fasd_state_file", |b| {
-        b.iter_custom(|iters| {
-            let mut total = Duration::ZERO;
+    c.bench_function(
+        format!("import fasd state file with {file_count} entries").as_str(),
+        |b| {
+            b.iter_custom(|iters| {
+                let mut total = Duration::ZERO;
 
-            for _ in 0..iters {
-                let temp_dir_db = tempdir().expect("Failed to create temp dir");
-                let db_dir = temp_dir_db.path();
+                for _ in 0..iters {
+                    let temp_dir_db = tempdir().expect("Failed to create temp dir");
+                    let db_dir = temp_dir_db.path();
 
-                let mut cmd = Command::cargo_bin("memy").expect("Failed to find memy binary");
+                    let mut cmd = Command::cargo_bin("memy").expect("Failed to find memy binary");
 
-                // START TIMING
-                let start = Instant::now();
-                cmd.arg("list")
-                    .env("MEMY_DB_DIR", db_dir)
-                    .env("XDG_CACHE_HOME", cache_dir)
-                    .env("_ZO_DATA_DIR", cache_dir)
-                    .assert()
-                    .success();
-                let elapsed = start.elapsed();
+                    // START TIMING
+                    let start = Instant::now();
+                    cmd.arg("list")
+                        .env("MEMY_DB_DIR", db_dir)
+                        .env("XDG_CACHE_HOME", cache_dir)
+                        .env("_ZO_DATA_DIR", cache_dir)
+                        .assert()
+                        .success();
+                    let elapsed = start.elapsed();
 
-                // STOP TIMING
-                total += elapsed;
+                    // STOP TIMING
+                    total += elapsed;
 
-                let entry_count = get_entries_in_sqlite(temp_dir_db.path());
-                assert_eq!(
-                    entry_count, file_count,
-                    "{entry_count} doesn't match {file_count}"
-                );
-                temp_dir_db.close().expect("Failed to clean up temp dir");
-            }
-            total
-        });
-    });
+                    let entry_count = get_entries_in_sqlite(temp_dir_db.path());
+                    assert_eq!(
+                        entry_count, file_count,
+                        "{entry_count} doesn't match {file_count}"
+                    );
+                    temp_dir_db.close().expect("Failed to clean up temp dir");
+                }
+                total
+            });
+        },
+    );
 }
 
 criterion_group! {
