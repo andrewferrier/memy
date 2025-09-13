@@ -169,15 +169,19 @@ pub fn get_import_on_first_use() -> bool {
     CACHED_CONFIG.import_on_first_use.unwrap_or(true)
 }
 
-pub fn get_denylist_matcher() -> Gitignore {
-    let config = &*CACHED_CONFIG;
+fn build_gitignore(patterns: Vec<String>) -> Gitignore {
     let mut builder = GitignoreBuilder::new("/");
-    for pat in config.denylist.clone().unwrap_or_default() {
+    for pat in patterns {
         builder
             .add_line(None, &pat)
             .unwrap_or_else(|_| panic!("Pattern {pat} not valid."));
     }
     builder.build().expect("Failed to build denylist matcher")
+}
+
+pub fn get_denylist_matcher() -> Gitignore {
+    let config = &*CACHED_CONFIG;
+    build_gitignore(config.denylist.clone().unwrap_or_default())
 }
 
 pub fn get_normalize_symlinks_on_note() -> bool {
@@ -207,4 +211,77 @@ pub fn get_missing_files_delete_from_db_after() -> u64 {
     CACHED_CONFIG
         .missing_files_delete_from_db_after
         .unwrap_or(30)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[allow(
+        clippy::cognitive_complexity,
+        reason = "It's OK as these tests are all short"
+    )]
+    fn gitignore_tests() {
+        struct OwnedMatch {
+            is_ignore: bool,
+            is_whitelist: bool,
+            is_none: bool,
+        }
+
+        fn wrapper(patterns: &[&str], path: &str, is_dir: bool) -> OwnedMatch {
+            let strings: Vec<String> = patterns
+                .iter()
+                .map(std::string::ToString::to_string)
+                .collect();
+            let gitignore = build_gitignore(strings);
+            let matched = gitignore.matched_path_or_any_parents(path, is_dir);
+
+            OwnedMatch {
+                is_ignore: matched.is_ignore(),
+                is_whitelist: matched.is_whitelist(),
+                is_none: matched.is_none(),
+            }
+        }
+
+        // This is somewhat repeating testing which is presumably done on the Gitignore crate
+        // anyway, but it's in the context of the way we build it in build_gitignore() with
+        // root='/' and so on. See also ../tests/denylist.rs
+
+        assert!(wrapper(&["foo.txt"], "foo.txt", false).is_ignore);
+        assert!(wrapper(&["*.log"], "foo.log", false).is_ignore);
+        assert!(wrapper(&["*.log"], "foo.txt", false).is_none);
+        assert!(wrapper(&["*.log", "!important.log"], "app.log", false).is_ignore);
+        assert!(wrapper(&["*.log", "!important.log"], "important.log", false).is_whitelist);
+        assert!(wrapper(&["foo"], "foo/bar.txt", false).is_ignore);
+        assert!(wrapper(&["foo/"], "foo/bar.txt", false).is_ignore);
+        assert!(wrapper(&["foo/*"], "foo/bar.txt", false).is_ignore);
+        assert!(wrapper(&["foo/", "!foo/bar/"], "foo/bar/wibble.txt", false).is_whitelist);
+        assert!(wrapper(&["docs/"], "sub/docs/foo.txt", false).is_ignore);
+        assert!(wrapper(&["/docs/"], "sub/docs/foo.txt", false).is_none);
+        assert!(wrapper(&["**/docs/"], "sub/docs/foo.txt", false).is_ignore);
+        assert!(wrapper(&["**/docs/**"], "sub/docs/foo.txt", false).is_ignore);
+        assert!(wrapper(&["*.[oa]"], "a.a", false).is_ignore);
+        assert!(wrapper(&["*.[oa]"], "a.b", false).is_none);
+        assert!(wrapper(&["a/**/z"], "a/z", false).is_ignore);
+        assert!(wrapper(&["a/**/z"], "a/b/z", false).is_ignore);
+        assert!(wrapper(&["a/**/z"], "a/b/c/z", false).is_ignore);
+        assert!(wrapper(&["\\!important.txt"], "!important.txt", false).is_ignore);
+        assert!(wrapper(&["\\#notes.txt"], "#notes.txt", false).is_ignore);
+        assert!(wrapper(&[""], "foo.txt", false).is_none);
+        assert!(wrapper(&["#foo.txt"], "foo.txt", false).is_none);
+        assert!(wrapper(&[" foo.txt"], "foo.txt", false).is_none);
+        assert!(wrapper(&["foo.txt", "!foo.txt"], "foo.txt", false).is_whitelist);
+        assert!(wrapper(&["*.txt", "!*.txt"], "foo.txt", false).is_whitelist);
+
+        assert!(wrapper(&["foo/"], "foo", true).is_ignore);
+        assert!(wrapper(&["foo/"], "bar", true).is_none);
+        assert!(wrapper(&["bar/"], "foo", true).is_none);
+        assert!(wrapper(&["bar"], "foo/bar", true).is_ignore);
+        assert!(wrapper(&["bar"], "bar/bar", true).is_ignore);
+        assert!(wrapper(&["/bar"], "bar", true).is_ignore);
+        assert!(wrapper(&["/bar"], "foo", true).is_none);
+        assert!(wrapper(&["/bar"], "/foo", true).is_none);
+        assert!(wrapper(&["/bar"], "/bar", true).is_ignore);
+    }
 }
