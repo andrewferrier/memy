@@ -83,6 +83,7 @@ jobs:
       - name: Build .rpm package (non-MUSL Linux only)
         if: runner.os == 'Linux' && !contains(matrix.target, 'musl')
         run: |
+          cp -v target/${{ matrix.target }}/release/memy target/release/memy
           cargo generate-rpm --arch ${{ matrix.target }}
           cp -v $(ls target/generate-rpm/*${{ matrix.debos }}.rpm) dist/memy_latest_${{ matrix.debos }}.rpm
 
