@@ -96,7 +96,7 @@ To see the contents of a hook, type `memy hook <hookname>`. In future, we'll pro
 
 - [ARM64](https://github.com/andrewferrier/memy/releases/latest/download/memy_latest_arm64.rpm)
 
-[Install](https://phoenixnap.com/kb/how-to-install-rpm-file-centos-linux).
+[How to install RPMs](https://phoenixnap.com/kb/how-to-install-rpm-file-centos-linux).
 
 ### Download Binaries for Linux or MacOS from GitHub
 
