@@ -82,13 +82,21 @@ To see the contents of a hook, type `memy hook <hookname>`. In future, we'll pro
 
 ## Installation
 
-### Download Debian / Ubuntu Package
+### Download Debian / Ubuntu .deb-based package
 
-- [Linux (x86_64/amd64)](https://github.com/andrewferrier/memy/releases/latest/download/memy_latest_amd64.deb)
+- [x86_64/amd64](https://github.com/andrewferrier/memy/releases/latest/download/memy_latest_amd64.deb)
 
-- [Linux (ARM64)](https://github.com/andrewferrier/memy/releases/latest/download/memy_latest_arm64.deb)
+- [ARM64](https://github.com/andrewferrier/memy/releases/latest/download/memy_latest_arm64.deb)
 
 [Install using dpkg or apt](https://unix.stackexchange.com/a/159114/18985). Currently, Debian packages are not in a signed repository.
+
+### Download RHEL / Fedora / CentOS / OpenSUSE / SLES .rpm-based package
+
+- [x86_64/amd64](https://github.com/andrewferrier/memy/releases/latest/download/memy_latest_amd64.rpm)
+
+- [ARM64](https://github.com/andrewferrier/memy/releases/latest/download/memy_latest_arm64.rpm)
+
+[Install](https://phoenixnap.com/kb/how-to-install-rpm-file-centos-linux).
 
 ### Download Binaries for Linux or MacOS from GitHub
 
