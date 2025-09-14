@@ -6,6 +6,10 @@ use clap::{Args, Parser, Subcommand};
 #[command(version = option_env!("GIT_VERSION"))]
 #[command(author = "Andrew Ferrier")]
 #[command(about = "Track and recall frequently and recently used files or directories.")]
+#[command(subcommand_required = true)]
+#[command(override_usage = r#"
+  memy note <FILES...> - note some files
+  memy list            - list noted files in frecency order"#)]
 pub struct Cli {
     /// Enable verbose logging (can be added multiple times to add more verbosity)
     #[arg(display_order = 100, short, long, global = true, action = clap::ArgAction::Count, default_value_t = 0)]
