@@ -1,5 +1,33 @@
 # Changelog
 
+## [0.13.0](https://github.com/andrewferrier/memy/compare/v0.12.0...v0.13.0) (2025-09-14)
+
+
+### Features
+
+* Add template configuration to deb/RPM ([cd8465d](https://github.com/andrewferrier/memy/commit/cd8465dd947ff75e18bce42a2124fb2daf369e8a))
+* Build completions into packages - closes [#67](https://github.com/andrewferrier/memy/issues/67) ([dfbdeb1](https://github.com/andrewferrier/memy/commit/dfbdeb1ba3418c16eb26aff34c295cb5ae02163b))
+* Default list of denylist patterns - closes [#41](https://github.com/andrewferrier/memy/issues/41) ([d33823b](https://github.com/andrewferrier/memy/commit/d33823b51e5512167de8785d0fc463bf7a19338a))
+* Don't removed deleted files right away - closes [#64](https://github.com/andrewferrier/memy/issues/64) ([5ba9329](https://github.com/andrewferrier/memy/commit/5ba9329095a95393a5252dd52f75931e2c4f8474))
+
+
+### Bug Fixes
+
+* Add missing workflow perms ([71c89ef](https://github.com/andrewferrier/memy/commit/71c89ef5b0b93cf5a111dacff1e64948dc3ad2e0))
+* code scanning alert no. 2: Workflow does not contain permissions ([0658767](https://github.com/andrewferrier/memy/commit/06587672ee9d243e67cac517a09c516b6b61ebca))
+* Enhance gitignore checking - closes [#70](https://github.com/andrewferrier/memy/issues/70) ([31f869b](https://github.com/andrewferrier/memy/commit/31f869bd1d382c110dc62285d0bf303751cca2a4))
+* Ensure files_only conflicts with directories_only ([2ad444f](https://github.com/andrewferrier/memy/commit/2ad444f35b9ae9b6b2c65e3d954bef7594eeb2f4))
+* Improve stdout handling ([ed5ff45](https://github.com/andrewferrier/memy/commit/ed5ff4568d69a3f09808431ca5505e019b37f6e5))
+* Issue building RPM package ([66b3ad2](https://github.com/andrewferrier/memy/commit/66b3ad269f53395f8fb79b0bbfdc974bd2c8eec2))
+* Put .deb in 'utils' category ([3d03dfd](https://github.com/andrewferrier/memy/commit/3d03dfd94cbb20174d31f7208501785c6cd36ed6))
+* Simplify copy to dist ([c9f85e5](https://github.com/andrewferrier/memy/commit/c9f85e555207144b790630fbfc598cda370f9949))
+* Target RPM path for memy ([6d046ef](https://github.com/andrewferrier/memy/commit/6d046efad04d71772a8ea99843ca90ca21be8127))
+
+
+### Performance Improvements
+
+* Improve import performance - closes [#65](https://github.com/andrewferrier/memy/issues/65) ([36aa10b](https://github.com/andrewferrier/memy/commit/36aa10be39bdb18e1c658948ba2e582d315bef6c))
+
 ## [0.12.0](https://github.com/andrewferrier/memy/compare/v0.11.0...v0.12.0) (2025-09-07)
 
 
