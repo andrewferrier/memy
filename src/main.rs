@@ -289,8 +289,14 @@ fn list_paths(args: &ListArgs) -> Result<(), Box<dyn Error>> {
         _ => {
             let use_color = should_use_color(&args.color);
             for result in results {
+                let processed_path = if config::get_use_tilde_on_list() {
+                    utils::collapse_to_tilde(result.path)
+                } else {
+                    result.path
+                };
+
                 if use_color {
-                    let path_parts: Vec<&str> = result.path.rsplitn(2, '/').collect();
+                    let path_parts: Vec<&str> = processed_path.rsplitn(2, '/').collect();
                     if path_parts.len() == 2 {
                         writeln!(
                             stdout_handle,
@@ -298,10 +304,10 @@ fn list_paths(args: &ListArgs) -> Result<(), Box<dyn Error>> {
                             path_parts[1], path_parts[0]
                         )?;
                     } else {
-                        writeln!(stdout_handle, "\x1b[34m{}\x1b[0m", result.path)?;
+                        writeln!(stdout_handle, "\x1b[34m{processed_path}\x1b[0m")?;
                     }
                 } else {
-                    writeln!(stdout_handle, "{}", result.path)?;
+                    writeln!(stdout_handle, "{processed_path}")?;
                 }
             }
         }

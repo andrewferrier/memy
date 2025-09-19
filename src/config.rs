@@ -34,6 +34,7 @@ pub struct MemyConfig {
     pub missing_files_warn_on_note: Option<bool>,
     pub denied_files_warn_on_note: Option<bool>,
     pub denied_files_on_list: Option<DeniedFilesOnList>,
+    pub use_tilde_on_list: Option<bool>,
     #[serde(default, deserialize_with = "validate_recency_bias")]
     pub recency_bias: Option<RecencyBias>,
     pub missing_files_delete_from_db_after: Option<u64>,
@@ -214,6 +215,10 @@ pub fn get_denied_files_on_list() -> DeniedFilesOnList {
         .denied_files_on_list
         .clone()
         .unwrap_or(DeniedFilesOnList::Delete)
+}
+
+pub fn get_use_tilde_on_list() -> bool {
+    CACHED_CONFIG.use_tilde_on_list.unwrap_or(true)
 }
 
 pub fn get_recency_bias() -> RecencyBias {

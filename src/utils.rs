@@ -54,6 +54,25 @@ pub fn expand_tilde<P: AsRef<Path>>(path: P) -> PathBuf {
     p.to_path_buf()
 }
 
+pub fn collapse_to_tilde<P: AsRef<Path>>(path: P) -> String {
+    let p = path.as_ref();
+
+    if let Some(home) = home_dir() {
+        if let Ok(stripped) = p.strip_prefix(&home) {
+            if stripped.as_os_str().is_empty() {
+                return "~".to_owned();
+            }
+
+            return PathBuf::from("~")
+                .join(stripped)
+                .to_string_lossy()
+                .into_owned();
+        }
+    }
+
+    p.to_string_lossy().into_owned()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -68,5 +87,17 @@ mod tests {
         assert_eq!(expand_tilde("/etc/hosts"), PathBuf::from("/etc/hosts"));
         assert_eq!(expand_tilde("etc/hosts"), PathBuf::from("etc/hosts"));
         assert_eq!(expand_tilde("hosts"), PathBuf::from("hosts"));
+    }
+
+    #[test]
+    fn test_reduce_to_tilde() {
+        let home = home_dir().expect("Could not get home dir");
+
+        assert_eq!(collapse_to_tilde(&home), "~");
+        assert_eq!(collapse_to_tilde(home.join("memy")), "~/memy");
+        assert_eq!(collapse_to_tilde(home.join("memy/other")), "~/memy/other");
+        assert_eq!(collapse_to_tilde("/etc/hosts"), "/etc/hosts");
+        assert_eq!(collapse_to_tilde("etc/hosts"), "etc/hosts");
+        assert_eq!(collapse_to_tilde("hosts"), "hosts");
     }
 }

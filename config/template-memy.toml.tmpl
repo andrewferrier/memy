@@ -41,6 +41,12 @@ denied_files_warn_on_note = true
 # "skip-silently", "warn", "delete"
 denied_files_on_list = "delete"
 
+# When listing files, if they are inside the user's home directory,
+# should they be listed as ~/directory rather than /home/user/directory?
+# Only applies to the 'plain' output format (the CSV and JSON styles always use
+# full paths).
+use_tilde_on_list = true
+
 # When listing, how much should *recency of file noting* dominate over
 # *frequency of noting* in the sort? 0.0 means pure frequency; 1.0 means pure
 # recency.

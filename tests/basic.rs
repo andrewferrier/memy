@@ -36,7 +36,19 @@ fn test_note_homedir() {
     let lines = list_paths(&db_path, None, &[], &[]);
 
     assert_eq!(lines.len(), 1);
-    assert_eq!(lines[0], home_dir().unwrap().to_str().unwrap());
+    assert_eq!(lines[0], "~");
+}
+
+#[test]
+fn test_note_homedir_dont_use_tilde_on_list() {
+    let (_db_temp, db_path) = temp_dir();
+
+    note_path(&db_path, None, "~", 1, &[], &[]);
+
+    let lines = list_paths(&db_path, None, &["--config=use_tilde_on_list=false"], &[]);
+
+    assert_eq!(lines.len(), 1);
+    assert_eq!(lines[0], home_dir().unwrap().to_string_lossy());
 }
 
 #[test]
