@@ -207,9 +207,9 @@ fn list_paths_calculate(conn: &Connection, args: &ListArgs) -> Vec<PathFrecency>
             if last_noted_age_days > missing_files_delete_after_days {
                 conn.execute("DELETE FROM paths WHERE path = ?", params![path])
                     .expect("Delete failed");
-                warn!("Path {path} no longer exists; older than get_missing_files_delete_from_db_after, removed from database.");
+                warn!("{path} no longer exists; last noted {last_noted_age_days} days ago; older than get_missing_files_delete_from_db_after, removed from database.");
             } else {
-                info!("Path {path} no longer exists; within get_missing_files_delete_from_db_after, retained but skipped.");
+                info!("{path} no longer exists; last noted {last_noted_age_days} days ago; within get_missing_files_delete_from_db_after, retained but skipped.");
             }
 
             continue;
