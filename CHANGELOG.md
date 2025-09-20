@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.14.0](https://github.com/andrewferrier/memy/compare/v0.13.0...v0.14.0) (2025-09-20)
+
+
+### Features
+
+* Implement use_tilde_on_list - closes [#74](https://github.com/andrewferrier/memy/issues/74) ([79b432b](https://github.com/andrewferrier/memy/commit/79b432bfc3663c9f140d297a322b8f6ab6182264))
+* Include last_noted_age_days in diagnostic message ([91885ff](https://github.com/andrewferrier/memy/commit/91885ff72ec5c61686f26d7e96966164c153b0ae))
+
 ## [0.13.0](https://github.com/andrewferrier/memy/compare/v0.12.0...v0.13.0) (2025-09-14)
 
 
