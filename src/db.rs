@@ -1,3 +1,6 @@
+use crate::types::NotedCount;
+use crate::types::UnixTimestamp;
+
 use super::config;
 use super::import;
 
@@ -10,6 +13,12 @@ use tracing::instrument;
 use xdg::BaseDirectories;
 
 const DB_VERSION: i32 = 1;
+
+pub struct PathEntry {
+    pub path: String,
+    pub noted_count: NotedCount,
+    pub last_noted_timestamp: UnixTimestamp,
+}
 
 #[instrument(level = "trace")]
 fn check_db_version(conn: &Connection) -> Result<(), Box<dyn Error>> {
@@ -93,4 +102,20 @@ pub fn open_db() -> Result<Connection, Box<dyn Error>> {
     } else {
         Err(format!("Database path {} doesn't exist.", db_path.to_string_lossy()).into())
     }
+}
+
+pub fn get_rows(conn: &Connection) -> Result<Vec<PathEntry>, rusqlite::Error> {
+    let mut stmt = conn
+        .prepare("SELECT path, noted_count, last_noted_timestamp FROM paths")
+        .expect("Select failed");
+
+    stmt.query_map([], |row| {
+        Ok(PathEntry {
+            path: row.get(0)?,
+            noted_count: row.get(1)?,
+            last_noted_timestamp: row.get(2)?,
+        })
+    })
+    .expect("Query mapping failed")
+    .collect()
 }

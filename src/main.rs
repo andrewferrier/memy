@@ -175,19 +175,11 @@ fn should_use_color(color: &String) -> bool {
 }
 
 #[instrument(level = "trace")]
-fn list_paths_calculate(conn: &Connection, args: &ListArgs) -> Vec<PathFrecency> {
-    let mut stmt = conn
-        .prepare("SELECT path, noted_count, last_noted_timestamp FROM paths")
-        .expect("Select failed");
-
-    let rows = stmt
-        .query_map([], |row| {
-            let path: String = row.get(0)?;
-            let count: NotedCount = row.get(1)?;
-            let last_noted_timestamp: UnixTimestamp = row.get(2)?;
-            Ok((path, count, last_noted_timestamp))
-        })
-        .expect("query_map failed");
+fn list_paths_calculate(
+    conn: &Connection,
+    args: &ListArgs,
+) -> Result<Vec<PathFrecency>, Box<dyn Error>> {
+    let rows = db::get_rows(conn)?;
 
     let now = utils::get_unix_timestamp();
 
@@ -200,36 +192,36 @@ fn list_paths_calculate(conn: &Connection, args: &ListArgs) -> Vec<PathFrecency>
         get_oldest_timestamp_and_highest_count(conn, now);
     let oldest_last_noted_timestamp_hours = timestamp_age_hours(now, oldest_last_noted_timestamp);
 
-    for (path, count, last_noted_timestamp) in rows.into_iter().flatten() {
-        let Ok(metadata) = fs::metadata(&path) else {
+    for row in rows {
+        let Ok(metadata) = fs::metadata(&row.path) else {
             let missing_files_delete_after_days = config::get_missing_files_delete_from_db_after();
-            let last_noted_age_days = (now - last_noted_timestamp) / 86_400; // Convert seconds to days
+            let last_noted_age_days = (now - row.last_noted_timestamp) / 86_400; // Convert seconds to days
             if last_noted_age_days > missing_files_delete_after_days {
-                conn.execute("DELETE FROM paths WHERE path = ?", params![path])
+                conn.execute("DELETE FROM paths WHERE path = ?", params![row.path])
                     .expect("Delete failed");
-                warn!("{path} no longer exists; last noted {last_noted_age_days} days ago; older than get_missing_files_delete_from_db_after, removed from database.");
+                warn!("{} no longer exists; last noted {last_noted_age_days} days ago; older than get_missing_files_delete_from_db_after, removed from database.", row.path);
             } else {
-                info!("{path} no longer exists; last noted {last_noted_age_days} days ago; within get_missing_files_delete_from_db_after, retained but skipped.");
+                info!("{} no longer exists; last noted {last_noted_age_days} days ago; within get_missing_files_delete_from_db_after, retained but skipped.", row.path);
             }
 
             continue;
         };
 
         if let ignore::Match::Ignore(_matched_pat) =
-            matcher.matched_path_or_any_parents(&path, metadata.is_dir())
+            matcher.matched_path_or_any_parents(&row.path, metadata.is_dir())
         {
             match list_denied_action {
                 DeniedFilesOnList::SkipSilently => {
                     continue;
                 }
                 DeniedFilesOnList::Warn => {
-                    warn!("Path {path} is denied, remaining in database.");
+                    warn!("Path {} is denied, remaining in database.", &row.path);
                     continue;
                 }
                 DeniedFilesOnList::Delete => {
-                    conn.execute("DELETE FROM paths WHERE path = ?", params![path])
+                    conn.execute("DELETE FROM paths WHERE path = ?", params![row.path])
                         .expect("Delete failed");
-                    info!("Path {path} is denied, deleted from database.");
+                    info!("Path {} is denied, deleted from database.", row.path);
                     continue;
                 }
             }
@@ -244,16 +236,16 @@ fn list_paths_calculate(conn: &Connection, args: &ListArgs) -> Vec<PathFrecency>
         }
 
         let frecency = calculate_frecency(
-            count,
-            timestamp_age_hours(now, last_noted_timestamp),
+            row.noted_count,
+            timestamp_age_hours(now, row.last_noted_timestamp),
             highest_count,
             oldest_last_noted_timestamp_hours,
         );
         results.push(PathFrecency {
-            path,
+            path: row.path,
             frecency,
-            count,
-            last_noted: utils::timestamp_to_iso8601(last_noted_timestamp),
+            count: row.noted_count,
+            last_noted: utils::timestamp_to_iso8601(row.last_noted_timestamp),
         });
     }
 
@@ -263,13 +255,13 @@ fn list_paths_calculate(conn: &Connection, args: &ListArgs) -> Vec<PathFrecency>
             .expect("Sort results failed")
     });
 
-    results
+    Ok(results)
 }
 
 #[instrument(level = "trace")]
 fn list_paths(args: &ListArgs) -> Result<(), Box<dyn Error>> {
     let db_connection = db::open_db()?;
-    let results = list_paths_calculate(&db_connection, args);
+    let results = list_paths_calculate(&db_connection, args)?;
 
     let mut stdout_handle = stdout().lock();
 
