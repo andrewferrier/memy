@@ -1,4 +1,4 @@
-preexec() {
+memy_preexec() {
   local cmd="$1"
 
   for word in ${(z)cmd}; do
@@ -12,3 +12,7 @@ preexec() {
     fi
   done
 }
+
+autoload -Uz add-zsh-hook
+
+add-zsh-hook preexec memy_preexec
