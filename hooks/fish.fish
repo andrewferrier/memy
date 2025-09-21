@@ -5,7 +5,10 @@ function fish_preexec --on-event fish_preexec
         set expanded (eval echo $word)
 
         if test -e "$expanded"
-            memy --config denied_files_warn_on_note=false note "$expanded" &
+            memy  \
+                --config denied_files_warn_on_note=false \
+                --config missing_files_warn_on_note=false \
+                note "$expanded" &
         end
     end
 end
