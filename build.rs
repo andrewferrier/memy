@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_used, reason = "unwrap() OK inside build")]
+
 use clap::CommandFactory as _;
 use clap_complete::{
     generate_to,
@@ -17,18 +19,14 @@ include!("src/denylist_default.rs");
 fn embed_hooks() {
     let mut entries = Vec::new();
 
-    let read_dir: Vec<fs::DirEntry> = fs::read_dir(Path::new("hooks"))
-        .expect("Can't read hooks dir")
+    let read_dir = fs::read_dir(Path::new("hooks"))
+        .unwrap()
         .filter_map(Result::ok)
-        .collect();
+        .map(|entry| entry.path());
 
-    for entry in read_dir {
-        let path = entry.path();
+    for path in read_dir {
         if path.is_file() {
-            let filename = path
-                .file_name()
-                .expect("Cannot read hook filename")
-                .to_string_lossy();
+            let filename = path.file_name().unwrap().to_string_lossy();
             let content = fs::read_to_string(&path).expect("Failed to read hook file");
             let escaped = content.escape_default().to_string(); // escape for safe inclusion in code
             entries.push(format!("map.insert(\"{filename}\", \"{escaped}\");"));
@@ -40,7 +38,7 @@ fn embed_hooks() {
 
 pub static HOOKS: std::sync::LazyLock<HashMap<&'static str, &'static str>> = std::sync::LazyLock::new(|| {{
     let mut map = HashMap::new();
-    {}
+{}
     map
 }});",
         entries.join("\n")
