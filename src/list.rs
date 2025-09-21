@@ -133,6 +133,7 @@ fn handle_missing_file(
 fn calculate(conn: &Connection, args: &ListArgs) -> Result<Vec<PathFrecency>, Box<dyn Error>> {
     let rows = db::get_rows(conn)?;
     let now = utils::get_unix_timestamp();
+    let denylist_matcher = config::get_denylist_matcher();
 
     let mut results: Vec<PathFrecency> = vec![];
 
@@ -147,7 +148,7 @@ fn calculate(conn: &Connection, args: &ListArgs) -> Result<Vec<PathFrecency>, Bo
         };
 
         if let ignore::Match::Ignore(_matched_pat) =
-            config::get_denylist_matcher().matched_path_or_any_parents(&row.path, metadata.is_dir())
+            denylist_matcher.matched_path_or_any_parents(&row.path, metadata.is_dir())
         {
             handle_denied_file(conn, &row.path);
             continue;
