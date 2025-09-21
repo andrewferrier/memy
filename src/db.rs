@@ -121,3 +121,15 @@ pub fn get_rows(conn: &Connection) -> Result<Vec<PathEntry>, rusqlite::Error> {
     .expect("Query mapping failed")
     .collect()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn init_and_check_db() {
+        let conn = Connection::open_in_memory().expect("Could not open connection");
+        init_db(&conn);
+        check_db_version(&conn).expect("Couldn't check DB version");
+    }
+}
