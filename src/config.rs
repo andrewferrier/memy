@@ -111,7 +111,7 @@ fn test_config_file_issues(config_path: &PathBuf) -> Result<(), Box<dyn Error>> 
 }
 
 #[instrument(level = "trace")]
-pub fn load_config() -> MemyConfig {
+fn load_config() -> MemyConfig {
     let default_config = Config::builder()
         .add_source(File::from_str(TEMPLATE_CONFIG, FileFormat::Toml))
         .build()
