@@ -172,19 +172,50 @@ fn should_use_color(color: &String) -> bool {
     }
 }
 
+fn handle_denied_file(conn: &Connection, path: &String) {
+    let list_denied_action = config::get_denied_files_on_list();
+
+    match list_denied_action {
+        DeniedFilesOnList::Warn => {
+            warn!("Path {} is denied, remaining in database.", &path);
+        }
+        DeniedFilesOnList::Delete => {
+            conn.execute("DELETE FROM paths WHERE path = ?", params![&path])
+                .expect("Delete failed");
+            info!("Path {} is denied, deleted from database.", &path);
+        }
+        DeniedFilesOnList::SkipSilently => {}
+    }
+}
+
+fn handle_missing_file(
+    conn: &Connection,
+    path: &String,
+    now: UnixTimestamp,
+    last_noted_timestamp: UnixTimestamp,
+) {
+    let missing_files_delete_after_days = config::get_missing_files_delete_from_db_after();
+
+    let last_noted_age_days = (now - last_noted_timestamp) / 86_400; // Convert seconds to days
+
+    if last_noted_age_days > missing_files_delete_after_days {
+        conn.execute("DELETE FROM paths WHERE path = ?", params![path])
+            .expect("Delete failed");
+        warn!("{path} no longer exists; last noted {last_noted_age_days} days ago; older than get_missing_files_delete_from_db_after, removed from database.");
+    } else {
+        info!("{path} no longer exists; last noted {last_noted_age_days} days ago; within get_missing_files_delete_from_db_after, retained but skipped.");
+    }
+}
+
 #[instrument(level = "trace")]
 fn list_paths_calculate(
     conn: &Connection,
     args: &ListArgs,
 ) -> Result<Vec<PathFrecency>, Box<dyn Error>> {
     let rows = db::get_rows(conn)?;
-
     let now = utils::get_unix_timestamp();
 
     let mut results: Vec<PathFrecency> = vec![];
-
-    let list_denied_action = config::get_denied_files_on_list();
-    let matcher = config::get_denylist_matcher();
 
     let (oldest_last_noted_timestamp, highest_count) =
         get_oldest_timestamp_and_highest_count(conn, now);
@@ -192,44 +223,19 @@ fn list_paths_calculate(
 
     for row in rows {
         let Ok(metadata) = fs::metadata(&row.path) else {
-            let missing_files_delete_after_days = config::get_missing_files_delete_from_db_after();
-            let last_noted_age_days = (now - row.last_noted_timestamp) / 86_400; // Convert seconds to days
-            if last_noted_age_days > missing_files_delete_after_days {
-                conn.execute("DELETE FROM paths WHERE path = ?", params![row.path])
-                    .expect("Delete failed");
-                warn!("{} no longer exists; last noted {last_noted_age_days} days ago; older than get_missing_files_delete_from_db_after, removed from database.", row.path);
-            } else {
-                info!("{} no longer exists; last noted {last_noted_age_days} days ago; within get_missing_files_delete_from_db_after, retained but skipped.", row.path);
-            }
-
+            handle_missing_file(conn, &row.path, now, row.last_noted_timestamp);
             continue;
         };
 
         if let ignore::Match::Ignore(_matched_pat) =
-            matcher.matched_path_or_any_parents(&row.path, metadata.is_dir())
+            config::get_denylist_matcher().matched_path_or_any_parents(&row.path, metadata.is_dir())
         {
-            match list_denied_action {
-                DeniedFilesOnList::SkipSilently => {
-                    continue;
-                }
-                DeniedFilesOnList::Warn => {
-                    warn!("Path {} is denied, remaining in database.", &row.path);
-                    continue;
-                }
-                DeniedFilesOnList::Delete => {
-                    conn.execute("DELETE FROM paths WHERE path = ?", params![row.path])
-                        .expect("Delete failed");
-                    info!("Path {} is denied, deleted from database.", row.path);
-                    continue;
-                }
-            }
-        }
-
-        if args.files_only && !metadata.is_file() {
+            handle_denied_file(conn, &row.path);
             continue;
         }
 
-        if args.directories_only && !metadata.is_dir() {
+        if (args.files_only && !metadata.is_file()) || (args.directories_only && !metadata.is_dir())
+        {
             continue;
         }
 
@@ -239,6 +245,7 @@ fn list_paths_calculate(
             highest_count,
             oldest_last_noted_timestamp_hours,
         );
+
         results.push(PathFrecency {
             path: row.path,
             frecency,
