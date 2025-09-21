@@ -27,7 +27,9 @@ fn check_db_version(conn: &Connection) -> Result<(), Box<dyn Error>> {
         .expect("Failed to read database version");
 
     if version != DB_VERSION {
-        return Err(format!("Database version mismatch: expected {DB_VERSION}, found {version}. Please delete your database.").into());
+        return Err(
+            format!("Database version mismatch: expected {DB_VERSION}, found {version}.").into(),
+        );
     }
 
     Ok(())
