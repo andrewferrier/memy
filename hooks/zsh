@@ -5,7 +5,10 @@ preexec() {
     eval "expanded=\${~word}"
 
     if [[ -e $expanded ]]; then
-      memy --config denied_files_warn_on_note=false note "$expanded" &!
+      memy \
+        --config denied_files_warn_on_note=false \
+        --config missing_files_warn_on_note=false \
+        note "$expanded" &!
     fi
   done
 }
