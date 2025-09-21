@@ -17,6 +17,7 @@ use core::error::Error;
 use is_terminal::IsTerminal as _;
 use log::{debug, error, info, warn};
 use rusqlite::{params, Connection, OptionalExtension as _, Transaction};
+use std::borrow::Cow;
 use std::fs;
 use std::io::{self, stdout, Write as _};
 use std::path::Path;
@@ -27,21 +28,17 @@ use types::NotedCount;
 use types::UnixTimestamp;
 use types::UnixTimestampHours;
 
-fn normalize_path_if_needed(path: &Path) -> String {
+fn normalize_path_if_needed(path: &Path) -> std::io::Result<Cow<'_, Path>> {
     let normalize = config::get_normalize_symlinks_on_note();
 
     if normalize {
-        std::fs::canonicalize(path).ok().map_or_else(
-            || path.to_string_lossy().into_owned(),
-            |p| p.to_string_lossy().into_owned(),
-        )
+        Ok(Cow::Owned(fs::canonicalize(path)?))
     } else {
-        path.to_string_lossy().into_owned()
+        Ok(Cow::Borrowed(path))
     }
 }
 
-#[instrument(level = "trace")]
-fn note_path(tx: &Transaction, raw_path: &str) {
+fn note_path(tx: &Transaction, raw_path: &str) -> Result<(), Box<(dyn Error + 'static)>> {
     let pathbuf = utils::expand_tilde(raw_path);
     let path = pathbuf.as_path();
 
@@ -50,20 +47,20 @@ fn note_path(tx: &Transaction, raw_path: &str) {
             warn!("Path {raw_path} does not exist.");
         }
 
-        return;
+        return Ok(());
     }
 
-    let clean_path = normalize_path_if_needed(path);
+    let clean_path = normalize_path_if_needed(path)?;
 
     let matcher = config::get_denylist_matcher();
     if let ignore::Match::Ignore(_matched_pat) =
         matcher.matched_path_or_any_parents(&clean_path, false)
     {
         if config::get_denied_files_warn_on_note() {
-            warn!("Path {clean_path} denied by denylist pattern.");
+            warn!("Path {} denied by denylist pattern.", clean_path.display());
         }
 
-        return;
+        return Ok(());
     }
 
     let now = utils::get_unix_timestamp();
@@ -72,11 +69,12 @@ fn note_path(tx: &Transaction, raw_path: &str) {
             ON CONFLICT(path) DO UPDATE SET \
                 noted_count = noted_count + 1, \
                 last_noted_timestamp = excluded.last_noted_timestamp",
-        params![clean_path, now],
+        params![clean_path.to_string_lossy(), now],
     )
     .expect("Insert failed");
 
-    info!("Path {clean_path} noted");
+    info!("Path {} noted", clean_path.display());
+    Ok(())
 }
 
 #[instrument(level = "trace")]
@@ -91,7 +89,7 @@ fn note_paths(note_args: cli::NoteArgs) -> Result<(), Box<dyn Error>> {
         .expect("Cannot start DB transaction");
 
     for path in note_args.paths {
-        note_path(&tx, &path);
+        note_path(&tx, &path)?;
     }
 
     tx.commit().expect("Cannot commit transaction");
