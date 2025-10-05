@@ -286,11 +286,22 @@ mod tests {
         assert!(wrapper(&["a/**/z"], "a/b/c/z", false).is_ignore);
         assert!(wrapper(&["\\!important.txt"], "!important.txt", false).is_ignore);
         assert!(wrapper(&["\\#notes.txt"], "#notes.txt", false).is_ignore);
+        assert!(wrapper(&[], "foo.txt", false).is_none);
         assert!(wrapper(&[""], "foo.txt", false).is_none);
         assert!(wrapper(&["#foo.txt"], "foo.txt", false).is_none);
         assert!(wrapper(&[" foo.txt"], "foo.txt", false).is_none);
         assert!(wrapper(&["foo.txt", "!foo.txt"], "foo.txt", false).is_whitelist);
         assert!(wrapper(&["*.txt", "!*.txt"], "foo.txt", false).is_whitelist);
+        assert!(
+            wrapper(
+                &["/home/*/.cache/foo"],
+                "/home/user/.cache/foo/xyz.txt",
+                false
+            )
+            .is_ignore
+        );
+        assert!(wrapper(&["/**/.cache/foo"], "/home/user/.cache/foo/xyz.txt", false).is_ignore);
+        assert!(wrapper(&["**/.cache/foo"], "/home/user/.cache/foo/xyz.txt", false).is_ignore);
 
         assert!(wrapper(&["foo/"], "foo", true).is_ignore);
         assert!(wrapper(&["foo/"], "bar", true).is_none);
