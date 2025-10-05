@@ -1,4 +1,5 @@
 pub static DEFAULT_DENYLIST: &[&str] = &[
+    "*\\.swp",
     "/\\.git",
     "/dev",
     "/mnt",
@@ -7,4 +8,5 @@ pub static DEFAULT_DENYLIST: &[&str] = &[
     "/sys",
     "COMMIT_EDITMSG",
     "MERGE_MSG",
+    "\\.DS_Store",
 ];
