@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.14.0](https://github.com/andrewferrier/memy/compare/v0.13.0...v0.14.0) (2025-10-07)
+
+
+### Features
+
+* Add two default deny patterns ([3283294](https://github.com/andrewferrier/memy/commit/32832949b953b62bc04e9ea49f6ed546d05ac9ea))
+* Implement use_tilde_on_list - closes [#74](https://github.com/andrewferrier/memy/issues/74) ([79b432b](https://github.com/andrewferrier/memy/commit/79b432bfc3663c9f140d297a322b8f6ab6182264))
+* Include last_noted_age_days in diagnostic message ([91885ff](https://github.com/andrewferrier/memy/commit/91885ff72ec5c61686f26d7e96966164c153b0ae))
+
+
+### Bug Fixes
+
+* Expand tilde in denylist - closes [#80](https://github.com/andrewferrier/memy/issues/80) ([89a1533](https://github.com/andrewferrier/memy/commit/89a153384ac36e6cfd11a542b3a07b91726fe93c))
+* Handle missing files for fish ([3e868fa](https://github.com/andrewferrier/memy/commit/3e868faf297900b2af36df869f9db672282a28cc))
+* hooks - don't complain about missing files - closes [#78](https://github.com/andrewferrier/memy/issues/78) ([0f43b79](https://github.com/andrewferrier/memy/commit/0f43b79123e351680a24e3f2f3ec270b428ef001))
+* Remove confusing message ([83f45d9](https://github.com/andrewferrier/memy/commit/83f45d9e5ae06125b3e3d54fa38a9c32b28b46f8))
+* zsh hook - don't break other hooks ([b9fd11a](https://github.com/andrewferrier/memy/commit/b9fd11ae2f3b08e925a99c35c244ece0b8b1b145))
+
+
+### Performance Improvements
+
+* Create denylist_matcher only once ([0d24087](https://github.com/andrewferrier/memy/commit/0d24087611a9e402b2efa7d8a7c1240d5bb33427))
+
 ## [0.13.0](https://github.com/andrewferrier/memy/compare/v0.12.0...v0.13.0) (2025-09-14)
 
 
