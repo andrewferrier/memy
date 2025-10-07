@@ -1,4 +1,5 @@
 use super::denylist_default;
+use super::utils;
 
 use config::{Config, File, FileFormat, Value};
 use core::error::Error;
@@ -191,7 +192,15 @@ pub fn get_denylist_matcher() -> Gitignore {
         .iter()
         .map(std::string::ToString::to_string)
         .collect();
-    combined_denylist.append(&mut config.denylist.clone().unwrap_or_default());
+    combined_denylist.append(
+        &mut config
+            .denylist
+            .clone()
+            .unwrap_or_default()
+            .into_iter()
+            .map(|pattern| utils::expand_tilde(&pattern).to_string_lossy().to_string())
+            .collect(),
+    );
 
     debug!("Combined denylist: {combined_denylist:?}");
 
