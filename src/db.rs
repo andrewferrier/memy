@@ -1,9 +1,3 @@
-use crate::types::NotedCount;
-use crate::types::UnixTimestamp;
-
-use super::config;
-use super::import;
-
 use core::error::Error;
 use log::debug;
 use rusqlite::Connection;
@@ -11,6 +5,11 @@ use std::env;
 use std::path::PathBuf;
 use tracing::instrument;
 use xdg::BaseDirectories;
+
+use crate::config;
+use crate::import;
+use crate::types::NotedCount;
+use crate::types::UnixTimestamp;
 
 const DB_VERSION: i32 = 1;
 

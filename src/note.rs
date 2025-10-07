@@ -1,17 +1,16 @@
 use core::error::Error;
 use log::{info, warn};
 use rusqlite::params;
-use tracing::instrument;
-
-use super::cli;
-use super::config;
-use super::db;
-use super::utils;
-
 use rusqlite::Transaction;
 use std::borrow::Cow;
 use std::fs;
 use std::path::Path;
+use tracing::instrument;
+
+use crate::cli;
+use crate::config;
+use crate::db;
+use crate::utils;
 
 fn normalize_path_if_needed(path: &Path) -> std::io::Result<Cow<'_, Path>> {
     let normalize = config::get_normalize_symlinks_on_note();

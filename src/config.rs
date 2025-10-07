@@ -1,6 +1,3 @@
-use super::denylist_default;
-use super::utils;
-
 use config::{Config, File, FileFormat, Value};
 use core::error::Error;
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
@@ -15,6 +12,9 @@ use std::sync::OnceLock;
 use toml::Value as TomlValue;
 use tracing::instrument;
 use xdg::BaseDirectories;
+
+use crate::denylist_default;
+use crate::utils;
 
 pub type RecencyBias = f64;
 

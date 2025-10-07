@@ -8,16 +8,14 @@ use std::fs;
 use std::io::{stdout, Write as _};
 use tracing::instrument;
 
-use super::cli;
-use super::config;
-use super::db;
-use super::types;
-use super::utils;
-
-use types::Frecency;
-use types::NotedCount;
-use types::UnixTimestamp;
-use types::UnixTimestampHours;
+use crate::cli;
+use crate::config;
+use crate::db;
+use crate::types::Frecency;
+use crate::types::NotedCount;
+use crate::types::UnixTimestamp;
+use crate::types::UnixTimestampHours;
+use crate::utils;
 
 #[derive(serde::Serialize)]
 struct PathFrecency {
