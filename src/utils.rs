@@ -73,6 +73,26 @@ pub fn collapse_to_tilde<P: AsRef<Path>>(path: P) -> String {
     p.to_string_lossy().into_owned()
 }
 
+#[allow(
+    clippy::trivially_copy_pass_by_ref,
+    reason = "Reference required for Serialize"
+)]
+pub fn serialize_file_type<S>(ft: &std::fs::FileType, s: S) -> Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    let kind = if ft.is_dir() {
+        "dir"
+    } else if ft.is_file() {
+        "file"
+    } else if ft.is_symlink() {
+        "symlink"
+    } else {
+        "other"
+    };
+    s.serialize_str(kind)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

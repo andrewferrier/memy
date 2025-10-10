@@ -17,6 +17,7 @@ clap = { version = "4.5", default-features = false, features = [
     "help",
 ] }
 clap_complete = "4.5.55"
+colored = "3.0.0"
 config = { version = "0.15.13", default-features = false, features = [
     "json5",
     "toml",

@@ -1,10 +1,11 @@
 use cli::ListArgs;
+use colored::Colorize as _;
 use config::DeniedFilesOnList;
 use core::error::Error;
 use is_terminal::IsTerminal as _;
 use log::{error, info, warn};
 use rusqlite::{params, Connection, OptionalExtension as _};
-use std::fs;
+use std::fs::{metadata, FileType};
 use std::io::{stdout, Write as _};
 use tracing::instrument;
 
@@ -23,6 +24,8 @@ struct PathFrecency {
     frecency: Frecency,
     count: NotedCount,
     last_noted: String,
+    #[serde(serialize_with = "crate::utils::serialize_file_type")]
+    file_type: FileType,
 }
 
 fn should_use_color(color: &String) -> bool {
@@ -140,7 +143,7 @@ fn calculate(conn: &Connection, args: &ListArgs) -> Result<Vec<PathFrecency>, Bo
     let oldest_last_noted_timestamp_hours = timestamp_age_hours(now, oldest_last_noted_timestamp);
 
     for row in rows {
-        let Ok(metadata) = fs::metadata(&row.path) else {
+        let Ok(metadata) = metadata(&row.path) else {
             handle_missing_file(conn, &row.path, now, row.last_noted_timestamp);
             continue;
         };
@@ -169,6 +172,7 @@ fn calculate(conn: &Connection, args: &ListArgs) -> Result<Vec<PathFrecency>, Bo
             frecency,
             count: row.noted_count,
             last_noted: utils::timestamp_to_iso8601(row.last_noted_timestamp),
+            file_type: metadata.file_type(),
         });
     }
 
@@ -212,14 +216,17 @@ pub fn list_paths(args: &ListArgs) -> Result<(), Box<dyn Error>> {
 
                 if use_color {
                     let path_parts: Vec<&str> = processed_path.rsplitn(2, '/').collect();
+
                     if path_parts.len() == 2 {
-                        writeln!(
-                            stdout_handle,
-                            "{}/\x1b[34m{}\x1b[0m",
-                            path_parts[1], path_parts[0]
-                        )?;
-                    } else {
-                        writeln!(stdout_handle, "\x1b[34m{processed_path}\x1b[0m")?;
+                        if result.file_type.is_dir() {
+                            writeln!(stdout_handle, "{}/{}", path_parts[1], path_parts[0].blue())?;
+                        } else if result.file_type.is_file() {
+                            writeln!(stdout_handle, "{}/{}", path_parts[1], path_parts[0].green())?;
+                        }
+                    } else if result.file_type.is_dir() {
+                        writeln!(stdout_handle, "{}", processed_path.blue())?;
+                    } else if result.file_type.is_file() {
+                        writeln!(stdout_handle, "{}", processed_path.green())?;
                     }
                 } else {
                     writeln!(stdout_handle, "{processed_path}")?;

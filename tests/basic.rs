@@ -183,7 +183,7 @@ fn test_list_csv_format() {
 
     for line in lines {
         let fields = line.split(',').count();
-        assert_eq!(fields, 4, "CSV line does not have 4 fields");
+        assert_eq!(fields, 5, "CSV line does not have 5 fields");
     }
 }
 
