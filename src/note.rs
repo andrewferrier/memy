@@ -62,7 +62,7 @@ fn note_path(tx: &Transaction, raw_path: &str) -> Result<(), Box<dyn Error + 'st
 }
 
 #[instrument(level = "trace")]
-pub fn note_paths(note_args: cli::NoteArgs) -> Result<(), Box<dyn Error>> {
+pub fn command(note_args: cli::NoteArgs) -> Result<(), Box<dyn Error>> {
     if note_args.paths.is_empty() {
         return Err("You must specify some paths to note".into());
     }

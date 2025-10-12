@@ -186,7 +186,7 @@ fn calculate(conn: &Connection, args: &ListArgs) -> Result<Vec<PathFrecency>, Bo
 }
 
 #[instrument(level = "trace")]
-pub fn list_paths(args: &ListArgs) -> Result<(), Box<dyn Error>> {
+pub fn command(args: &ListArgs) -> Result<(), Box<dyn Error>> {
     let db_connection = db::open_db()?;
     let results = calculate(&db_connection, args)?;
 

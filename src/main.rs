@@ -16,7 +16,7 @@ use clap::Parser as _;
 use cli::{Cli, Commands};
 use core::error::Error;
 use log::{debug, error, warn};
-use std::io::{self, stdout, Write as _};
+use std::io::stdout;
 use tracing::instrument;
 
 #[instrument(level = "trace")]
@@ -29,40 +29,18 @@ fn completions(shell: Option<clap_complete::Shell>) {
     clap_complete::generate(actual_shell, &mut cmd, bin_name, &mut stdout());
 }
 
-#[instrument(level = "trace")]
-fn hook_show(
-    hook_name: Option<String>,
-) -> core::result::Result<(), std::boxed::Box<dyn Error + 'static>> {
-    let mut stdout_handle = io::stdout().lock();
-
-    if let Some(actual_hook_name) = hook_name {
-        if let Some(content) = hooks::get_hook_content(&actual_hook_name) {
-            write!(stdout_handle, "{content}")?;
-        } else {
-            return Err(format!("Hook not found: {actual_hook_name}").into());
-        }
-    } else {
-        writeln!(stdout_handle, "Available hooks:")?;
-        for hook in hooks::get_hook_list() {
-            writeln!(stdout_handle, "{hook}")?;
-        }
-    }
-
-    Ok(())
-}
-
 fn handle_cli_command(
     command: Commands,
 ) -> core::result::Result<(), std::boxed::Box<dyn Error + 'static>> {
     match command {
-        Commands::Note(note_args) => Ok(note::note_paths(note_args)?),
-        Commands::List(list_args) => Ok(list::list_paths(&list_args)?),
+        Commands::Note(note_args) => Ok(note::command(note_args)?),
+        Commands::List(list_args) => Ok(list::command(&list_args)?),
         Commands::GenerateConfig {} => Ok(config::output_template_config()?),
         Commands::Completions { shell } => {
             completions(shell);
             Ok(())
         }
-        Commands::Hook { hook_name } => Ok(hook_show(hook_name)?),
+        Commands::Hook { hook_name } => Ok(hooks::command(hook_name)?),
     }
 }
 
