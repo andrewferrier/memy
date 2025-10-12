@@ -7,12 +7,6 @@ fn get_hook_content(name: &str) -> Option<&'static str> {
     hooks_generated::HOOKS.get(name).copied()
 }
 
-fn get_hook_list() -> Vec<&'static str> {
-    let mut keys: Vec<&'static str> = hooks_generated::HOOKS.keys().copied().collect();
-    keys.sort_unstable();
-    keys
-}
-
 #[instrument(level = "trace")]
 pub fn command(
     hook_name: Option<String>,
@@ -27,8 +21,8 @@ pub fn command(
         }
     } else {
         writeln!(stdout_handle, "Available hooks:")?;
-        for hook in get_hook_list() {
-            writeln!(stdout_handle, "{hook}")?;
+        for (k, _) in hooks_generated::HOOKS.iter() {
+            writeln!(stdout_handle, "{k}")?;
         }
     }
 

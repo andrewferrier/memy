@@ -34,10 +34,10 @@ fn embed_hooks() {
     }
 
     let generated_code = format!(
-        r"use std::collections::HashMap;
+        r"use std::collections::BTreeMap;
 
-pub static HOOKS: std::sync::LazyLock<HashMap<&'static str, &'static str>> = std::sync::LazyLock::new(|| {{
-    let mut map = HashMap::new();
+pub static HOOKS: std::sync::LazyLock<BTreeMap<&'static str, &'static str>> = std::sync::LazyLock::new(|| {{
+    let mut map = BTreeMap::new();
 {}
     map
 }});",
