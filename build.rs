@@ -47,7 +47,7 @@ pub static HOOKS: std::sync::LazyLock<BTreeMap<&'static str, &'static str>> = st
     let dest_path = Path::new("src/hooks_generated.rs");
     fs::write(dest_path, generated_code).expect("Failed to write generated code");
 
-    println!("cargo:rerun-if-changed=plugins");
+    println!("cargo:rerun-if-changed=hooks/");
 }
 
 fn get_git_version() {
@@ -73,7 +73,7 @@ fn generate_completions(build_root_dir: &Path) -> std::io::Result<()> {
     generate_to(Zsh, &mut cmd, "memy", &completions_dir)?;
     generate_to(Fish, &mut cmd, "memy", &completions_dir)?;
 
-    println!("cargo:rerun-if-changed=target/completions");
+    println!("cargo:rerun-if-changed=src/cli.rs");
 
     Ok(())
 }
