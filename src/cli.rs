@@ -83,3 +83,83 @@ pub struct ListArgs {
     #[arg(long, default_value = "automatic", value_name = "WHEN", alias="colour", value_parser = PossibleValuesParser::new(["always", "automatic", "never"]))]
     pub color: String,
 }
+
+#[allow(clippy::unwrap_used, reason = "unwrap() OK inside tests")]
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_key_val_simple() {
+        assert_eq!(
+            parse_key_val("key=value").unwrap(),
+            ("key".to_owned(), "value".to_owned())
+        );
+    }
+
+    #[test]
+    fn test_parse_key_val_with_double_quotes() {
+        assert_eq!(
+            parse_key_val("key=\"value with spaces\"").unwrap(),
+            ("key".to_owned(), "value with spaces".to_owned())
+        );
+    }
+
+    #[test]
+    fn test_parse_key_val_with_single_quotes() {
+        assert_eq!(
+            parse_key_val("key='value with spaces'").unwrap(),
+            ("key".to_owned(), "value with spaces".to_owned())
+        );
+    }
+
+    #[test]
+    fn test_parse_key_val_no_value() {
+        assert!(parse_key_val("key=").is_ok());
+        assert_eq!(
+            parse_key_val("key=").unwrap(),
+            ("key".to_owned(), String::new())
+        );
+    }
+
+    #[test]
+    fn test_parse_key_val_empty_value_with_quotes() {
+        assert_eq!(
+            parse_key_val("key=\"\"").unwrap(),
+            ("key".to_owned(), String::new())
+        );
+    }
+
+    #[test]
+    fn test_parse_key_val_no_equal_sign() {
+        assert!(parse_key_val("invalidkeyvalue").is_err());
+        assert_eq!(
+            parse_key_val("invalidkeyvalue").unwrap_err(),
+            "Invalid key=value pair: invalidkeyvalue"
+        );
+    }
+
+    #[test]
+    fn test_parse_key_val_multiple_equals() {
+        assert_eq!(
+            parse_key_val("key=value=another").unwrap(),
+            ("key".to_owned(), "value=another".to_owned())
+        );
+    }
+
+    #[test]
+    fn test_parse_key_val_with_numbers() {
+        assert_eq!(
+            parse_key_val("count=123").unwrap(),
+            ("count".to_owned(), "123".to_owned())
+        );
+    }
+
+    #[test]
+    fn test_parse_key_val_with_boolean() {
+        assert_eq!(
+            parse_key_val("enabled=true").unwrap(),
+            ("enabled".to_owned(), "true".to_owned())
+        );
+    }
+}
