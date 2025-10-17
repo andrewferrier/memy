@@ -3,7 +3,7 @@ use colored::Colorize as _;
 use config::DeniedFilesOnList;
 use core::error::Error;
 use is_terminal::IsTerminal as _;
-use log::{error, info, warn};
+use log::{info, warn};
 use rusqlite::{params, Connection, OptionalExtension as _};
 use std::fs::{metadata, FileType};
 use std::io::{stdout, Write as _};
@@ -28,15 +28,12 @@ struct PathFrecency {
     file_type: FileType,
 }
 
-fn should_use_color(color: &String) -> bool {
+fn should_use_color(color: &String) -> Result<bool, String> {
     match color.as_str() {
-        "always" => true,
-        "never" => false,
-        "automatic" => stdout().is_terminal(),
-        _ => {
-            error!("Invalid value for color: {color}");
-            std::process::exit(1);
-        }
+        "always" => Ok(true),
+        "never" => Ok(false),
+        "automatic" => Ok(stdout().is_terminal()),
+        _ => Err(format!("Invalid value for color: {color}")),
     }
 }
 
@@ -206,7 +203,7 @@ pub fn command(args: &ListArgs) -> Result<(), Box<dyn Error>> {
             wtr.flush()?;
         }
         _ => {
-            let use_color = should_use_color(&args.color);
+            let use_color = should_use_color(&args.color)?;
             for result in results {
                 let processed_path = if config::get_use_tilde_on_list() {
                     utils::collapse_to_tilde(result.path)
