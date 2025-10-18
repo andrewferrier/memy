@@ -11,7 +11,7 @@ use clap::{Args, Parser, Subcommand};
   memy note <FILES...> - note some files
   memy list            - list noted files in frecency order"#)]
 pub struct Cli {
-    /// Enable verbose logging (can be added multiple times to add more verbosity)
+    /// Enable verbose logging (add multiple times for more verbosity)
     #[arg(display_order = 100, short, long, global = true, action = clap::ArgAction::Count, default_value_t = 0)]
     pub verbose: u8,
 
@@ -39,10 +39,15 @@ fn parse_key_val(s: &str) -> Result<(String, String), String> {
 
 #[derive(Subcommand, Debug)]
 pub enum Commands {
-    /// Note usage of one or more paths
+    /// Note usage of (add to database) one or more paths
     Note(NoteArgs),
     /// List paths by frecency score
     List(ListArgs),
+    /// Show contents of a memy hook
+    Hook {
+        #[arg(value_enum)]
+        hook_name: Option<String>,
+    },
     /// Generate a default memy.toml config file on stdout
     GenerateConfig {},
     /// Generate shell completion scripts
@@ -50,11 +55,6 @@ pub enum Commands {
         /// The shell to generate completions for
         #[arg(value_enum)]
         shell: Option<clap_complete::Shell>,
-    },
-    /// Show contents of a memy hook
-    Hook {
-        #[arg(value_enum)]
-        hook_name: Option<String>,
     },
 }
 
