@@ -56,7 +56,7 @@ Many of these more advanced tricks would work well configured as [shell aliases]
   xdg-open "$(memy list -d | fzf)"
   ```
 
-`memy` will import your database from [fasd](https://github.com/whjvenyl/fasd) and/or [zoxide](https://github.com/ajeetdsouza/zoxide), if there is one, on first run (this behaviour can be disabled in the configuration file).
+`memy` will import your database from [fasd](https://github.com/whjvenyl/fasd), [autojump](https://github.com/wting/autojump) and/or [zoxide](https://github.com/ajeetdsouza/zoxide), if there is one, on first run (this behaviour can be disabled in the configuration file).
 
 ## Noting files automatically using hooks
 

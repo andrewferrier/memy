@@ -7,7 +7,7 @@ use support::*;
 fn test_generate_config_outputs_template() {
     let (_db_temp, db_path) = temp_dir();
 
-    let output = memy_cmd(&db_path, None, &["generate-config"])
+    let output = memy_cmd(&db_path, None, &["generate-config"], vec![])
         .output()
         .expect("Failed to execute command");
 

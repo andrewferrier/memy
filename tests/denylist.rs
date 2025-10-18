@@ -219,7 +219,7 @@ fn test_denied_files_on_list_delete_behavior() {
 
     fs::remove_file(config_path.join("memy.toml")).expect("Failed to delete config file");
 
-    let output_list_after_config_delete = memy_cmd(&db_path, Some(&config_path), &["list"])
+    let output_list_after_config_delete = memy_cmd(&db_path, Some(&config_path), &["list"], vec![])
         .output()
         .expect("Failed to execute command after config delete");
 

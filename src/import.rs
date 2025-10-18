@@ -44,7 +44,7 @@ fn from_fasd_str(s: &str) -> Result<MemyEntry, Box<dyn Error>> {
     })
 }
 
-fn from_zoxide_str(s: &str) -> Result<MemyEntry, Box<dyn Error>> {
+fn from_whitespace_split_str(s: &str) -> Result<MemyEntry, Box<dyn Error>> {
     let parts: Vec<&str> = s.split_whitespace().collect();
     if parts.len() != 2 {
         return Err(format!("Invalid entry: {s}").into());
@@ -69,12 +69,23 @@ fn from_zoxide_str(s: &str) -> Result<MemyEntry, Box<dyn Error>> {
     })
 }
 
+fn parse_state_generic<F>(contents: &str, line_parser: F) -> Result<Vec<MemyEntry>, Box<dyn Error>>
+where
+    F: Fn(&str) -> Result<MemyEntry, Box<dyn Error>>,
+{
+    contents.lines().map(line_parser).collect()
+}
+
 fn parse_fasd_state(contents: &str) -> Result<Vec<MemyEntry>, Box<dyn Error>> {
-    contents.lines().map(from_fasd_str).collect()
+    parse_state_generic(contents, from_fasd_str)
 }
 
 fn parse_zoxide_state(contents: &str) -> Result<Vec<MemyEntry>, Box<dyn Error>> {
-    contents.lines().map(from_zoxide_str).collect()
+    parse_state_generic(contents, from_whitespace_split_str)
+}
+
+fn parse_autojump_state(contents: &str) -> Result<Vec<MemyEntry>, Box<dyn Error>> {
+    parse_state_generic(contents, from_whitespace_split_str)
 }
 
 fn insert_into_db(conn: &mut Connection, entries: Vec<MemyEntry>) -> Result<(), Box<dyn Error>> {
@@ -102,7 +113,7 @@ fn insert_into_db(conn: &mut Connection, entries: Vec<MemyEntry>) -> Result<(), 
             ],
         )
         .map_err(|e| format!("Failed to insert or update entry into database: {e}"))?;
-        debug!("Imported {}", entry.filename);
+        debug!("Imported entry for file {}", entry.filename);
     }
 
     tx.commit().expect("Cannot commit transaction");
@@ -110,15 +121,30 @@ fn insert_into_db(conn: &mut Connection, entries: Vec<MemyEntry>) -> Result<(), 
     Ok(())
 }
 
-pub fn process_fasd_file(file_path: &str, conn: &mut Connection) -> Result<(), Box<dyn Error>> {
+pub fn process_file<F>(
+    file_path: &str,
+    conn: &mut Connection,
+    parser: F,
+) -> Result<(), Box<dyn Error>>
+where
+    F: Fn(&str) -> Result<Vec<MemyEntry>, Box<dyn Error>>,
+{
     let contents = fs::read_to_string(file_path)?;
-    let entries = parse_fasd_state(&contents)?;
+    let entries = parser(&contents)?;
 
     insert_into_db(conn, entries)?;
 
-    info!("Imported {file_path}");
+    info!("Imported database {file_path}");
 
     Ok(())
+}
+
+pub fn process_fasd_file(file_path: &str, conn: &mut Connection) -> Result<(), Box<dyn Error>> {
+    process_file(file_path, conn, parse_fasd_state)
+}
+
+pub fn process_autojump_file(file_path: &str, conn: &mut Connection) -> Result<(), Box<dyn Error>> {
+    process_file(file_path, conn, parse_autojump_state)
 }
 
 pub fn process_zoxide_query(conn: &mut Connection) {

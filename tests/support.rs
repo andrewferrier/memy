@@ -47,6 +47,7 @@ pub fn memy_cmd(
     db_path: &std::path::Path,
     config_path: Option<&std::path::Path>,
     args: &[&str],
+    env_vars: Vec<(&str, &str)>,
 ) -> Command {
     let mut cmd = Command::cargo_bin("memy").expect("Cannot set up memy command");
     cmd.env("MEMY_DB_DIR", db_path);
@@ -56,6 +57,10 @@ pub fn memy_cmd(
     } else {
         let (_temp_dir, temp_path) = temp_dir();
         cmd.env("MEMY_CONFIG_DIR", &temp_path);
+    }
+
+    for (key, value) in env_vars {
+        cmd.env(key, value);
     }
 
     cmd.args(args);
@@ -72,7 +77,7 @@ pub fn memy_cmd_test_defaults(
     args.push("import_on_first_use=false");
     args.extend(original_args);
 
-    memy_cmd(db_path, config_path, &args)
+    memy_cmd(db_path, config_path, &args, vec![])
 }
 
 pub fn sleep(millis: u64) {

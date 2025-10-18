@@ -90,7 +90,7 @@ fn test_recency_bias_below_0() {
     let config_contents = "recency_bias=-1\n";
     create_config_file(&config_path, config_contents);
 
-    let output = memy_cmd(&db_path, Some(&config_path), &["list"])
+    let output = memy_cmd(&db_path, Some(&config_path), &["list"], vec![])
         .output()
         .expect("Failed to execute command");
     assert!(!output.status.success());
@@ -107,7 +107,7 @@ fn test_recency_bias_above_1() {
     let config_contents = "recency_bias=1.5\n";
     create_config_file(&config_path, config_contents);
 
-    let output = memy_cmd(&db_path, Some(&config_path), &["list"])
+    let output = memy_cmd(&db_path, Some(&config_path), &["list"], vec![])
         .output()
         .expect("Failed to execute command");
     assert!(!output.status.success());

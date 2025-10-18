@@ -8,7 +8,7 @@ fn test_invalid_config_key() {
 
     create_config_file(&config_path, "foo=\"bar\"");
 
-    let output = memy_cmd(&db_path, Some(&config_path), &["list"])
+    let output = memy_cmd(&db_path, Some(&config_path), &["list"], vec![])
         .output()
         .expect("failed to run memy");
     let stderr = String::from_utf8_lossy(&output.stderr);
@@ -23,7 +23,7 @@ fn test_invalid_config_datatype() {
 
     create_config_file(&config_path, "normalize_symlinks_on_note=100");
 
-    let output = memy_cmd(&db_path, Some(&config_path), &["list"])
+    let output = memy_cmd(&db_path, Some(&config_path), &["list"], vec![])
         .output()
         .expect("failed to run memy");
     let stderr = String::from_utf8_lossy(&output.stderr);

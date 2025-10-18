@@ -62,16 +62,28 @@ fn init_db(conn: &Connection) {
 
 #[instrument(level = "trace")]
 fn handle_post_init_checks(conn: &mut Connection) {
-    let fasd_state_path = BaseDirectories::new()
-        .find_cache_file("fasd")
-        .expect("Cannot find cache file");
-    let fasd_state_path_str = fasd_state_path
-        .to_str()
-        .expect("Cannot convert PathBuf to str");
+    if let Some(fasd_state_path) = BaseDirectories::new().find_cache_file("fasd") {
+        if fasd_state_path.exists() {
+            let fasd_state_path_str = fasd_state_path
+                .to_str()
+                .expect("Cannot convert PathBuf to str");
 
-    if fasd_state_path.exists() {
-        import::process_fasd_file(fasd_state_path_str, conn)
-            .expect("Failed to process fasd state file");
+            import::process_fasd_file(fasd_state_path_str, conn)
+                .expect("Failed to process fasd state file");
+        }
+    }
+
+    if let Some(autojump_share_path) =
+        BaseDirectories::with_prefix("autojump").find_data_file("autojump.txt")
+    {
+        if autojump_share_path.exists() {
+            let autojump_share_path_str = autojump_share_path
+                .to_str()
+                .expect("Cannot convert PathBuf to str");
+
+            import::process_autojump_file(autojump_share_path_str, conn)
+                .expect("Failed to process autojump state file");
+        }
     }
 
     import::process_zoxide_query(conn);

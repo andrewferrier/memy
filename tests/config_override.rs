@@ -166,7 +166,7 @@ fn test_denylist_excludes_file_override_quoted_value() {
 fn test_invalid_param() {
     let (_db_temp, db_path) = temp_dir();
 
-    let output = memy_cmd(&db_path, None, &["--config", "foo='bar'", "list"])
+    let output = memy_cmd(&db_path, None, &["--config", "foo='bar'", "list"], vec![])
         .output()
         .unwrap();
 
@@ -183,6 +183,7 @@ fn test_incorrect_type() {
         &db_path,
         None,
         &["--config", "normalize_symlinks_on_note=100", "list"],
+        vec![],
     )
     .output()
     .unwrap();
