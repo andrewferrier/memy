@@ -29,6 +29,8 @@ struct PathFrecency {
 }
 
 fn should_use_color(color: &String) -> Result<bool, String> {
+    colored::control::set_override(true);
+
     match color.as_str() {
         "always" => Ok(true),
         "never" => Ok(false),
