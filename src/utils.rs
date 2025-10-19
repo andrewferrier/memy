@@ -46,14 +46,13 @@ pub fn detect_shell() -> Option<clap_complete::Shell> {
 pub fn expand_tilde<P: AsRef<Path>>(path: P) -> PathBuf {
     let p = path.as_ref();
 
-    if let Some(Component::Normal(first)) = p.components().next() {
-        if first == "~" {
-            if let Some(home) = home_dir() {
-                let mut comps = p.components();
-                comps.next();
-                return home.join(comps.as_path());
-            }
-        }
+    if let Some(Component::Normal(first)) = p.components().next()
+        && first == "~"
+        && let Some(home) = home_dir()
+    {
+        let mut comps = p.components();
+        comps.next();
+        return home.join(comps.as_path());
     }
 
     p.to_path_buf()
@@ -62,17 +61,17 @@ pub fn expand_tilde<P: AsRef<Path>>(path: P) -> PathBuf {
 pub fn collapse_to_tilde<P: AsRef<Path>>(path: P) -> String {
     let p = path.as_ref();
 
-    if let Some(home) = home_dir() {
-        if let Ok(stripped) = p.strip_prefix(&home) {
-            if stripped.as_os_str().is_empty() {
-                return "~".to_owned();
-            }
-
-            return PathBuf::from("~")
-                .join(stripped)
-                .to_string_lossy()
-                .into_owned();
+    if let Some(home) = home_dir()
+        && let Ok(stripped) = p.strip_prefix(&home)
+    {
+        if stripped.as_os_str().is_empty() {
+            return "~".to_owned();
         }
+
+        return PathBuf::from("~")
+            .join(stripped)
+            .to_string_lossy()
+            .into_owned();
     }
 
     p.to_string_lossy().into_owned()

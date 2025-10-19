@@ -1,7 +1,7 @@
-use std::io::stderr;
 use std::io::IsTerminal as _;
+use std::io::stderr;
 use tracing_log::LogTracer;
-use tracing_subscriber::{fmt, EnvFilter};
+use tracing_subscriber::{EnvFilter, fmt};
 
 pub fn configure_logging_and_tracing(verbose: u8) {
     LogTracer::init().expect("Failed to init LogTracer");

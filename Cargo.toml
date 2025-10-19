@@ -1,7 +1,7 @@
 [package]
 name = "memy"
 version = "0.14.0"
-edition = "2021"
+edition = "2024"
 authors = ["Andrew Ferrier <andrew.ferrier@example.com>"]
 description = "Track and recall frequently and recently used files or directories."
 license = "MIT"

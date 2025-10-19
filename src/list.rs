@@ -4,9 +4,9 @@ use config::DeniedFilesOnList;
 use core::error::Error;
 use is_terminal::IsTerminal as _;
 use log::{info, warn};
-use rusqlite::{params, Connection, OptionalExtension as _};
-use std::fs::{metadata, FileType};
-use std::io::{stdout, Write as _};
+use rusqlite::{Connection, OptionalExtension as _, params};
+use std::fs::{FileType, metadata};
+use std::io::{Write as _, stdout};
 use tracing::instrument;
 
 use crate::cli;
@@ -124,9 +124,13 @@ fn handle_missing_file(
     if last_noted_age_days > missing_files_delete_after_days {
         conn.execute("DELETE FROM paths WHERE path = ?", params![path])
             .expect("Delete failed");
-        warn!("{path} no longer exists; last noted {last_noted_age_days} days ago; older than get_missing_files_delete_from_db_after, removed from database.");
+        warn!(
+            "{path} no longer exists; last noted {last_noted_age_days} days ago; older than get_missing_files_delete_from_db_after, removed from database."
+        );
     } else {
-        info!("{path} no longer exists; last noted {last_noted_age_days} days ago; within get_missing_files_delete_from_db_after, retained but skipped.");
+        info!(
+            "{path} no longer exists; last noted {last_noted_age_days} days ago; within get_missing_files_delete_from_db_after, retained but skipped."
+        );
     }
 }
 

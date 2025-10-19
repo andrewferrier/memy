@@ -5,7 +5,7 @@ use log::{debug, error};
 use serde::Deserialize as _;
 use std::env;
 use std::fs;
-use std::io::{stdout, Write as _};
+use std::io::{Write as _, stdout};
 use std::path::PathBuf;
 use std::sync::LazyLock;
 use std::sync::OnceLock;
@@ -46,11 +46,11 @@ where
     D: serde::Deserializer<'de>,
 {
     let value: Option<RecencyBias> = Option::deserialize(deserializer)?;
-    if let Some(v) = value {
-        if !(0.0..=1.0).contains(&v) {
-            error!("recency_bias configuration option must be between 0 and 1");
-            std::process::exit(1);
-        }
+    if let Some(v) = value
+        && !(0.0..=1.0).contains(&v)
+    {
+        error!("recency_bias configuration option must be between 0 and 1");
+        std::process::exit(1);
     }
     Ok(value)
 }

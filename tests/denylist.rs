@@ -261,13 +261,15 @@ fn test_denied_files_on_list_warn_behavior() {
     let stdout_list = String::from_utf8_lossy(&output_list.stdout);
     let stderr_list = String::from_utf8_lossy(&output_list.stderr);
     assert!(stdout_list.is_empty());
-    assert!(stderr_list.contains(
-        format!(
-            "Path {} is denied, remaining in database.",
-            deny_file.display()
+    assert!(
+        stderr_list.contains(
+            format!(
+                "Path {} is denied, remaining in database.",
+                deny_file.display()
+            )
+            .as_str()
         )
-        .as_str()
-    ));
+    );
 }
 
 #[test]
