@@ -1,6 +1,6 @@
 use core::error::Error;
 use log::debug;
-use rusqlite::Connection;
+use rusqlite::{Connection, OptionalExtension as _};
 use std::env;
 use std::path::PathBuf;
 use tracing::instrument;
@@ -90,7 +90,7 @@ fn handle_post_init_checks(conn: &mut Connection) {
 }
 
 #[instrument(level = "trace")]
-pub fn open_db() -> Result<Connection, Box<dyn Error>> {
+pub fn open() -> Result<Connection, Box<dyn Error>> {
     let db_path = get_db_path();
 
     if db_path.exists() {
@@ -115,6 +115,12 @@ pub fn open_db() -> Result<Connection, Box<dyn Error>> {
     } else {
         Err(format!("Database path {} doesn't exist.", db_path.to_string_lossy()).into())
     }
+}
+
+#[instrument(level = "trace")]
+pub fn close(conn: Connection) -> Result<(), Box<dyn Error>> {
+    conn.execute("PRAGMA optimize;", []).optional()?;
+    conn.close().map_err(|(_, err)| err.into())
 }
 
 pub fn get_rows(conn: &Connection) -> Result<Vec<PathEntry>, rusqlite::Error> {

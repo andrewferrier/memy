@@ -67,7 +67,7 @@ pub fn command(note_args: cli::NoteArgs) -> Result<(), Box<dyn Error>> {
         return Err("You must specify some paths to note".into());
     }
 
-    let mut db_connection = db::open_db().expect("Could not open memy database");
+    let mut db_connection = db::open().expect("Could not open memy database");
     let tx = db_connection
         .transaction()
         .expect("Cannot start DB transaction");
@@ -77,6 +77,7 @@ pub fn command(note_args: cli::NoteArgs) -> Result<(), Box<dyn Error>> {
     }
 
     tx.commit().expect("Cannot commit transaction");
+    db::close(db_connection)?;
 
     Ok(())
 }
