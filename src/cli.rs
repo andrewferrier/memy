@@ -43,6 +43,8 @@ pub enum Commands {
     Note(NoteArgs),
     /// List paths by frecency score
     List(ListArgs),
+    /// Show statistics about noted paths
+    Stats(StatsArgs),
     /// Show contents of a memy hook
     Hook {
         #[arg(value_enum)]
@@ -82,6 +84,13 @@ pub struct ListArgs {
     /// Output colorization
     #[arg(long, default_value = "automatic", value_name = "WHEN", alias="colour", value_parser = PossibleValuesParser::new(["always", "automatic", "never"]))]
     pub color: String,
+}
+
+#[derive(Args, Debug)]
+pub struct StatsArgs {
+    /// Output format
+    #[arg(long, default_value = "plain", value_name = "FORMAT", value_parser = PossibleValuesParser::new(["plain", "json"]))]
+    pub format: String,
 }
 
 #[allow(clippy::unwrap_used, reason = "unwrap() OK inside tests")]

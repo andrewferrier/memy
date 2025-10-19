@@ -4,6 +4,7 @@ use std::path::{Component, Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::types::UnixTimestamp;
+use crate::types::UnixTimestampHours;
 
 #[allow(
     clippy::cast_possible_wrap,
@@ -23,6 +24,11 @@ pub fn timestamp_to_iso8601(timestamp: UnixTimestamp) -> String {
         .unwrap_or_else(|| panic!("Can't convert timestamp {timestamp}"));
 
     datetime.to_rfc3339()
+}
+
+pub fn timestamp_age_hours(now: UnixTimestamp, timestamp: UnixTimestamp) -> UnixTimestampHours {
+    let age_seconds = now - timestamp;
+    age_seconds as f64 / 3600.0
 }
 
 pub fn detect_shell() -> Option<clap_complete::Shell> {

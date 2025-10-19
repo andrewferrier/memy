@@ -4,7 +4,7 @@ use config::DeniedFilesOnList;
 use core::error::Error;
 use is_terminal::IsTerminal as _;
 use log::{info, warn};
-use rusqlite::{Connection, OptionalExtension as _, params};
+use rusqlite::{Connection, params};
 use std::fs::{FileType, metadata};
 use std::io::{Write as _, stdout};
 use tracing::instrument;
@@ -12,10 +12,11 @@ use tracing::instrument;
 use crate::cli;
 use crate::config;
 use crate::db;
+use crate::frecency;
+use crate::stats;
 use crate::types::Frecency;
 use crate::types::NotedCount;
 use crate::types::UnixTimestamp;
-use crate::types::UnixTimestampHours;
 use crate::utils;
 
 #[derive(serde::Serialize)]
@@ -37,61 +38,6 @@ fn should_use_color(color: &String) -> Result<bool, String> {
         "automatic" => Ok(stdout().is_terminal()),
         _ => Err(format!("Invalid value for color: {color}")),
     }
-}
-
-fn calculate_frecency(
-    count: NotedCount,
-    last_noted_timestamp_hours: UnixTimestampHours,
-    highest_count: NotedCount,
-    oldest_last_noted_timestamp_hours: UnixTimestampHours,
-) -> Frecency {
-    let freq_score = if highest_count > 0 {
-        count as f64 / highest_count as f64
-    } else {
-        0.0
-    };
-
-    let recency_score = if last_noted_timestamp_hours < oldest_last_noted_timestamp_hours {
-        1.0 - (last_noted_timestamp_hours / oldest_last_noted_timestamp_hours)
-    } else {
-        0.0
-    };
-
-    let lambda = config::get_recency_bias();
-    (1.0 - lambda).mul_add(freq_score, lambda * recency_score)
-}
-
-fn timestamp_age_hours(now: UnixTimestamp, timestamp: UnixTimestamp) -> UnixTimestampHours {
-    let age_seconds = now - timestamp;
-    age_seconds as f64 / 3600.0
-}
-
-#[instrument(level = "trace")]
-fn get_oldest_timestamp_and_highest_count(
-    conn: &Connection,
-    now: UnixTimestamp,
-) -> (UnixTimestamp, NotedCount) {
-    let oldest_last_noted_timestamp: UnixTimestamp = conn
-        .query_row(
-            "SELECT last_noted_timestamp FROM paths ORDER BY last_noted_timestamp ASC LIMIT 1",
-            [],
-            |row| row.get(0),
-        )
-        .optional()
-        .expect("Cannot get oldest timestamp")
-        .unwrap_or(now);
-
-    let highest_count: NotedCount = conn
-        .query_row(
-            "SELECT noted_count FROM paths ORDER BY noted_count DESC LIMIT 1",
-            [],
-            |row| row.get(0),
-        )
-        .optional()
-        .expect("Cannot get highest count")
-        .unwrap_or(0);
-
-    (oldest_last_noted_timestamp, highest_count)
 }
 
 fn handle_denied_file(conn: &Connection, path: &String) {
@@ -141,10 +87,16 @@ fn calculate(conn: &Connection, args: &ListArgs) -> Result<Vec<PathFrecency>, Bo
     let denylist_matcher = config::get_denylist_matcher();
 
     let mut results: Vec<PathFrecency> = vec![];
+    let stats = stats::get(conn)?;
 
-    let (oldest_last_noted_timestamp, highest_count) =
-        get_oldest_timestamp_and_highest_count(conn, now);
-    let oldest_last_noted_timestamp_hours = timestamp_age_hours(now, oldest_last_noted_timestamp);
+    let Some(oldest_note) = stats.oldest_note else {
+        return Ok(results);
+    };
+    let oldest_last_noted_timestamp_hours = utils::timestamp_age_hours(now, oldest_note.timestamp);
+
+    let Some(highest_count) = stats.highest_count else {
+        return Ok(results);
+    };
 
     for row in rows {
         let Ok(metadata) = metadata(&row.path) else {
@@ -164,10 +116,10 @@ fn calculate(conn: &Connection, args: &ListArgs) -> Result<Vec<PathFrecency>, Bo
             continue;
         }
 
-        let frecency = calculate_frecency(
+        let frecency = frecency::calculate(
             row.noted_count,
-            timestamp_age_hours(now, row.last_noted_timestamp),
-            highest_count,
+            utils::timestamp_age_hours(now, row.last_noted_timestamp),
+            highest_count.count,
             oldest_last_noted_timestamp_hours,
         );
 

@@ -8,8 +8,7 @@ use xdg::BaseDirectories;
 
 use crate::config;
 use crate::import;
-use crate::types::NotedCount;
-use crate::types::UnixTimestamp;
+use crate::types::{NotedCount, UnixTimestamp};
 
 const DB_VERSION: i32 = 1;
 

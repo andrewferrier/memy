@@ -2,12 +2,14 @@ mod cli;
 mod config;
 mod db;
 mod denylist_default;
+mod frecency;
 mod hooks;
 mod hooks_generated;
 mod import;
 mod list;
 mod logging;
 mod note;
+mod stats; // New module for stats command
 mod types;
 mod utils;
 
@@ -41,6 +43,7 @@ fn handle_cli_command(
             Ok(())
         }
         Commands::Hook { hook_name } => Ok(hooks::command(hook_name)?),
+        Commands::Stats(stats_args) => Ok(stats::command(&stats_args)?),
     }
 }
 
