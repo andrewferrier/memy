@@ -125,6 +125,7 @@ fn benchmark_import_fasd(c: &mut Criterion) {
                     cmd.arg("list")
                         .env("MEMY_DB_DIR", db_dir)
                         .env("XDG_CACHE_HOME", cache_dir)
+                        .env("XDG_DATA_HOME", cache_dir)
                         .env("_ZO_DATA_DIR", cache_dir)
                         .assert()
                         .success();
