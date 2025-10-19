@@ -5,16 +5,20 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::types::UnixTimestamp;
 
+#[allow(
+    clippy::cast_possible_wrap,
+    reason = "Value is never going to be large enough in practice that it can't be cast"
+)]
 pub fn get_unix_timestamp() -> UnixTimestamp {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .expect("Couldn't get seconds since epoch")
-        .as_secs()
+        .expect("Time went backwards")
+        .as_secs() as UnixTimestamp
 }
 
 pub fn timestamp_to_iso8601(timestamp: UnixTimestamp) -> String {
     let datetime: DateTime<Local> = Local
-        .timestamp_opt(timestamp.try_into().expect("Can't convert timestamp"), 0)
+        .timestamp_opt(timestamp, 0)
         .single()
         .expect("Can't convert timestamp");
     datetime.to_rfc3339()

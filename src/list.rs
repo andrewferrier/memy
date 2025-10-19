@@ -116,7 +116,8 @@ fn handle_missing_file(
     now: UnixTimestamp,
     last_noted_timestamp: UnixTimestamp,
 ) {
-    let missing_files_delete_after_days = config::get_missing_files_delete_from_db_after();
+    let missing_files_delete_after_days =
+        i64::from(config::get_missing_files_delete_from_db_after());
 
     let last_noted_age_days = (now - last_noted_timestamp) / 86_400; // Convert seconds to days
 

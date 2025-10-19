@@ -228,9 +228,12 @@ mod tests {
     #[test]
     fn test_parse_fasd_state_negative_timestamp() {
         let input = "file1.txt|10.5|-5";
-        let result = parse_fasd_state(input);
+        let result = parse_fasd_state(input).expect("Couldn't parse fasd state");
 
-        assert!(result.is_err());
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].filename, "file1.txt");
+        assert_eq!(result[0].count, 11);
+        assert_eq!(result[0].timestamp, -5);
     }
 
     #[test]
