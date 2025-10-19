@@ -9,6 +9,15 @@ use support::*;
 use std::env::home_dir;
 
 #[test]
+fn test_list_empty_db() {
+    let (_db_temp, db_path) = temp_dir();
+
+    let lines = list_paths(&db_path, None, &[], &[]);
+
+    assert_eq!(lines.len(), 0);
+}
+
+#[test]
 fn test_note_and_list_paths() {
     let (_db_temp, db_path) = temp_dir();
     let (_working_temp, working_path) = temp_dir();
