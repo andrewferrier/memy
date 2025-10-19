@@ -127,6 +127,8 @@ mod tests {
     }
 
     use proptest::prelude::*;
+    use proptest::strategy::Strategy;
+    use proptest::string::string_regex;
 
     proptest! {
         #[test]
@@ -137,5 +139,26 @@ mod tests {
 
             prop_assert_eq!(timestamp, round_trip_timestamp);
         }
+    }
+
+    proptest! {
+        #[test]
+        fn test_tilde_expand_collapse(path in generate_unix_path()) {
+            let expanded = expand_tilde(&path);
+            let collapsed = collapse_to_tilde(&expanded);
+
+            prop_assert_eq!(collapsed, path);
+        }
+    }
+
+    fn generate_unix_path() -> impl Strategy<Value = String> {
+        let component_char = r"[^/]+"; // one or more chars except '/'
+        let components = proptest::collection::vec(
+            string_regex(component_char).expect("string_regex failed"),
+            1..6,
+        );
+        let base_path = components.prop_map(|comps| comps.join("/"));
+        base_path
+            .prop_flat_map(|s| prop_oneof![Just(format!("~/{s}")), Just(format!("/{s}")), Just(s)])
     }
 }
