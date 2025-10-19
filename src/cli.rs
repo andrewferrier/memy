@@ -88,47 +88,7 @@ pub struct ListArgs {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn test_parse_key_val_simple() {
-        assert_eq!(
-            parse_key_val("key=value").unwrap(),
-            ("key".to_owned(), "value".to_owned())
-        );
-    }
-
-    #[test]
-    fn test_parse_key_val_with_double_quotes() {
-        assert_eq!(
-            parse_key_val("key=\"value with spaces\"").unwrap(),
-            ("key".to_owned(), "value with spaces".to_owned())
-        );
-    }
-
-    #[test]
-    fn test_parse_key_val_with_single_quotes() {
-        assert_eq!(
-            parse_key_val("key='value with spaces'").unwrap(),
-            ("key".to_owned(), "value with spaces".to_owned())
-        );
-    }
-
-    #[test]
-    fn test_parse_key_val_no_value() {
-        assert!(parse_key_val("key=").is_ok());
-        assert_eq!(
-            parse_key_val("key=").unwrap(),
-            ("key".to_owned(), String::new())
-        );
-    }
-
-    #[test]
-    fn test_parse_key_val_empty_value_with_quotes() {
-        assert_eq!(
-            parse_key_val("key=\"\"").unwrap(),
-            ("key".to_owned(), String::new())
-        );
-    }
+    use proptest::prelude::*;
 
     #[test]
     fn test_parse_key_val_no_equal_sign() {
@@ -139,27 +99,51 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_parse_key_val_multiple_equals() {
-        assert_eq!(
-            parse_key_val("key=value=another").unwrap(),
-            ("key".to_owned(), "value=another".to_owned())
-        );
-    }
+    proptest! {
+        #[test]
+        fn proptest_parse_key_val(
+            key_first in prop::sample::select(
+                ('a'..='z').chain('A'..='Z').chain(core::iter::once('_')).collect::<Vec<_>>()
+            ),
+            key_rest in prop::collection::vec(
+                prop::sample::select(
+                    ('a'..='z')
+                        .chain('A'..='Z')
+                        .chain('0'..='9')
+                        .chain(vec!['_','-'].into_iter())
+                        .collect::<Vec<_>>()
+                ),
+                0..=10
+            ),
+            value_raw in prop::collection::vec(
+                prop::sample::select(
+                    ('a'..='z')
+                        .chain('A'..='Z')
+                        .chain('0'..='9')
+                        .chain(vec![' ','_','-','.','='].into_iter())
+                        .collect::<Vec<_>>()
+                ),
+                0..=20
+            ),
+            quote_type in prop_oneof![Just("\""), Just("'"), Just("none")])
+        {
+            let value_raw_string: String = value_raw.into_iter().collect();
 
-    #[test]
-    fn test_parse_key_val_with_numbers() {
-        assert_eq!(
-            parse_key_val("count=123").unwrap(),
-            ("count".to_owned(), "123".to_owned())
-        );
-    }
+            let input_value_str = match quote_type{
+                "\"" => format!("\"{value_raw_string}\""),
+                "'" => format!("'{value_raw_string}'"),
+                "none" => value_raw_string.clone(),
+                _ => String::new(),
+            };
 
-    #[test]
-    fn test_parse_key_val_with_boolean() {
-        assert_eq!(
-            parse_key_val("enabled=true").unwrap(),
-            ("enabled".to_owned(), "true".to_owned())
-        );
+            let key: String = core::iter::once(key_first).chain(key_rest.into_iter()).collect();
+
+            let input_str = format!("{key}={input_value_str}");
+
+            let (parsed_key, parsed_value) = parse_key_val(&input_str).unwrap_or_else(|_| panic!("Parsing failed for input: \"{input_str}\""));
+
+            assert_eq!(parsed_key, key, "Key mismatch for input: \"{input_str}\"");
+            assert_eq!(parsed_value, value_raw_string, "Value mismatch for input: \"{input_str}\"");
+        }
     }
 }
