@@ -42,6 +42,7 @@ xdg = { version = "3.0.0", default-features = false }
 assert_cmd = "2"
 criterion = "0.7.0"
 tempfile = "3"
+proptest = "1.0"
 walkdir = "2.5.0"
 
 [build-dependencies]

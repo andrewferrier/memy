@@ -20,7 +20,8 @@ pub fn timestamp_to_iso8601(timestamp: UnixTimestamp) -> String {
     let datetime: DateTime<Local> = Local
         .timestamp_opt(timestamp, 0)
         .single()
-        .expect("Can't convert timestamp");
+        .unwrap_or_else(|| panic!("Can't convert timestamp {timestamp}"));
+
     datetime.to_rfc3339()
 }
 
@@ -123,5 +124,18 @@ mod tests {
         assert_eq!(collapse_to_tilde("/etc/hosts"), "/etc/hosts");
         assert_eq!(collapse_to_tilde("etc/hosts"), "etc/hosts");
         assert_eq!(collapse_to_tilde("hosts"), "hosts");
+    }
+
+    use proptest::prelude::*;
+
+    proptest! {
+        #[test]
+        fn round_trip_timestamp_serialization(timestamp in 0..=DateTime::parse_from_rfc3339("9999-12-31T23:59:59+00:00").expect("Cannot parse").timestamp()) {
+            let iso8601 = timestamp_to_iso8601(timestamp);
+            let parsed_datetime = DateTime::parse_from_rfc3339(&iso8601).unwrap_or_else(|_| panic!("Failed to parse ISO8601 string {iso8601}"));
+            let round_trip_timestamp = parsed_datetime.timestamp();
+
+            prop_assert_eq!(timestamp, round_trip_timestamp);
+        }
     }
 }
