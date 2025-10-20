@@ -125,6 +125,7 @@ mod tests {
         assert_eq!(collapse_to_tilde("hosts"), "hosts");
     }
 
+    use normalize_path::NormalizePath as _;
     use proptest::prelude::*;
     use proptest::strategy::Strategy;
     use proptest::string::string_regex;
@@ -143,10 +144,12 @@ mod tests {
     proptest! {
         #[test]
         fn test_tilde_expand_collapse(path in generate_unix_path()) {
-            let expanded = expand_tilde(&path);
+            // Path normalization is needed for test paths like `~/.`
+            let normalized_path = Path::new(&path).normalize();
+            let expanded = expand_tilde(&normalized_path);
             let collapsed = collapse_to_tilde(&expanded);
 
-            prop_assert_eq!(collapsed, path);
+            prop_assert_eq!(collapsed, normalized_path.to_string_lossy());
         }
     }
 
