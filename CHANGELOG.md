@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.15.0](https://github.com/andrewferrier/memy/compare/v0.14.0...v0.15.0) (2025-10-21)
+
+
+### Features
+
+* Color files/dirs differently ([e080e0c](https://github.com/andrewferrier/memy/commit/e080e0c0bc5199a51ba6e1f6703422893eaae0cf))
+* Introduce 'stats' command - closes [#87](https://github.com/andrewferrier/memy/issues/87) ([f5c4e36](https://github.com/andrewferrier/memy/commit/f5c4e363867f02e9ca415e895935e298ff919663))
+* Support import from autojump ([3ac4071](https://github.com/andrewferrier/memy/commit/3ac40716d43c9df2c548dd56c7a5443c3516145d))
+* Use PRAGMA optimize - closes [#85](https://github.com/andrewferrier/memy/issues/85) ([bed8f92](https://github.com/andrewferrier/memy/commit/bed8f921347e53377e7934e17f18359ad209ff11))
+
+
+### Bug Fixes
+
+* Don't import from autojump in bench ([b78dbc9](https://github.com/andrewferrier/memy/commit/b78dbc93b6988955febf7cfa40793229445e4939))
+* Handle color="always" when not a terminal ([876bded](https://github.com/andrewferrier/memy/commit/876bded439b01d224c19016f2d6a56d01b3cbd81))
+* Unix timestamps are signed, not unsigned ([55fa725](https://github.com/andrewferrier/memy/commit/55fa72518d0f06f4b7a73baa25cd110f321fb2ae))
+
 ## [0.14.0](https://github.com/andrewferrier/memy/compare/v0.13.0...v0.14.0) (2025-10-07)
 
 
