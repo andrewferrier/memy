@@ -65,18 +65,24 @@ fn handle_missing_file(
     let missing_files_delete_after_days =
         i64::from(config::get_missing_files_delete_from_db_after());
 
-    let last_noted_age_days = (now - last_noted_timestamp) / 86_400; // Convert seconds to days
-
-    if last_noted_age_days > missing_files_delete_after_days {
-        conn.execute("DELETE FROM paths WHERE path = ?", params![path])
-            .expect("Delete failed");
+    if missing_files_delete_after_days < 0 {
         info!(
-            "{path} no longer exists; last noted {last_noted_age_days} days ago; older than get_missing_files_delete_from_db_after, removed from database."
+            "{path} no longer exists but get_missing_files_delete_from_db_after < 0, so it will not be deleted."
         );
     } else {
-        info!(
-            "{path} no longer exists; last noted {last_noted_age_days} days ago; within get_missing_files_delete_from_db_after, retained but skipped."
-        );
+        let last_noted_age_days = (now - last_noted_timestamp) / 86_400; // Convert seconds to days
+
+        if last_noted_age_days > missing_files_delete_after_days {
+            conn.execute("DELETE FROM paths WHERE path = ?", params![path])
+                .expect("Delete failed");
+            info!(
+                "{path} no longer exists; last noted {last_noted_age_days} days ago; older than get_missing_files_delete_from_db_after, removed from database."
+            );
+        } else {
+            info!(
+                "{path} no longer exists; last noted {last_noted_age_days} days ago; within get_missing_files_delete_from_db_after, retained but skipped."
+            );
+        }
     }
 }
 

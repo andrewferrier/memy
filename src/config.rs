@@ -38,7 +38,7 @@ pub struct MemyConfig {
     pub use_tilde_on_list: Option<bool>,
     #[serde(default, deserialize_with = "validate_recency_bias")]
     pub recency_bias: Option<RecencyBias>,
-    pub missing_files_delete_from_db_after: Option<u32>,
+    pub missing_files_delete_from_db_after: Option<i32>,
 }
 
 fn validate_recency_bias<'de, D>(deserializer: D) -> Result<Option<RecencyBias>, D::Error>
@@ -234,7 +234,7 @@ pub fn get_recency_bias() -> RecencyBias {
     CACHED_CONFIG.recency_bias.unwrap_or(0.5)
 }
 
-pub fn get_missing_files_delete_from_db_after() -> u32 {
+pub fn get_missing_files_delete_from_db_after() -> i32 {
     CACHED_CONFIG
         .missing_files_delete_from_db_after
         .unwrap_or(30)
