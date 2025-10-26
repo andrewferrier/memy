@@ -27,14 +27,17 @@ fn parse_key_val(s: &str) -> Result<(String, String), String> {
     let pos = s
         .find('=')
         .ok_or_else(|| format!("Invalid key=value pair: {s}"))?;
-    let key = s[..pos].to_string();
-    let mut value = s[pos + 1..].to_string();
-    if (value.starts_with('"') && value.ends_with('"'))
-        || (value.starts_with('\'') && value.ends_with('\''))
+
+    let trimmed_key = s[..pos].trim().to_owned();
+    let mut trimmed_value = s[pos + 1..].trim().to_owned();
+
+    if (trimmed_value.starts_with('"') && trimmed_value.ends_with('"'))
+        || (trimmed_value.starts_with('\'') && trimmed_value.ends_with('\''))
     {
-        value = value[1..value.len() - 1].to_string();
+        trimmed_value = trimmed_value[1..trimmed_value.len() - 1].to_string();
     }
-    Ok((key, value))
+
+    Ok((trimmed_key, trimmed_value))
 }
 
 #[derive(Subcommand, Debug)]
@@ -108,6 +111,22 @@ mod tests {
         );
     }
 
+    #[test]
+    fn test_parse_key_val_padded() {
+        assert_eq!(
+            parse_key_val(" a = b ").unwrap(),
+            ("a".to_owned(), "b".to_owned())
+        );
+        assert_eq!(
+            parse_key_val(" a = \"b \" ").unwrap(),
+            ("a".to_owned(), "b ".to_owned())
+        );
+        assert_eq!(
+            parse_key_val(" a = ' b' ").unwrap(),
+            ("a".to_owned(), " b".to_owned())
+        );
+    }
+
     proptest! {
         #[test]
         fn proptest_parse_key_val(
@@ -134,9 +153,19 @@ mod tests {
                 ),
                 0..=20
             ),
-            quote_type in prop_oneof![Just("\""), Just("'"), Just("none")])
+            quote_type in prop_oneof![Just("\""), Just("'"), Just("none")],
+            whitespace in prop::collection::vec(
+                prop::sample::select(vec![' ', '\t']),
+                0..=5
+            )
+        )
         {
             let value_raw_string: String = value_raw.into_iter().collect();
+            let whitespace_string: String = whitespace.into_iter().collect();
+
+            prop_assume!(
+                !(value_raw_string.chars().any(char::is_whitespace) && quote_type == "none")
+            );
 
             let input_value_str = match quote_type{
                 "\"" => format!("\"{value_raw_string}\""),
@@ -147,7 +176,7 @@ mod tests {
 
             let key: String = core::iter::once(key_first).chain(key_rest.into_iter()).collect();
 
-            let input_str = format!("{key}={input_value_str}");
+            let input_str = format!("{whitespace_string}{key}{whitespace_string}={whitespace_string}{input_value_str}{whitespace_string}");
 
             let (parsed_key, parsed_value) = parse_key_val(&input_str).unwrap_or_else(|_| panic!("Parsing failed for input: \"{input_str}\""));
 
