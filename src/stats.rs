@@ -31,7 +31,7 @@ pub struct StatsOutput {
 
 #[instrument(level = "trace")]
 pub fn get(conn: &Connection) -> Result<StatsOutput, Box<dyn Error>> {
-    let rows = db::get_rows(conn)?;
+    let row_count = conn.query_row("SELECT COUNT(*) FROM paths", [], |row| row.get(0))?;
 
     let oldest = conn.query_row(
         "SELECT path, last_noted_timestamp FROM paths ORDER BY last_noted_timestamp ASC LIMIT 1",
@@ -71,7 +71,7 @@ pub fn get(conn: &Connection) -> Result<StatsOutput, Box<dyn Error>> {
         .optional()?;
 
     Ok(StatsOutput {
-        total_paths: rows.len(),
+        total_paths: row_count,
         oldest_note: oldest,
         newest_note: newest,
         highest_count,
