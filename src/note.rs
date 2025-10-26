@@ -12,19 +12,18 @@ use crate::config;
 use crate::db;
 use crate::utils;
 
-fn normalize_path_if_needed(path: &Path) -> std::io::Result<Cow<'_, Path>> {
+fn normalize_path_if_needed(path: Cow<'_, Path>) -> std::io::Result<Cow<'_, Path>> {
     let normalize = config::get_normalize_symlinks_on_note();
 
     if normalize {
-        Ok(Cow::Owned(fs::canonicalize(path)?))
+        Ok(Cow::Owned(fs::canonicalize(&*path)?))
     } else {
-        Ok(Cow::Borrowed(path))
+        Ok(path)
     }
 }
 
 fn note_path(tx: &Transaction, raw_path: &str) -> Result<(), Box<dyn Error + 'static>> {
-    let pathbuf = utils::expand_tilde(raw_path);
-    let path = pathbuf.as_path();
+    let path = utils::expand_tilde(raw_path);
 
     if !path.exists() {
         if config::get_missing_files_warn_on_note() {

@@ -1,4 +1,5 @@
 use chrono::{DateTime, Local, TimeZone as _};
+use std::borrow::Cow;
 use std::env::home_dir;
 use std::path::{Component, Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -49,7 +50,7 @@ pub fn detect_shell() -> Option<clap_complete::Shell> {
     })
 }
 
-pub fn expand_tilde<P: AsRef<Path>>(path: P) -> PathBuf {
+pub fn expand_tilde<P: AsRef<Path> + ?Sized>(path: &'_ P) -> Cow<'_, Path> {
     let p = path.as_ref();
 
     if let Some(Component::Normal(first)) = p.components().next()
@@ -57,11 +58,12 @@ pub fn expand_tilde<P: AsRef<Path>>(path: P) -> PathBuf {
         && let Some(home) = home_dir()
     {
         let mut comps = p.components();
-        comps.next();
-        return home.join(comps.as_path());
+        comps.next(); // skip "~"
+        let expanded = home.join(comps.as_path());
+        Cow::Owned(expanded)
+    } else {
+        Cow::Borrowed(p)
     }
-
-    p.to_path_buf()
 }
 
 pub fn collapse_to_tilde<P: AsRef<Path>>(path: P) -> String {
