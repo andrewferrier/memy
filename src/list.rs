@@ -70,7 +70,7 @@ fn handle_missing_file(
     if last_noted_age_days > missing_files_delete_after_days {
         conn.execute("DELETE FROM paths WHERE path = ?", params![path])
             .expect("Delete failed");
-        warn!(
+        info!(
             "{path} no longer exists; last noted {last_noted_age_days} days ago; older than get_missing_files_delete_from_db_after, removed from database."
         );
     } else {
