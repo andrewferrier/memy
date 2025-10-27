@@ -5,11 +5,7 @@ use support::*;
 
 #[test]
 fn test_generate_config_outputs_template() {
-    let (_db_temp, db_path) = temp_dir();
-
-    let output = memy_cmd(&db_path, None, &["generate-config"], vec![])
-        .output()
-        .expect("Failed to execute command");
+    let output = memy_cmd(None, None, &["generate-config"], vec![]);
 
     assert!(output.status.success());
     let stdout = String::from_utf8(output.stdout).expect("Failed to parse stdout as UTF-8");

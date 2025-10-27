@@ -164,11 +164,7 @@ fn test_denylist_excludes_file_override_quoted_value() {
 
 #[test]
 fn test_invalid_param() {
-    let (_db_temp, db_path) = temp_dir();
-
-    let output = memy_cmd(&db_path, None, &["--config", "foo='bar'", "list"], vec![])
-        .output()
-        .unwrap();
+    let output = memy_cmd(None, None, &["--config", "foo='bar'", "list"], vec![]);
 
     assert!(!output.status.success());
     let stderr = String::from_utf8_lossy(&output.stderr);
@@ -177,16 +173,12 @@ fn test_invalid_param() {
 
 #[test]
 fn test_incorrect_type() {
-    let (_db_temp, db_path) = temp_dir();
-
     let output = memy_cmd(
-        &db_path,
+        None,
         None,
         &["--config", "normalize_symlinks_on_note=100", "list"],
         vec![],
-    )
-    .output()
-    .unwrap();
+    );
 
     assert!(!output.status.success());
     let stderr = String::from_utf8_lossy(&output.stderr);

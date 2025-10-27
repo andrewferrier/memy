@@ -207,9 +207,7 @@ fn test_denied_files_on_list_delete_behavior() {
         format!("denylist = [\"{deny_pattern}\"]\ndenied_files_on_list = \"delete\"\n");
     create_config_file(&config_path, &config_contents);
 
-    let output_list = memy_cmd_test_defaults(&db_path, Some(&config_path), &["list"])
-        .output()
-        .expect("Failed to execute command");
+    let output_list = memy_cmd_test_defaults(&db_path, Some(&config_path), &["list"]);
 
     assert!(output_list.status.success());
     let stdout_list = String::from_utf8_lossy(&output_list.stdout);
@@ -219,9 +217,8 @@ fn test_denied_files_on_list_delete_behavior() {
 
     fs::remove_file(config_path.join("memy.toml")).expect("Failed to delete config file");
 
-    let output_list_after_config_delete = memy_cmd(&db_path, Some(&config_path), &["list"], vec![])
-        .output()
-        .expect("Failed to execute command after config delete");
+    let output_list_after_config_delete =
+        memy_cmd(Some(&db_path), Some(&config_path), &["list"], vec![]);
 
     assert!(output_list_after_config_delete.status.success());
     let stdout_after_delete = String::from_utf8_lossy(&output_list_after_config_delete.stdout);
@@ -253,9 +250,7 @@ fn test_denied_files_on_list_warn_behavior() {
         format!("denylist = [\"{deny_pattern}\"]\ndenied_files_on_list = \"warn\"\n");
     create_config_file(&config_path, &config_contents);
 
-    let output_list = memy_cmd_test_defaults(&db_path, Some(&config_path), &["list"])
-        .output()
-        .expect("Failed to execute command");
+    let output_list = memy_cmd_test_defaults(&db_path, Some(&config_path), &["list"]);
 
     assert!(output_list.status.success());
     let stdout_list = String::from_utf8_lossy(&output_list.stdout);
@@ -298,9 +293,7 @@ fn test_denied_files_on_list_skip_silently_behavior() {
     let stderr_note = String::from_utf8_lossy(&output_note.stderr);
     assert!(stderr_note.is_empty()); // No warning on note
 
-    let output_list = memy_cmd_test_defaults(&db_path, Some(&config_path), &["list"])
-        .output()
-        .expect("Failed to execute command");
+    let output_list = memy_cmd_test_defaults(&db_path, Some(&config_path), &["list"]);
 
     assert!(output_list.status.success());
     let stdout_list = String::from_utf8_lossy(&output_list.stdout);

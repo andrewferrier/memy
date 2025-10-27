@@ -84,15 +84,12 @@ fn test_recency_bias_1() {
 
 #[test]
 fn test_recency_bias_below_0() {
-    let (_db_temp, db_path) = temp_dir();
     let (_config_temp_dir, config_path) = temp_dir();
 
     let config_contents = "recency_bias=-1\n";
     create_config_file(&config_path, config_contents);
 
-    let output = memy_cmd(&db_path, Some(&config_path), &["list"], vec![])
-        .output()
-        .expect("Failed to execute command");
+    let output = memy_cmd(None, Some(&config_path), &["list"], vec![]);
     assert!(!output.status.success());
 
     let stderr = String::from_utf8_lossy(&output.stderr);
@@ -101,15 +98,12 @@ fn test_recency_bias_below_0() {
 
 #[test]
 fn test_recency_bias_above_1() {
-    let (_db_temp, db_path) = temp_dir();
     let (_config_temp_dir, config_path) = temp_dir();
 
     let config_contents = "recency_bias=1.5\n";
     create_config_file(&config_path, config_contents);
 
-    let output = memy_cmd(&db_path, Some(&config_path), &["list"], vec![])
-        .output()
-        .expect("Failed to execute command");
+    let output = memy_cmd(None, Some(&config_path), &["list"], vec![]);
     assert!(!output.status.success());
 
     let stderr = String::from_utf8_lossy(&output.stderr);

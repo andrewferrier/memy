@@ -24,7 +24,7 @@ fn test_import_fasd_state_file() {
     fs::write(&fasd_state_file, fasd_contents).expect("Failed to write mock fasd state file");
 
     let output = memy_cmd(
-        &db_path,
+        Some(&db_path),
         None,
         &["list"],
         vec![
@@ -34,9 +34,7 @@ fn test_import_fasd_state_file() {
             // This makes sure the test does't accidentally import from the zoxide state
             ("_ZO_DATA_DIR", empty_path.to_str().unwrap()),
         ],
-    )
-    .output()
-    .expect("wibble");
+    );
 
     assert!(output.status.success());
 
@@ -68,7 +66,7 @@ fn test_import_autojump_state_file() {
         .expect("Failed to write mock autojump state file");
 
     let output = memy_cmd(
-        &db_path,
+        Some(&db_path),
         None,
         &["list", "-vv"],
         vec![
@@ -78,9 +76,7 @@ fn test_import_autojump_state_file() {
             // This makes sure the test does't accidentally import from the zoxide state
             ("_ZO_DATA_DIR", empty_path.to_str().unwrap()),
         ],
-    )
-    .output()
-    .expect("Failed to execute memy list command");
+    );
 
     assert!(output.status.success());
 
