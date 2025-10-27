@@ -2,7 +2,7 @@ use config::{Config, File, FileFormat, Value};
 use core::error::Error;
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
 use log::{debug, error};
-use serde::Deserialize as _;
+use serde::de::{self, Deserialize as _};
 use std::env;
 use std::fs;
 use std::io::{Write as _, stdout};
@@ -49,8 +49,7 @@ where
     if let Some(v) = value
         && !(0.0..=1.0).contains(&v)
     {
-        error!("recency_bias configuration option must be between 0 and 1");
-        std::process::exit(1);
+        return Err(de::Error::custom("recency_bias must be between 0 and 1"));
     }
     Ok(value)
 }
