@@ -9,7 +9,7 @@ mod import;
 mod list;
 mod logging;
 mod note;
-mod stats; // New module for stats command
+mod stats;
 mod types;
 mod utils;
 
