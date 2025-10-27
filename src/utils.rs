@@ -90,16 +90,12 @@ pub fn serialize_file_type<S>(ft: &std::fs::FileType, s: S) -> Result<S::Ok, S::
 where
     S: serde::Serializer,
 {
-    let kind = if ft.is_dir() {
-        "dir"
-    } else if ft.is_file() {
-        "file"
-    } else if ft.is_symlink() {
-        "symlink"
-    } else {
-        "other"
-    };
-    s.serialize_str(kind)
+    s.serialize_str(match (ft.is_dir(), ft.is_file(), ft.is_symlink()) {
+        (true, _, _) => "dir",
+        (_, true, _) => "file",
+        (_, _, true) => "symlink",
+        _ => "other",
+    })
 }
 
 #[cfg(test)]
