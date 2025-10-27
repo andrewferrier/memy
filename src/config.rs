@@ -151,7 +151,7 @@ fn load_config() -> MemyConfig {
         .build()
         .and_then(Config::try_deserialize::<MemyConfig>)
         .unwrap_or_else(|e| {
-            error!("Failed to build or deserialize final config, falling back to defaults: {e}");
+            error!("Failed to build or deserialize final config: {e}");
             std::process::exit(1);
         });
 
