@@ -86,8 +86,7 @@ fn toml_to_config_value(toml_val: &TomlValue) -> Value {
 }
 
 fn parse_toml_value(s: &str) -> Result<Value, Box<dyn Error>> {
-    let toml_snippet = format!("value = {s}");
-    let parsed: TomlValue = toml::from_str(&toml_snippet)?;
+    let parsed: TomlValue = toml::from_str(&format!("value = {s}"))?;
     let inner = parsed
         .get("value")
         .ok_or("Missing 'value' in parsed toml")?;
