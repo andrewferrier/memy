@@ -129,6 +129,8 @@ pub fn process_file<F>(
 where
     F: Fn(&str) -> Result<Vec<MemyEntry>, Box<dyn Error>>,
 {
+    info!("Importing from database {file_path}...");
+
     let contents = fs::read_to_string(file_path)?;
     let entries = parser(&contents)?;
 
