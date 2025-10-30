@@ -78,7 +78,7 @@ fn test_note_and_list_paths_multiarg() {
     assert!(output.status.success());
     let lines = list_paths(&db_path, None, &[], &[]);
     assert_eq!(lines.len(), 2);
-    let paths: Vec<&str> = vec![dir_a.to_str().unwrap(), dir_b.to_str().unwrap()];
+    let paths = [dir_a.to_str().unwrap(), dir_b.to_str().unwrap()];
     for path in paths {
         assert!(lines.contains(&path.to_owned()), "Missing path: {path}");
     }
