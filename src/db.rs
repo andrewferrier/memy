@@ -2,6 +2,7 @@ use core::error::Error;
 use log::debug;
 use rusqlite::{Connection, OptionalExtension as _};
 use std::env;
+use std::fs;
 use std::path::PathBuf;
 use tracing::instrument;
 use xdg::BaseDirectories;
@@ -91,28 +92,28 @@ fn handle_post_init_checks(conn: &mut Connection) {
 pub fn open() -> Result<Connection, Box<dyn Error>> {
     let db_path = get_db_path();
 
-    if db_path.exists() {
-        let db_file = db_path.join("memy.sqlite3");
-        let db_path_exists = db_file.exists();
-        let mut conn = Connection::open(&db_file).expect("Failed to open memy database");
-
-        if db_path_exists {
-            debug!("Database at {} does exist", db_file.to_string_lossy());
-            check_db_version(&conn)?;
-        } else {
-            debug!("Database at {} does not exist", db_file.to_string_lossy());
-            init_db(&conn);
-
-            if config::get_import_on_first_use() {
-                handle_post_init_checks(&mut conn);
-            }
-        }
-
-        debug!("Database opened");
-        Ok(conn)
-    } else {
-        Err(format!("Database path {} doesn't exist.", db_path.to_string_lossy()).into())
+    if !db_path.exists() {
+        fs::create_dir_all(&db_path)?;
     }
+
+    let db_file = db_path.join("memy.sqlite3");
+    let db_path_exists = db_file.exists();
+    let mut conn = Connection::open(&db_file).expect("Failed to open memy database");
+
+    if db_path_exists {
+        debug!("Database at {} does exist", db_file.to_string_lossy());
+        check_db_version(&conn)?;
+    } else {
+        debug!("Database at {} does not exist", db_file.to_string_lossy());
+        init_db(&conn);
+
+        if config::get_import_on_first_use() {
+            handle_post_init_checks(&mut conn);
+        }
+    }
+
+    debug!("Database opened");
+    Ok(conn)
 }
 
 #[instrument(level = "trace")]
