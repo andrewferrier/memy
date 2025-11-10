@@ -30,31 +30,31 @@ Currently, memy has been tested on Linux and MacOS (limited). It has not been te
   memy list
   ```
 
-Many of these more advanced tricks would work well configured as [shell aliases](https://linuxize.com/post/how-to-create-bash-aliases/):
-
 - Change to a directory from your remembered paths using [fzf](https://github.com/junegunn/fzf) as a wrapper:
 
   ```sh
-  cd $(memy list -d | fzf)
+  memy list -d | fzf | read -r DIR; cd "${DIR/#\~/$HOME}";
   ```
 
 - Change to the most frecent directory containing the string 'download' (case-insensitive):
 
   ```sh
-  cd $(memy list -d | grep -i download | tail -1)
+  cd $(memy list -d | grep -i download | tail -1 | sed "s|^~|$HOME|")
   ```
 
 - Open a recently used file in your editor, selecting it using `fzf` (assuming your editor is `vim`).
 
   ```sh
-  vim "$(memy list -f | fzf)"
+  memy list -f | fzf | sed "s|^~|$HOME|" | xargs vim
   ```
 
 - (On Linux) Open a recently used path in your GUI file manager:
 
   ```sh
-  xdg-open "$(memy list -d | fzf)"
+  memy list -f | fzf | sed "s|^~|$HOME|" | xargs xdg-open
   ```
+
+Many of these more advanced tricks would work well configured as [shell aliases](https://linuxize.com/post/how-to-create-bash-aliases/).
 
 `memy` will import your database from [fasd](https://github.com/whjvenyl/fasd), [autojump](https://github.com/wting/autojump) and/or [zoxide](https://github.com/ajeetdsouza/zoxide), if there is one, on first run (this behaviour can be disabled in the configuration file).
 
