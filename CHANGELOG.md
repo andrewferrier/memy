@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.15.0](https://github.com/andrewferrier/memy/compare/v0.14.0...v0.15.0) (2025-11-12)
+
+
+### Features
+
+* And message re: importing database ([1218a6e](https://github.com/andrewferrier/memy/commit/1218a6e3343f00b06d7c9c73ac3d6bead00015f8))
+* Can prevent missing file deletion - closes [#90](https://github.com/andrewferrier/memy/issues/90) ([cbed029](https://github.com/andrewferrier/memy/commit/cbed02955e17acbcdb90f71b1c0b8ce2b6072919))
+* Color files/dirs differently ([e080e0c](https://github.com/andrewferrier/memy/commit/e080e0c0bc5199a51ba6e1f6703422893eaae0cf))
+* Introduce 'stats' command - closes [#87](https://github.com/andrewferrier/memy/issues/87) ([f5c4e36](https://github.com/andrewferrier/memy/commit/f5c4e363867f02e9ca415e895935e298ff919663))
+* Support import from autojump ([3ac4071](https://github.com/andrewferrier/memy/commit/3ac40716d43c9df2c548dd56c7a5443c3516145d))
+* Use PRAGMA optimize - closes [#85](https://github.com/andrewferrier/memy/issues/85) ([bed8f92](https://github.com/andrewferrier/memy/commit/bed8f921347e53377e7934e17f18359ad209ff11))
+
+
+### Bug Fixes
+
+* Don't import from autojump in bench ([b78dbc9](https://github.com/andrewferrier/memy/commit/b78dbc93b6988955febf7cfa40793229445e4939))
+* Handle color="always" when not a terminal ([876bded](https://github.com/andrewferrier/memy/commit/876bded439b01d224c19016f2d6a56d01b3cbd81))
+* Handle missing db_path ([047f2a9](https://github.com/andrewferrier/memy/commit/047f2a9b4ee6125af2d9e63a501a9087c3800200))
+* Handle NO_COLOR consistently ([a80b2e8](https://github.com/andrewferrier/memy/commit/a80b2e83482dca31b94bc1554ec8a1c59ca626a3))
+* Handle whitespace-padded --config ([9f7b620](https://github.com/andrewferrier/memy/commit/9f7b620009698ff4c8bdaac002336509263b1306))
+* No warn when removing old files - closes [#91](https://github.com/andrewferrier/memy/issues/91) ([d3c4903](https://github.com/andrewferrier/memy/commit/d3c4903299265c449f3383893cda096d2ed26255))
+* Remove comment about falling back to defaults ([6546a52](https://github.com/andrewferrier/memy/commit/6546a52c048f793bad9b444e5a1d9b52cc935771))
+* Unix timestamps are signed, not unsigned ([55fa725](https://github.com/andrewferrier/memy/commit/55fa72518d0f06f4b7a73baa25cd110f321fb2ae))
+
 ## [0.14.0](https://github.com/andrewferrier/memy/compare/v0.13.0...v0.14.0) (2025-10-07)
 
 
