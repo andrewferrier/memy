@@ -2,7 +2,6 @@ use cli::ListArgs;
 use colored::Colorize as _;
 use config::DeniedFilesOnList;
 use core::error::Error;
-use is_terminal::IsTerminal as _;
 use log::{info, warn};
 use rusqlite::{Connection, params};
 use std::fs::{FileType, metadata};
@@ -27,17 +26,6 @@ struct PathFrecency {
     last_noted: String,
     #[serde(serialize_with = "crate::utils::serialize_file_type")]
     file_type: FileType,
-}
-
-fn should_use_color(color: &String) -> Result<bool, String> {
-    colored::control::set_override(true);
-
-    match color.as_str() {
-        "always" => Ok(true),
-        "never" => Ok(false),
-        "automatic" => Ok(stdout().is_terminal()),
-        _ => Err(format!("Invalid value for color: {color}")),
-    }
 }
 
 fn handle_denied_file(conn: &Connection, path: &String) {
@@ -169,7 +157,6 @@ pub fn command(args: &ListArgs) -> Result<(), Box<dyn Error>> {
             wtr.flush()?;
         }
         _ => {
-            let use_color = should_use_color(&args.color)?;
             for result in results {
                 let processed_path = if config::get_use_tilde_on_list() {
                     utils::collapse_to_tilde(result.path)
@@ -177,22 +164,18 @@ pub fn command(args: &ListArgs) -> Result<(), Box<dyn Error>> {
                     result.path
                 };
 
-                if use_color {
-                    let path_parts: Vec<&str> = processed_path.rsplitn(2, '/').collect();
+                let path_parts: Vec<&str> = processed_path.rsplitn(2, '/').collect();
 
-                    if path_parts.len() == 2 {
-                        if result.file_type.is_dir() {
-                            writeln!(stdout_handle, "{}/{}", path_parts[1], path_parts[0].blue())?;
-                        } else if result.file_type.is_file() {
-                            writeln!(stdout_handle, "{}/{}", path_parts[1], path_parts[0].green())?;
-                        }
-                    } else if result.file_type.is_dir() {
-                        writeln!(stdout_handle, "{}", processed_path.blue())?;
+                if path_parts.len() == 2 {
+                    if result.file_type.is_dir() {
+                        writeln!(stdout_handle, "{}/{}", path_parts[1], path_parts[0].blue())?;
                     } else if result.file_type.is_file() {
-                        writeln!(stdout_handle, "{}", processed_path.green())?;
+                        writeln!(stdout_handle, "{}/{}", path_parts[1], path_parts[0].green())?;
                     }
-                } else {
-                    writeln!(stdout_handle, "{processed_path}")?;
+                } else if result.file_type.is_dir() {
+                    writeln!(stdout_handle, "{}", processed_path.blue())?;
+                } else if result.file_type.is_file() {
+                    writeln!(stdout_handle, "{}", processed_path.green())?;
                 }
             }
         }

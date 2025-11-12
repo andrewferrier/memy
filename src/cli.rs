@@ -19,6 +19,10 @@ pub struct Cli {
     #[arg(display_order = 101, short, long, global = true, value_parser = parse_key_val, value_name("OPTION=VALUE"), number_of_values = 1)]
     pub config: Vec<(String, String)>,
 
+    /// Output colorization
+    #[arg(long, default_value = "automatic", value_name = "WHEN", alias="colour", value_parser = PossibleValuesParser::new(["always", "automatic", "never"]))]
+    pub color: String,
+
     #[command(subcommand)]
     pub command: Commands,
 }
@@ -83,10 +87,6 @@ pub struct ListArgs {
     /// Output format
     #[arg(long, default_value = "plain", value_name = "FORMAT", value_parser = PossibleValuesParser::new(["plain", "csv", "json"]))]
     pub format: String,
-
-    /// Output colorization
-    #[arg(long, default_value = "automatic", value_name = "WHEN", alias="colour", value_parser = PossibleValuesParser::new(["always", "automatic", "never"]))]
-    pub color: String,
 }
 
 #[derive(Args, Debug)]

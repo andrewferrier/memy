@@ -47,20 +47,41 @@ fn handle_cli_command(
     }
 }
 
+fn configure_color(color: &str) -> Result<Option<bool>, String> {
+    match color {
+        "always" => {
+            colored::control::set_override(true);
+            Ok(Some(true))
+        }
+        "never" => {
+            colored::control::set_override(false);
+            Ok(Some(false))
+        }
+        "automatic" => Ok(None),
+        _ => Err(format!("Invalid value for color: {color}")),
+    }
+}
+
 fn main() {
     let cli = Cli::parse();
 
     config::set_config_overrides(cli.config.clone());
-    logging::configure_logging_and_tracing(cli.verbose);
 
-    debug!("Memy version {}", env!("GIT_VERSION"));
-    debug!("CLI params parsed: {cli:?}");
-
-    match handle_cli_command(cli.command) {
-        Ok(()) => {}
+    let color_option = match configure_color(&cli.color) {
+        Ok(option) => option,
         Err(err) => {
             error!("{err}");
             std::process::exit(1);
         }
+    };
+
+    logging::configure_logging_and_tracing(cli.verbose, color_option);
+
+    debug!("Memy version {}", env!("GIT_VERSION"));
+    debug!("CLI params parsed: {cli:?}");
+
+    if let Err(err) = handle_cli_command(cli.command) {
+        error!("{err}");
+        std::process::exit(1);
     }
 }
