@@ -258,9 +258,7 @@ fn test_graceful_when_db_missing() {
 #[test]
 fn test_graceful_when_dbdir_missing() {
     let output = memy_cmd_test_defaults(Path::new("/tmp/definitelydoesntexist"), None, &["list"]);
-    assert!(!output.status.success());
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(stderr.contains("Database path /tmp/definitelydoesntexist doesn't exist"));
+    assert!(output.status.success());
 }
 
 #[test]
