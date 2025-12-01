@@ -7,7 +7,6 @@ use std::env;
 use std::fs;
 use std::io::{Write as _, stdout};
 use std::path::PathBuf;
-use std::sync::LazyLock;
 use std::sync::OnceLock;
 use toml::Value as TomlValue;
 use tracing::instrument;
@@ -54,8 +53,7 @@ where
     Ok(value)
 }
 
-static CACHED_CONFIG: LazyLock<MemyConfig> = LazyLock::new(load_config);
-static CONFIG_OVERRIDES: OnceLock<Vec<(String, String)>> = OnceLock::new();
+static CONFIG: OnceLock<MemyConfig> = OnceLock::new();
 
 const TEMPLATE_CONFIG: &str = include_str!("../config/template-memy.toml");
 
@@ -110,7 +108,7 @@ fn test_config_file_issues(config_path: &PathBuf) -> Result<(), Box<dyn Error>> 
 }
 
 #[instrument(level = "trace")]
-fn load_config() -> MemyConfig {
+pub fn load_config(overrides: Vec<(String, String)>) {
     let default_config = Config::builder()
         .add_source(File::from_str(TEMPLATE_CONFIG, FileFormat::Toml))
         .build()
@@ -131,9 +129,9 @@ fn load_config() -> MemyConfig {
         builder = builder.add_source(File::from(config_path).format(FileFormat::Toml));
     }
 
-    for (key, value_str) in CONFIG_OVERRIDES.get().expect("Overrides not loaded") {
+    for (key, value_str) in overrides {
         if key == "denylist" {
-            let value = parse_toml_value(value_str)
+            let value = parse_toml_value(&value_str)
                 .expect("Failed to parse TOML value for denylist override");
             builder = builder
                 .set_override(key, value)
@@ -154,14 +152,11 @@ fn load_config() -> MemyConfig {
         });
 
     debug!("Config loaded: {config:?}");
-
-    config
+    CONFIG.set(config).expect("Could not set configuration");
 }
 
-pub fn set_config_overrides(overrides: Vec<(String, String)>) {
-    CONFIG_OVERRIDES
-        .set(overrides)
-        .expect("Overrides could not be set");
+fn get_config() -> &'static MemyConfig {
+    CONFIG.get().expect("Config not initialized")
 }
 
 pub fn output_template_config() -> Result<(), Box<dyn Error>> {
@@ -170,7 +165,7 @@ pub fn output_template_config() -> Result<(), Box<dyn Error>> {
 }
 
 pub fn get_import_on_first_use() -> bool {
-    CACHED_CONFIG.import_on_first_use.unwrap_or(true)
+    get_config().import_on_first_use.unwrap_or(true)
 }
 
 fn build_gitignore(patterns: Vec<String>) -> Gitignore {
@@ -184,7 +179,7 @@ fn build_gitignore(patterns: Vec<String>) -> Gitignore {
 }
 
 pub fn get_denylist_matcher() -> Gitignore {
-    let config = &*CACHED_CONFIG;
+    let config = get_config();
 
     let mut combined_denylist: Vec<String> = denylist_default::DEFAULT_DENYLIST
         .iter()
@@ -206,34 +201,34 @@ pub fn get_denylist_matcher() -> Gitignore {
 }
 
 pub fn get_normalize_symlinks_on_note() -> bool {
-    CACHED_CONFIG.normalize_symlinks_on_note.unwrap_or(true)
+    get_config().normalize_symlinks_on_note.unwrap_or(true)
 }
 
 pub fn get_missing_files_warn_on_note() -> bool {
-    CACHED_CONFIG.missing_files_warn_on_note.unwrap_or(true)
+    get_config().missing_files_warn_on_note.unwrap_or(true)
 }
 
 pub fn get_denied_files_warn_on_note() -> bool {
-    CACHED_CONFIG.denied_files_warn_on_note.unwrap_or(true)
+    get_config().denied_files_warn_on_note.unwrap_or(true)
 }
 
 pub fn get_denied_files_on_list() -> DeniedFilesOnList {
-    CACHED_CONFIG
+    get_config()
         .denied_files_on_list
         .clone()
         .unwrap_or(DeniedFilesOnList::Delete)
 }
 
 pub fn get_use_tilde_on_list() -> bool {
-    CACHED_CONFIG.use_tilde_on_list.unwrap_or(true)
+    get_config().use_tilde_on_list.unwrap_or(true)
 }
 
 pub fn get_recency_bias() -> RecencyBias {
-    CACHED_CONFIG.recency_bias.unwrap_or(0.5)
+    get_config().recency_bias.unwrap_or(0.5)
 }
 
 pub fn get_missing_files_delete_from_db_after() -> i32 {
-    CACHED_CONFIG
+    get_config()
         .missing_files_delete_from_db_after
         .unwrap_or(30)
 }

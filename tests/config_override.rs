@@ -172,6 +172,15 @@ fn test_invalid_param() {
 }
 
 #[test]
+fn test_invalid_config_key_stats() {
+    let output = memy_cmd(None, None, &["--config", "x=y", "stats"], vec![]);
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("unknown field `x`, expected one of"));
+}
+
+#[test]
 fn test_incorrect_type() {
     let output = memy_cmd(
         None,

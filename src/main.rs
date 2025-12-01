@@ -65,8 +65,6 @@ fn configure_color(color: &str) -> Result<Option<bool>, String> {
 fn main() {
     let cli = Cli::parse();
 
-    config::set_config_overrides(cli.config.clone());
-
     let color_option = match configure_color(&cli.color) {
         Ok(option) => option,
         Err(err) => {
@@ -76,6 +74,7 @@ fn main() {
     };
 
     logging::configure_logging_and_tracing(cli.verbose, color_option);
+    config::load_config(cli.config.clone());
 
     debug!("Memy version {}", env!("GIT_VERSION"));
     debug!("CLI params parsed: {cli:?}");
