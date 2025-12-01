@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.15.1](https://github.com/andrewferrier/memy/compare/v0.15.0...v0.15.1) (2025-12-01)
+
+
+### Bug Fixes
+
+* Evaluate CLI config before commands - closes [#93](https://github.com/andrewferrier/memy/issues/93) ([35d7266](https://github.com/andrewferrier/memy/commit/35d7266c6ae6d98f3a614a48a0f86642e7e11a7e))
+
 ## [0.15.0](https://github.com/andrewferrier/memy/compare/v0.14.0...v0.15.0) (2025-11-12)
 
 
