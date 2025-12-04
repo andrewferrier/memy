@@ -2,12 +2,13 @@ use clap::builder::PossibleValuesParser;
 use clap::{Args, Parser, Subcommand};
 
 #[derive(Parser, Debug)]
-#[command(name = "memy")]
-#[command(version = option_env!("GIT_VERSION"))]
-#[command(author = "Andrew Ferrier")]
-#[command(about = "Track and recall frequently and recently used files or directories.")]
-#[command(subcommand_required = true)]
-#[command(override_usage = r#"
+#[command(
+    name = "memy",
+    version = option_env!("GIT_VERSION"),
+    author = "Andrew Ferrier",
+    about = "Track and recall frequently and recently used files or directories.",
+    subcommand_required = true,
+    override_usage = r#"
   memy note <FILES...> - note some files
   memy list            - list noted files in frecency order"#)]
 pub struct Cli {
