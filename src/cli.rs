@@ -28,21 +28,21 @@ pub struct Cli {
     pub command: Commands,
 }
 
-fn parse_key_val(s: &str) -> Result<(String, String), String> {
-    let pos = s
-        .find('=')
-        .ok_or_else(|| format!("Invalid key=value pair: {s}"))?;
+fn parse_key_val(key_value: &str) -> Result<(String, String), String> {
+    let (key_str, value_str) = key_value
+        .split_once('=')
+        .ok_or_else(|| format!("Invalid key=value pair: missing '=' in '{key_value}'"))?;
 
-    let trimmed_key = s[..pos].trim().to_owned();
-    let mut trimmed_value = s[pos + 1..].trim().to_owned();
+    let key = key_str.trim().to_owned();
+    let mut value = value_str.trim().to_owned();
 
-    if (trimmed_value.starts_with('"') && trimmed_value.ends_with('"'))
-        || (trimmed_value.starts_with('\'') && trimmed_value.ends_with('\''))
-    {
-        trimmed_value = trimmed_value[1..trimmed_value.len() - 1].to_string();
+    if let Some(stripped) = value.strip_prefix('"').and_then(|s| s.strip_suffix('"')) {
+        value = stripped.to_owned();
+    } else if let Some(stripped) = value.strip_prefix('\'').and_then(|s| s.strip_suffix('\'')) {
+        value = stripped.to_owned();
     }
 
-    Ok((trimmed_key, trimmed_value))
+    Ok((key, value))
 }
 
 #[derive(Subcommand, Debug)]
@@ -108,7 +108,7 @@ mod tests {
         assert!(parse_key_val("invalidkeyvalue").is_err());
         assert_eq!(
             parse_key_val("invalidkeyvalue").unwrap_err(),
-            "Invalid key=value pair: invalidkeyvalue"
+            "Invalid key=value pair: missing '=' in 'invalidkeyvalue'"
         );
     }
 

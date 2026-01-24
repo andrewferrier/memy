@@ -100,17 +100,12 @@ fn insert_into_db(conn: &mut Connection, entries: Vec<MemyEntry>) -> Result<(), 
             clippy::cast_sign_loss,
             reason = "We expect this score will always fit in a u64"
         )]
-        let rounded_score = entry.count;
         tx.execute(
             "INSERT INTO paths (path, noted_count, last_noted_timestamp) VALUES (?1, ?2, ?3)
              ON CONFLICT(path) DO UPDATE SET
              noted_count = noted_count + excluded.noted_count,
              last_noted_timestamp = excluded.last_noted_timestamp",
-            [
-                &entry.filename,
-                &rounded_score.to_string(),
-                &entry.timestamp.to_string(),
-            ],
+            rusqlite::params![entry.filename, entry.count, entry.timestamp],
         )
         .map_err(|e| format!("Failed to insert or update entry into database: {e}"))?;
         debug!("Imported entry for file {}", entry.filename);
