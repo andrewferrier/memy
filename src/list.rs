@@ -6,6 +6,7 @@ use log::{info, warn};
 use rusqlite::{Connection, params};
 use std::fs::{FileType, metadata};
 use std::io::{Write as _, stdout};
+use std::sync::LazyLock;
 use tracing::instrument;
 
 use crate::cli;
@@ -50,25 +51,25 @@ fn handle_missing_file(
     now: UnixTimestamp,
     last_noted_timestamp: UnixTimestamp,
 ) {
-    let missing_files_delete_after_days =
-        i64::from(config::get_missing_files_delete_from_db_after());
+    static MISSING_FILES_DELETE_AFTER_SECS: LazyLock<i64> =
+        LazyLock::new(|| i64::from(config::get_missing_files_delete_from_db_after()) * 86400);
 
-    if missing_files_delete_after_days < 0 {
+    if *MISSING_FILES_DELETE_AFTER_SECS < 0 {
         info!(
             "{path} no longer exists but get_missing_files_delete_from_db_after < 0, so it will not be deleted."
         );
     } else {
-        let last_noted_age_days = (now - last_noted_timestamp) / 86_400; // Convert seconds to days
+        let last_noted_age_secs = now - last_noted_timestamp;
 
-        if last_noted_age_days > missing_files_delete_after_days {
+        if last_noted_age_secs > *MISSING_FILES_DELETE_AFTER_SECS {
             conn.execute("DELETE FROM paths WHERE path = ?", params![path])
                 .expect("Delete failed");
             info!(
-                "{path} no longer exists; last noted {last_noted_age_days} days ago; older than get_missing_files_delete_from_db_after, removed from database."
+                "{path} no longer exists; last noted {last_noted_age_secs} seconds ago; older than get_missing_files_delete_from_db_after, removed from database."
             );
         } else {
             info!(
-                "{path} no longer exists; last noted {last_noted_age_days} days ago; within get_missing_files_delete_from_db_after, retained but skipped."
+                "{path} no longer exists; last noted {last_noted_age_secs} seconds ago; within get_missing_files_delete_from_db_after, retained but skipped."
             );
         }
     }
