@@ -17,18 +17,19 @@ use clap::CommandFactory as _;
 use clap::Parser as _;
 use cli::{Cli, Commands};
 use core::error::Error;
-use log::{debug, error, warn};
+use log::{debug, warn};
 use std::io::stdout;
 use tracing::instrument;
 
 #[instrument(level = "trace")]
-fn completions(shell: Option<clap_complete::Shell>) {
+fn completions(shell: Option<clap_complete::Shell>) -> Result<(), Box<dyn Error>> {
     let actual_shell = shell
         .or_else(utils::detect_shell)
-        .expect("Could not determine shell. Specify one explicitly.");
+        .ok_or("Could not determine shell. Specify one explicitly.")?;
     let mut cmd = Cli::command();
     let bin_name = cmd.get_name().to_owned();
     clap_complete::generate(actual_shell, &mut cmd, bin_name, &mut stdout());
+    Ok(())
 }
 
 fn handle_cli_command(
@@ -38,16 +39,13 @@ fn handle_cli_command(
         Commands::Note(note_args) => Ok(note::command(note_args)?),
         Commands::List(list_args) => Ok(list::command(&list_args)?),
         Commands::GenerateConfig {} => Ok(config::output_template_config()?),
-        Commands::Completions { shell } => {
-            completions(shell);
-            Ok(())
-        }
+        Commands::Completions { shell } => Ok(completions(shell)?),
         Commands::Hook { hook_name } => Ok(hooks::command(hook_name)?),
         Commands::Stats(stats_args) => Ok(stats::command(&stats_args)?),
     }
 }
 
-fn configure_color(color: &str) -> Result<Option<bool>, String> {
+fn configure_color(color: &str) -> Result<Option<bool>, Box<dyn Error>> {
     match color {
         "always" => {
             colored::control::set_override(true);
@@ -58,20 +56,14 @@ fn configure_color(color: &str) -> Result<Option<bool>, String> {
             Ok(Some(false))
         }
         "automatic" => Ok(None),
-        _ => Err(format!("Invalid value for color: {color}")),
+        _ => Err(format!("Invalid value for color: {color}").into()),
     }
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     let cli = Cli::parse();
 
-    let color_option = match configure_color(&cli.color) {
-        Ok(option) => option,
-        Err(err) => {
-            error!("{err}");
-            std::process::exit(1);
-        }
-    };
+    let color_option = configure_color(&cli.color)?;
 
     logging::configure_logging_and_tracing(cli.verbose, color_option);
     config::load_config(cli.config.clone());
@@ -79,8 +71,7 @@ fn main() {
     debug!("Memy version {}", env!("GIT_VERSION"));
     debug!("CLI params parsed: {cli:?}");
 
-    if let Err(err) = handle_cli_command(cli.command) {
-        error!("{err}");
-        std::process::exit(1);
-    }
+    handle_cli_command(cli.command)?;
+
+    Ok(())
 }
