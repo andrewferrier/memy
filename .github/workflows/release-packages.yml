@@ -76,14 +76,14 @@ jobs:
         if: runner.os == 'Linux' && !contains(matrix.target, 'musl')
         run: |
           cargo deb --no-strip --no-build --target ${{ matrix.target }}
-          cp -v $(ls target/debian/*.deb) dist/memy_latest_${{ matrix.debos }}.deb
+          cp -v "$(ls target/debian/*.deb)" dist/memy_latest_${{ matrix.debos }}.deb
 
       - name: Build .rpm package (non-MUSL Linux only)
         if: runner.os == 'Linux' && !contains(matrix.target, 'musl')
         run: |
           cp -v target/${{ matrix.target }}/release/memy target/release/memy
           cargo generate-rpm --arch ${{ matrix.target }}
-          cp -v $(ls target/generate-rpm/*.rpm) dist/memy_latest_${{ matrix.debos }}.rpm
+          cp -v "$(ls target/generate-rpm/*.rpm)" dist/memy_latest_${{ matrix.debos }}.rpm
 
       - name: Upload binaries to GitHub Release
         uses: softprops/action-gh-release@v2
