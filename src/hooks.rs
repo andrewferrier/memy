@@ -13,18 +13,28 @@ pub fn command(
 ) -> core::result::Result<(), std::boxed::Box<dyn Error + 'static>> {
     let mut stdout_handle = io::stdout().lock();
 
-    if let Some(actual_hook_name) = hook_name {
-        if let Some(content) = get_hook_content(&actual_hook_name) {
-            write!(stdout_handle, "{content}")?;
+    let result = (|| -> io::Result<()> {
+        if let Some(actual_hook_name) = hook_name {
+            if let Some(content) = get_hook_content(&actual_hook_name) {
+                write!(stdout_handle, "{content}")?;
+            } else {
+                return Err(io::Error::new(
+                    io::ErrorKind::NotFound,
+                    format!("Hook not found: {actual_hook_name}"),
+                ));
+            }
         } else {
-            return Err(format!("Hook not found: {actual_hook_name}").into());
+            writeln!(stdout_handle, "Available hooks:")?;
+            for (k, _) in hooks_generated::HOOKS.iter() {
+                writeln!(stdout_handle, "{k}")?;
+            }
         }
-    } else {
-        writeln!(stdout_handle, "Available hooks:")?;
-        for (k, _) in hooks_generated::HOOKS.iter() {
-            writeln!(stdout_handle, "{k}")?;
-        }
-    }
+        Ok(())
+    })();
 
-    Ok(())
+    match result {
+        Err(e) if e.kind() == io::ErrorKind::BrokenPipe => Ok(()),
+        Err(e) => Err(e.into()),
+        Ok(()) => Ok(()),
+    }
 }
