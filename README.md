@@ -72,7 +72,7 @@ To see the contents of a hook, type `memy hook <hookname>`. In future, we'll pro
 
 | Tool   | How to Install                                              |
 | ------ | ----------------------------------------------------------- |
-| bash   | Run `echo 'eval $(memy hook bash)' >> ~/.bashrc`            |
+| bash   | Run `echo 'source <(memy hook bash)' >> ~/.bashrc`          |
 | fish   | Run `memy hook fish.fish >> ~/.config/fish/config.fish`     |
 | lfrc   | Run `memy hook lfrc >> ~/.config/lf/lfrc`                   |
 | neovim | Run `memy hook neovim.lua > ~/.config/nvim/plugin/memy.lua` |
