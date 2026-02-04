@@ -13,4 +13,4 @@ jobs:
   commit_lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: webiny/action-conventional-commits@v1.3.0
+      - uses: webiny/action-conventional-commits@v1.3.1
