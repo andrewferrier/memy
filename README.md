@@ -30,22 +30,24 @@ Currently, memy has been tested on Linux and MacOS (limited). It has not been te
   memy list
   ```
 
+- Open a recently used file in your editor, selecting it using `fzf` (assuming your editor is `vim`).
+
+  ```sh
+  memy list -f | fzf | sed "s|^~|$HOME|" | xargs vim
+  ```
+
 - Change to a directory from your remembered paths using [fzf](https://github.com/junegunn/fzf) as a wrapper:
 
   ```sh
-  memy list -d | fzf | read -r DIR; cd "${DIR/#\~/$HOME}";
+  selected=$(memy list -d | fzf); [[ -n "$selected" ]] && cd "${selected/#\~/$HOME}"
+
+  # (or just 'memy-cd' if you have the bash/zsh hook installed)
   ```
 
 - Change to the most frecent directory containing the string 'download' (case-insensitive):
 
   ```sh
   cd $(memy list -d | grep -i download | tail -1 | sed "s|^~|$HOME|")
-  ```
-
-- Open a recently used file in your editor, selecting it using `fzf` (assuming your editor is `vim`).
-
-  ```sh
-  memy list -f | fzf | sed "s|^~|$HOME|" | xargs vim
   ```
 
 - (On Linux) Open a recently used path in your GUI file manager:
