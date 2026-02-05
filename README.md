@@ -4,7 +4,10 @@
 
 <p align="center">
 <img src="./logo.svg" />
-([YouTube demo video](https://youtu.be/YKfYz_56nkg))
+</p>
+<p align="center">
+<strong><a href="https://youtu.be/YKfYz_56nkg">YouTube Demo</a></strong>
+<br/>
 </p>
 
 **memy** is a modern, fast, and simple command-line tool to help you track and recall the files and directories you use most often. Many similar tools support only directories, **but memy supports files too**. Inspired by [fasd](https://github.com/whjvenyl/fasd), memy (with the aid of hooks into your favourite tools) remembers the paths you interact with, lists them back to you by a combination of frequency and recency ("frecency"), and makes it easy to build a workflow around them using standard Linux/Unix tools. memy is written using Rust and a SQLite backend for speed and scalability.
