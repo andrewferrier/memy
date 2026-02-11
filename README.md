@@ -45,7 +45,7 @@ Currently, memy has been tested on Linux and MacOS (limited). It has not been te
   ```sh
   selected=$(memy list -d | fzf); [[ -n "$selected" ]] && cd "${selected/#\~/$HOME}"
 
-  # (or just 'memy-cd' if you have the bash/zsh hook installed)
+  # (or just 'memy-cd' if you have the bash/zsh/fish hook installed)
   ```
 
 - Change to the most frecent directory containing the string 'download' (case-insensitive):
