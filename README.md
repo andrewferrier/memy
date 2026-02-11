@@ -16,7 +16,7 @@ Unlike tools such as [zoxide](https://github.com/ajeetdsouza/zoxide), memy is le
 
 memy is ideal for developers, sysadmins, CLI power users, and anyone who works with many files and directories and wants a smarter way to recall them.
 
-Currently, memy has been tested on Linux and MacOS (limited). It has not been tested on Windows, any testing or feedback would be appreciated.
+Currently, memy has been tested on Linux and MacOS (limited). It has not been tested on Windows, any testing or feedback would be appreciated. For transparency, `memy` is partially created using AI assistance - all code changes are overseen by a human maintainer!
 
 ## Quick Start
 
