@@ -118,11 +118,10 @@ fn calculate(conn: &Connection, args: &ListArgs) -> Result<Vec<PathFrecency>, Bo
             continue;
         }
 
-        // Filter by newer_than timestamp if specified
-        if let Some(cutoff_timestamp) = newer_than_timestamp {
-            if row.last_noted_timestamp < cutoff_timestamp {
-                continue;
-            }
+        if let Some(cutoff_timestamp) = newer_than_timestamp
+            && row.last_noted_timestamp < cutoff_timestamp
+        {
+            continue;
         }
 
         let frecency = frecency::calculate(

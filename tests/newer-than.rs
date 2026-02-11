@@ -53,18 +53,30 @@ fn test_newer_than_with_duration_filters_correctly() {
 
     // List files newer than 5 days
     let newer_5d_lines = list_paths(&db_path, None, &[], &["--newer-than", "5d"]);
-    assert_eq!(newer_5d_lines.len(), 2, "Should have 2 files newer than 5 days");
+    assert_eq!(
+        newer_5d_lines.len(),
+        2,
+        "Should have 2 files newer than 5 days"
+    );
     assert!(newer_5d_lines.iter().any(|s| s.contains("file2.txt")));
     assert!(newer_5d_lines.iter().any(|s| s.contains("file3.txt")));
 
     // List files newer than 1 day
     let newer_1d_lines = list_paths(&db_path, None, &[], &["--newer-than", "1d"]);
-    assert_eq!(newer_1d_lines.len(), 1, "Should have 1 file newer than 1 day");
+    assert_eq!(
+        newer_1d_lines.len(),
+        1,
+        "Should have 1 file newer than 1 day"
+    );
     assert!(newer_1d_lines.iter().any(|s| s.contains("file3.txt")));
 
     // List files newer than 3 hours
     let newer_3h_lines = list_paths(&db_path, None, &[], &["--newer-than", "3h"]);
-    assert_eq!(newer_3h_lines.len(), 1, "Should have 1 file newer than 3 hours");
+    assert_eq!(
+        newer_3h_lines.len(),
+        1,
+        "Should have 1 file newer than 3 hours"
+    );
     assert!(newer_3h_lines.iter().any(|s| s.contains("file3.txt")));
 }
 
@@ -103,12 +115,20 @@ fn test_newer_than_with_iso8601_date() {
 
     // List files newer than 2024-01-01
     let newer_lines = list_paths(&db_path, None, &[], &["--newer-than", "2024-01-01"]);
-    assert_eq!(newer_lines.len(), 1, "Should have 1 file newer than 2024-01-01");
+    assert_eq!(
+        newer_lines.len(),
+        1,
+        "Should have 1 file newer than 2024-01-01"
+    );
     assert!(newer_lines.iter().any(|s| s.contains("file2.txt")));
 
     // List files newer than 2019-01-01
     let all_lines = list_paths(&db_path, None, &[], &["--newer-than", "2019-01-01"]);
-    assert_eq!(all_lines.len(), 2, "Should have 2 files newer than 2019-01-01");
+    assert_eq!(
+        all_lines.len(),
+        2,
+        "Should have 2 files newer than 2019-01-01"
+    );
 }
 
 #[test]
@@ -183,5 +203,9 @@ fn test_newer_than_no_results() {
 
     // List files newer than a very recent date
     let newer_lines = list_paths(&db_path, None, &[], &["--newer-than", "1h"]);
-    assert_eq!(newer_lines.len(), 0, "Should have no files newer than 1 hour");
+    assert_eq!(
+        newer_lines.len(),
+        0,
+        "Should have no files newer than 1 hour"
+    );
 }
