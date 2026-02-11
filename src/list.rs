@@ -81,6 +81,13 @@ fn calculate(conn: &Connection, args: &ListArgs) -> Result<Vec<PathFrecency>, Bo
     let now = utils::get_unix_timestamp();
     let denylist_matcher = config::get_denylist_matcher();
 
+    // Parse the newer_than filter if provided
+    let newer_than_timestamp = if let Some(ref newer_than_str) = args.newer_than {
+        Some(utils::parse_newer_than(newer_than_str)?)
+    } else {
+        None
+    };
+
     let mut results: Vec<PathFrecency> = vec![];
     let stats = stats::get(conn)?;
 
@@ -109,6 +116,13 @@ fn calculate(conn: &Connection, args: &ListArgs) -> Result<Vec<PathFrecency>, Bo
         if (args.files_only && !metadata.is_file()) || (args.directories_only && !metadata.is_dir())
         {
             continue;
+        }
+
+        // Filter by newer_than timestamp if specified
+        if let Some(cutoff_timestamp) = newer_than_timestamp {
+            if row.last_noted_timestamp < cutoff_timestamp {
+                continue;
+            }
         }
 
         let frecency = frecency::calculate(

@@ -32,6 +32,40 @@ pub fn timestamp_age_hours(now: UnixTimestamp, timestamp: UnixTimestamp) -> Unix
     age_seconds as f64 / 3600.0
 }
 
+pub fn parse_newer_than(input: &str) -> Result<UnixTimestamp, Box<dyn std::error::Error>> {
+    // First try parsing as a duration using humantime
+    if let Ok(duration) = humantime::parse_duration(input) {
+        let now = get_unix_timestamp();
+        let cutoff = now - duration.as_secs() as UnixTimestamp;
+        return Ok(cutoff);
+    }
+
+    // Try parsing as ISO-8601 datetime
+    if let Ok(datetime) = DateTime::parse_from_rfc3339(input) {
+        return Ok(datetime.timestamp());
+    }
+
+    // Try parsing as a date-only string (partial ISO-8601)
+    // Handle formats like "2025-01-01"
+    if let Ok(naive_date) = chrono::NaiveDate::parse_from_str(input, "%Y-%m-%d") {
+        let datetime = naive_date
+            .and_hms_opt(0, 0, 0)
+            .ok_or("Failed to create datetime")?;
+        let local_datetime = Local.from_local_datetime(&datetime).single()
+            .ok_or("Failed to convert to local time")?;
+        return Ok(local_datetime.timestamp());
+    }
+
+    // Try parsing as datetime without timezone
+    if let Ok(naive_datetime) = chrono::NaiveDateTime::parse_from_str(input, "%Y-%m-%dT%H:%M:%S") {
+        let local_datetime = Local.from_local_datetime(&naive_datetime).single()
+            .ok_or("Failed to convert to local time")?;
+        return Ok(local_datetime.timestamp());
+    }
+
+    Err(format!("Unable to parse '{}' as a duration or date/time", input).into())
+}
+
 pub fn detect_shell() -> Option<clap_complete::Shell> {
     let name = std::env::var("SHELL")
         .ok()
