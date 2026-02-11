@@ -32,9 +32,6 @@ pub fn timestamp_age_hours(now: UnixTimestamp, timestamp: UnixTimestamp) -> Unix
     age_seconds as f64 / 3600.0
 }
 
-/// Parse a "newer than" time string into a Unix timestamp.
-/// Accepts both duration strings (e.g., "4d", "3h", "4d3h") and ISO-8601 date/time strings.
-/// Returns the Unix timestamp representing the cutoff time.
 pub fn parse_newer_than(input: &str) -> Result<UnixTimestamp, Box<dyn std::error::Error>> {
     // First try parsing as a duration using humantime
     if let Ok(duration) = humantime::parse_duration(input) {
