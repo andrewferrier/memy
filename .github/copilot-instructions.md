@@ -74,7 +74,7 @@ Key clippy configurations:
 - `cast_precision_loss` allowed (common in this codebase)
 - `multiple_crate_versions` allowed (dependency constraint)
 
-**Important:** The build script (`build.rs`) explicitly allows `unwrap_used` since it's acceptable in build-time code.
+**Important:** The build script (`build.rs`) explicitly allows `unwrap_used` with a reason attribute since it's acceptable in build-time code. The project has `allow_attributes_without_reason = "warn"` enabled, so all `#[allow(...)]` attributes must include a reason.
 
 ### Formatting
 
