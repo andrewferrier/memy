@@ -16,18 +16,9 @@
 ## Technology Stack
 
 - **Language:** Rust 2024 edition
-- **Database:** SQLite (bundled via rusqlite)
 - **Build System:** Cargo
-- **Core Dependencies:**
-  - `clap` - CLI argument parsing with derive macros
-  - `rusqlite` - SQLite interface with bundled database
-  - `chrono` - Date/time handling for frecency calculations
-  - `serde`/`serde_json`/`toml` - Serialization and config parsing
-  - `config` - TOML/JSON5 config file loading
-  - `tracing`/`log`/`env_logger` - Logging infrastructure
-  - `colored` - Terminal output coloring
-  - `ignore` - For respecting gitignore patterns in denylist
-  - `xdg` - XDG Base Directory specification support
+
+For detailed dependency information, refer to `Cargo.toml`.
 
 ## Build and Validation
 
@@ -60,21 +51,11 @@ Tests are organized as:
 
 ### Linting
 
-The project uses extensive clippy linting configured in `Cargo.toml` under `[lints.clippy]`:
-
 ```bash
 cargo clippy             # Run clippy lints
 ```
 
-Key clippy configurations:
-- Most pedantic, nursery, complexity, and performance lints enabled at warn level
-- `unwrap_used` is warned (avoid `.unwrap()` in production code)
-- `print_stdout` and `print_stderr` warned (use logging instead)
-- `shadow_*` variants warned (avoid variable shadowing)
-- `cast_precision_loss` allowed (common in this codebase)
-- `multiple_crate_versions` allowed (dependency constraint)
-
-**Important:** The build script (`build.rs`) explicitly allows `unwrap_used` with a reason attribute since it's acceptable in build-time code. The project has `allow_attributes_without_reason = "warn"` enabled, so all `#[allow(...)]` attributes must include a reason.
+The project uses extensive clippy linting configured in `Cargo.toml` under `[lints.clippy]`. Refer to `Cargo.toml` for the complete configuration. **Ensure all code produced conforms to the clippy configuration.**
 
 ### Formatting
 
@@ -112,138 +93,16 @@ GitHub Actions workflows in `.github/workflows/`:
 ```
 memy/
 ├── src/                    # Source code
-│   ├── main.rs            # Entry point and command routing
-│   ├── cli.rs             # CLI argument definitions (clap)
-│   ├── db.rs              # SQLite database operations
-│   ├── frecency.rs        # Frecency scoring algorithm
-│   ├── note.rs            # 'note' command implementation
-│   ├── list.rs            # 'list' command implementation
-│   ├── stats.rs           # 'stats' command
-│   ├── hooks.rs           # Hook management and embedding
-│   ├── import.rs          # Import from fasd/autojump/zoxide
-│   ├── config.rs          # Configuration loading
-│   ├── logging.rs         # Logging setup
-│   ├── types.rs           # Common types
-│   ├── utils.rs           # Utility functions
-│   └── denylist_default.rs # Default denylist patterns
-├── hooks/                 # Integration hooks (embedded at build time)
-│   ├── bash, zsh, fish    # Shell hooks
-│   ├── vim.vim, neovim.lua # Editor hooks
-│   └── ranger.rc.conf, lfrc # File manager hooks
-├── config/                # Configuration templates
-├── tests/                 # Integration tests
-│   ├── support.rs         # Test utilities and helpers
-│   └── *.rs               # Feature-specific test files
-├── benches/               # Performance benchmarks
-└── build.rs               # Build script
+├── hooks/                  # Integration hooks (embedded at build time)
+├── config/                 # Configuration templates
+├── tests/                  # Integration tests
+├── benches/                # Performance benchmarks
+└── build.rs                # Build script
 ```
-
-### Key Entry Points
-
-**Commands** (defined in `cli.rs`, routed in `main.rs`):
-- `note <PATHS>` - Record file/directory usage
-- `list` - Display paths sorted by frecency
-  - `-f` - Files only
-  - `-d` - Directories only
-  - `-n <count>` - Limit results
-  - `--newer-than <duration>` - Filter by time
-- `stats` - Show usage statistics (plain or JSON format)
-- `hook [name]` - Display integration hooks
-- `generate-config` - Output default config template
-- `completions <shell>` - Generate shell completions
-- `import <tool>` - Import from other tools
-
-### Core Modules
-
-**`db.rs`** - Database Layer
-- SQLite operations for tracking paths
-- Schema management and migrations
-- Frecency score calculations and queries
-- Path insertion, deletion, and lookup
-- Uses bundled SQLite (no external dependency)
-
-**`frecency.rs`** - Scoring Algorithm
-- Calculates frecency: combination of frequency and recency
-- Configurable recency bias (0.0 to 1.0)
-- Time-weighted scoring based on last access times
-- Core algorithm for ranking paths
-
-**`config.rs`** - Configuration Management
-- Loads TOML config from `$XDG_CONFIG_HOME/memy/memy.toml`
-- Environment variable override: `MEMY_CONFIG_DIR`
-- Default config values and validation
-- Denylist pattern support (glob patterns)
-
-**`hooks.rs`** - Hook Management
-- Hooks are embedded in binary at build time via `build.rs`
-- Stored in static `HOOKS` map
-- Retrieved and printed on demand via `memy hook <name>`
-
-**`import.rs`** - Data Import
-- Imports from fasd, autojump, zoxide databases
-- One-time import on first run (configurable)
-- Handles different database formats (text, SQLite)
-
-**`list.rs`** - List Command
-- Queries database with frecency ordering
-- Supports filtering by file type, count, time
-- Path output with home directory tilde expansion
-
-**`note.rs`** - Note Command
-- Records path usage to database
-- Path normalization and validation
-- Denylist checking
-- Symlink resolution (optional)
-
-**`utils.rs`** - Utilities
-- Path normalization
-- Home directory expansion
-- Common helper functions
-
-### Configuration Files
-
-**Config Location:** `$XDG_CONFIG_HOME/memy/memy.toml` (typically `~/.config/memy/memy.toml`)
-**Database Location:** `$XDG_STATE_HOME/memy/memy.sqlite3` (typically `~/.local/state/memy/memy.sqlite3`)
-
-Config options:
-- `recency_bias` - Weight between frequency and recency (0.0-1.0)
-- `denylist` - Glob patterns for paths to exclude
-- `import_on_startup` - Auto-import from other tools
-- `normalize_paths` - Resolve symlinks
-
-### Database Schema
-
-The SQLite database (`db.rs`) tracks:
-- `paths` table: path, type (file/directory), access count, last access time
-- Frecency scores computed dynamically based on access patterns
-- Indexes for efficient lookup and sorting
 
 ### Architectural Principles
 
-From `ARCHITECTURE.md`:
-- **No auto_vacuum** - SQLite auto_vacuum disabled as it can worsen performance and database size is not a concern
-
-### Common Patterns
-
-1. **Error Handling:**
-   - Avoid `.unwrap()` in production code (clippy warns)
-   - Use `?` operator for propagating errors
-   - Provide meaningful error messages
-
-2. **Logging:**
-   - Use `tracing` macros (`debug!`, `info!`, `warn!`, `error!`)
-   - Avoid `print!`/`println!` (clippy warns)
-   - Configure via `RUST_LOG` environment variable
-
-3. **Path Handling:**
-   - Always normalize paths (resolve `.`, `..`, symlinks as configured)
-   - Use tilde (`~`) expansion for home directory in output
-   - Check against denylist before recording
-
-4. **Testing:**
-   - Integration tests use `assert_cmd` for CLI testing
-   - Use `tempfile` for temporary directories/files
-   - Test both success and error cases
+Refer to `ARCHITECTURE.md` for architectural principles and design decisions.
 
 ## Common Issues and Workarounds
 
