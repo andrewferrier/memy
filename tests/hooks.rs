@@ -24,6 +24,10 @@ fn test_hook_fish() {
     assert!(stdout.contains("--on-event fish_preexec"));
 
     // Verify it does NOT use the unsafe eval printf pattern
+    // This pattern causes stray lines when running commands like:
+    //   memy hook fish.fish >> ~/.config/fish/config.fish
+    // in an interactive fish shell with the hook already loaded.
+    // The eval causes the command arguments to be written to the file.
     assert!(!stdout.contains("eval printf"),
         "Fish hook should not use 'eval printf' as it evaluates shell operators like redirections");
 
