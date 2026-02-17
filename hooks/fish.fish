@@ -2,7 +2,11 @@ function fish_preexec --on-event fish_preexec
     set cmd $argv[1]
 
     for word in $cmd
-        set expanded (eval echo $word)
+        set expanded $word
+
+        if string match -q '~*' -- $word
+            set expanded (string replace -r '^~' $HOME $word)
+        end
 
         if test -e "$expanded"
             memy  \
