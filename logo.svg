@@ -35,11 +35,10 @@
     <!-- Folder gradient -->
     <linearGradient
        id="folderGrad"
-       x1="12.309777"
-       y1="37.774853"
-       x2="12.309777"
-       y2="118.19873"
-       gradientTransform="matrix(1.2185436,0,0,0.82065181,-3.0826583,-20.768801)"
+       x1="60.917341"
+       y1="11.231198"
+       x2="60.917341"
+       y2="95.231198"
        gradientUnits="userSpaceOnUse">
       <stop
          offset="0%"
@@ -56,7 +55,7 @@
      x="12.917341"
      y="11.231198"
      width="96"
-     height="64"
+     height="84"
      rx="8"
      ry="8"
      fill="url(#folderGrad)"
@@ -100,24 +99,24 @@
   <!-- Clock icon with solid background and white hands -->
   <circle
      cx="100.91734"
-     cy="75.231194"
+     cy="70"
      r="12"
      fill="#ff6f61"
      id="circle7" />
   <line
      x1="100.91734"
-     y1="75.231194"
+     y1="70"
      x2="100.91734"
-     y2="69.231194"
+     y2="64"
      stroke="#ffffff"
      stroke-width="2"
      stroke-linecap="round"
      id="line7" />
   <line
      x1="100.91734"
-     y1="75.231194"
+     y1="70"
      x2="106.91734"
-     y2="79.231194"
+     y2="74"
      stroke="#ffffff"
      stroke-width="2"
      stroke-linecap="round"
