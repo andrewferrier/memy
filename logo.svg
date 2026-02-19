@@ -99,24 +99,24 @@
   <!-- Clock icon with solid background and white hands -->
   <circle
      cx="100.91734"
-     cy="70"
+     cy="93"
      r="12"
      fill="#ff6f61"
      id="circle7" />
   <line
      x1="100.91734"
-     y1="70"
+     y1="93"
      x2="100.91734"
-     y2="64"
+     y2="87"
      stroke="#ffffff"
      stroke-width="2"
      stroke-linecap="round"
      id="line7" />
   <line
      x1="100.91734"
-     y1="70"
+     y1="93"
      x2="106.91734"
-     y2="74"
+     y2="97"
      stroke="#ffffff"
      stroke-width="2"
      stroke-linecap="round"
@@ -124,7 +124,7 @@
   <!-- Text "memy" in serif font -->
   <text
      x="55.091373"
-     y="92.501457"
+     y="82.501457"
      font-family="Georgia, serif"
      font-size="14px"
      fill="#000000"
