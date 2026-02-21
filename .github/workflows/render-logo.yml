@@ -16,11 +16,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Install ImageMagick
-        run: sudo apt-get install -y imagemagick
+      - name: Install rsvg-convert
+        run: sudo apt-get install -y librsvg2-bin
 
       - name: Render logo.png from logo.svg
-        run: convert -background none -density 1000 logo.svg -resize 1024x logo.png
+        run: rsvg-convert logo.svg -w 1024 -o logo.png
 
       - name: Commit and push logo.png
         run: |
