@@ -1,0 +1,33 @@
+---
+name: Render Logo
+
+on:
+  push:
+    branches: ["main"]
+    paths: ["logo.svg"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  render-logo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install ImageMagick
+        run: sudo apt-get install -y imagemagick
+
+      - name: Render logo.png from logo.svg
+        run: convert -background none -density 1000 logo.svg -resize 1024x logo.png
+
+      - name: Commit and push logo.png
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add logo.png
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: re-render logo.png from logo.svg"
+            git push
+          fi
