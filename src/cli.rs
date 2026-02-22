@@ -50,6 +50,7 @@ pub enum Commands {
     /// Note usage of (add to database) one or more paths
     Note(NoteArgs),
     /// List paths by frecency score
+    #[command(visible_alias = "ls")]
     List(ListArgs),
     /// Show statistics about noted paths
     Stats(StatsArgs),

@@ -262,6 +262,23 @@ fn test_graceful_when_dbdir_missing() {
 }
 
 #[test]
+fn test_ls_alias_for_list() {
+    let (_db_temp, db_path) = temp_dir();
+    let (_working_temp, working_path) = temp_dir();
+
+    let dir_a = create_test_directory(&working_path, "dir_a");
+
+    note_path(&db_path, None, dir_a.to_str().unwrap(), 1, &[], &[]);
+
+    let output = memy_cmd_test_defaults(&db_path, None, &["ls"]);
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8(output.stdout).expect("Invalid UTF-8 in output");
+    assert!(stdout.contains(dir_a.to_str().unwrap()));
+}
+
+
+#[test]
 fn test_graceful_when_configdir_missing() {
     // If the config path doesn't exist we just silently ignore it, it's the user's responsibility
     // to make sure the config file is there.

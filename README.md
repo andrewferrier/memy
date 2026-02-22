@@ -34,6 +34,8 @@ Currently, memy has been tested on Linux and MacOS (limited). It has not been te
   memy list
   ```
 
+  (`ls` is an alias for `list`, so `memy ls` works too.)
+
 - Open a recently used file in your editor, selecting it using `fzf` (assuming your editor is `vim`).
 
   ```sh
