@@ -1,5 +1,34 @@
 # Changelog
 
+## [0.16.0](https://github.com/andrewferrier/memy/compare/v0.15.0...v0.16.0) (2026-02-21)
+
+
+### Features
+
+* add comprehensive copilot-instructions.md and remove CONTRIBUTING.md ([97acf69](https://github.com/andrewferrier/memy/commit/97acf69f7c314fbaccdb1c239577a77194a210ab))
+* add GitHub Action to re-render logo.png from logo.svg ([1504518](https://github.com/andrewferrier/memy/commit/1504518d8c02e854e56fe32061bd6cc84bb23c8f))
+* Implement 'memy-cd' and rearrange README ([72ae9c8](https://github.com/andrewferrier/memy/commit/72ae9c890c1017e5520fd234be2fd987e531ea97))
+
+
+### Bug Fixes
+
+* Add FreeFont TTF installation to workflow ([ffaf65c](https://github.com/andrewferrier/memy/commit/ffaf65c4c86a4686f4a790c4769aaa1d6364f8cc))
+* Cleanly split and normalize paths w/o eval - closes [#106](https://github.com/andrewferrier/memy/issues/106) ([84c2797](https://github.com/andrewferrier/memy/commit/84c2797120dcaa5e844e4a920585c22b96f85ac4))
+* Correct instructions for installing bash hook ([ef78a69](https://github.com/andrewferrier/memy/commit/ef78a69312c76ff6f33f8e18f6d2197b08c7b80e))
+* Evaluate CLI config before commands - closes [#93](https://github.com/andrewferrier/memy/issues/93) ([35d7266](https://github.com/andrewferrier/memy/commit/35d7266c6ae6d98f3a614a48a0f86642e7e11a7e))
+* Hook will no longer error on SIGPIPE ([d4c2256](https://github.com/andrewferrier/memy/commit/d4c2256e6e11d32526ba3019beba1d949fe9d54b))
+* Implement missing memy-cd command for fish - closes [#104](https://github.com/andrewferrier/memy/issues/104) ([e7c769c](https://github.com/andrewferrier/memy/commit/e7c769c0cf4a63b9eb58831d71e58ca21e6b9b51))
+* make logo.svg background transparent ([f58ee29](https://github.com/andrewferrier/memy/commit/f58ee29604af1378cd03c90e8fc6e04d71f83239))
+* move 'memy' text inside orange box in logo.svg ([52b7b75](https://github.com/andrewferrier/memy/commit/52b7b75e4400351506c582409ce02d5f87544948))
+* move text up and clock to bottom-right corner in logo.svg ([55c154e](https://github.com/andrewferrier/memy/commit/55c154e8d93efb9ddb4d4c3a1b0ea8d9822dcac0))
+* Tweak logo layout ([eddb82a](https://github.com/andrewferrier/memy/commit/eddb82a785188cfe3c2d814400d6f8f99ad3d664))
+* Update svg → png conversion ([7b03a07](https://github.com/andrewferrier/memy/commit/7b03a0731c85195408cbf1e620540d578955f7bc))
+
+
+### Performance Improvements
+
+* Compare secs for more efficient maths ([5ff161c](https://github.com/andrewferrier/memy/commit/5ff161ca18c82b90dc33e091ad566a377203c91e))
+
 ## [0.15.0](https://github.com/andrewferrier/memy/compare/v0.14.0...v0.15.0) (2025-11-12)
 
 
