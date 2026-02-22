@@ -10,7 +10,7 @@ use clap::{Args, Parser, Subcommand};
     subcommand_required = true,
     override_usage = r#"
   memy note <FILES...> - note some files
-  memy list            - list noted files in frecency order"#)]
+  memy list            - list noted files in frecency order (alias: ls)"#)]
 pub struct Cli {
     /// Enable verbose logging (add multiple times for more verbosity)
     #[arg(display_order = 100, short, long, global = true, action = clap::ArgAction::Count, default_value_t = 0)]
@@ -50,6 +50,7 @@ pub enum Commands {
     /// Note usage of (add to database) one or more paths
     Note(NoteArgs),
     /// List paths by frecency score
+    #[command(visible_alias = "ls")]
     List(ListArgs),
     /// Show statistics about noted paths
     Stats(StatsArgs),
