@@ -10,7 +10,7 @@ use clap::{Args, Parser, Subcommand};
     subcommand_required = true,
     override_usage = r#"
   memy note <FILES...> - note some files
-  memy list            - list noted files in frecency order (alias: ls)"#)]
+  memy list            - list noted files in frecency order"#)]
 pub struct Cli {
     /// Enable verbose logging (add multiple times for more verbosity)
     #[arg(display_order = 100, short, long, global = true, action = clap::ArgAction::Count, default_value_t = 0)]
