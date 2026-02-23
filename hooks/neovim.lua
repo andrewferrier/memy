@@ -41,3 +41,13 @@ if minipick_ok then
         require("mini.pick").builtin.cli({ command = external_command }, {})
     end, {})
 end
+
+local ok_telescope, _ = pcall(require, "telescope.builtin")
+if ok_telescope then
+    vim.api.nvim_create_user_command("MemyTelescope", function(_)
+        require("telescope.builtin").find_files({
+            find_command = external_command,
+            sorter = require("telescope.sorters").fuzzy_with_index_bias(),
+        })
+    end, {})
+end
