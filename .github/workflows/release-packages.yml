@@ -118,10 +118,12 @@ jobs:
 
       - name: Compute sha256sums
         run: |
-          echo "SHA256_MACOS_AARCH64=$(sha256sum /tmp/memy-release/memy-macos-aarch64 | cut -d' ' -f1)" >> "$GITHUB_ENV"
-          echo "SHA256_MACOS_X86_64=$(sha256sum /tmp/memy-release/memy-macos-x86_64 | cut -d' ' -f1)" >> "$GITHUB_ENV"
-          echo "SHA256_LINUX_AARCH64=$(sha256sum /tmp/memy-release/memy-linux-aarch64 | cut -d' ' -f1)" >> "$GITHUB_ENV"
-          echo "SHA256_LINUX_X86_64=$(sha256sum /tmp/memy-release/memy-linux-x86_64 | cut -d' ' -f1)" >> "$GITHUB_ENV"
+          {
+            echo "SHA256_MACOS_AARCH64=$(sha256sum /tmp/memy-release/memy-macos-aarch64 | cut -d' ' -f1)";
+            echo "SHA256_MACOS_X86_64=$(sha256sum /tmp/memy-release/memy-macos-x86_64 | cut -d' ' -f1)";
+            echo "SHA256_LINUX_AARCH64=$(sha256sum /tmp/memy-release/memy-linux-aarch64 | cut -d' ' -f1)";
+            echo "SHA256_LINUX_X86_64=$(sha256sum /tmp/memy-release/memy-linux-x86_64 | cut -d' ' -f1)"
+          } >> "$GITHUB_ENV"
 
       - name: Update Homebrew formula
         run: |
