@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.17.0](https://github.com/andrewferrier/memy/compare/v0.16.0...v0.17.0) (2026-02-23)
+
+
+### Features
+
+* Add install.sh - closes [#123](https://github.com/andrewferrier/memy/issues/123) ([4e4a65b](https://github.com/andrewferrier/memy/commit/4e4a65b4c9d68321d0046418b5af4ad4fb6cb791))
+* Add MemyTelescope command - closes [#117](https://github.com/andrewferrier/memy/issues/117) ([8d3383f](https://github.com/andrewferrier/memy/commit/8d3383f888eeb848819caefdc03c07e3b5728c12))
+* implement homebrew formula with automated sha256sum updates ([f1fafcd](https://github.com/andrewferrier/memy/commit/f1fafcd825e2144379ae0ced34554d70fe83fde3))
+* **list:** add ls as visible alias for list command ([e03db2a](https://github.com/andrewferrier/memy/commit/e03db2a374a338729a52f7ec5f6bb8b09eb15bd2))
+
+
+### Bug Fixes
+
+* Correct order in NeoVim commands ([555223b](https://github.com/andrewferrier/memy/commit/555223b79bd1593cdd807de56f2791db13b0a2ce))
+* Don't prompt to overwrite ([c7b3015](https://github.com/andrewferrier/memy/commit/c7b3015219803f22cc3b32e2d2b16a0e59390619))
+* dynamically update URL version in Homebrew formula during release ([21254d6](https://github.com/andrewferrier/memy/commit/21254d6515ff5ba7fbfa5d3adcc5899385c65702))
+* **list:** remove ls alias mention from usage string ([535d8e4](https://github.com/andrewferrier/memy/commit/535d8e439fe8ed0df5d73e80f7e8431a0676cf67))
+* use TAG env var directly instead of reconstructing with 'v' prefix ([c327156](https://github.com/andrewferrier/memy/commit/c327156a68a030b581eb450e55b85add1b54636b))
+
 ## [0.16.0](https://github.com/andrewferrier/memy/compare/v0.15.0...v0.16.0) (2026-02-21)
 
 
