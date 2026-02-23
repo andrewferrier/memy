@@ -22,7 +22,7 @@ vim.api.nvim_create_autocmd({ "BufReadPre", "BufWritePost" }, {
 local fzf_ok, _ = pcall(require, "fzf-lua")
 if fzf_ok then
     vim.api.nvim_create_user_command("MemyFZF", function(_)
-        require("fzf-lua").fzf_exec("memy list -f", {
+        require("fzf-lua").fzf_exec("memy list -f | tac", {
             actions = require("fzf-lua.config").globals.actions.files,
             fzf_opts = {
                 ["--exact"] = "",
@@ -33,12 +33,11 @@ if fzf_ok then
     end, {})
 end
 
+local external_command = { "sh", "-c", "memy list -f | tac" }
+
 local minipick_ok, _ = pcall(require, "mini.pick")
 if minipick_ok then
     vim.api.nvim_create_user_command("MemyMiniPick", function(_)
-        require("mini.pick").builtin.cli(
-            { command = { "memy", "list", "-f" } },
-            {}
-        )
+        require("mini.pick").builtin.cli({ command = external_command }, {})
     end, {})
 end
