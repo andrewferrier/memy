@@ -4,30 +4,30 @@
 class Memy < Formula
   desc "Track and recall frequently and recently used files or directories"
   homepage "https://github.com/andrewferrier/memy"
-  version "0.17.0"
+  version "hb3"
   license "MIT"
 
   on_macos do
     on_arm do
       url "https://github.com/andrewferrier/memy/releases/download/hb2/memy-macos-aarch64"
-      sha256 "9422cdbb81eebefa8fecaffd83cbdc774dba2867c722cb9645bfdc316c2b9715"
+      sha256 "3592a14b76b2c63e235e2bc6406128dd6cb40cac04e8db3ef5aa8e11735e2088"
     end
 
     on_intel do
       url "https://github.com/andrewferrier/memy/releases/download/hb2/memy-macos-x86_64"
-      sha256 "36a6f9fa5547836c12c98cacbbea04b9952b106cf1cf759f3c25fdba9f664548"
+      sha256 "ee670d275cc57af1c17048f3bf3675a38f9cdaca7402441296adbcf25e12b0cd"
     end
   end
 
   on_linux do
     on_arm do
       url "https://github.com/andrewferrier/memy/releases/download/hb2/memy-linux-aarch64"
-      sha256 "c7112e8b9a8a2d1a34e0ed08981cf5b5ad5458ecd3dd297f27d6f047656d257e"
+      sha256 "b811048106b509505ee63a5cfd2470026dceab85c6932be72c0ca43f68439d97"
     end
 
     on_intel do
       url "https://github.com/andrewferrier/memy/releases/download/hb2/memy-linux-x86_64"
-      sha256 "10854475644c792418cf7af7f6c63931e8b3dbd4b89a62dfab9e62bbda9a68cd"
+      sha256 "a79a6c092df47d0319a49977dc5aa7cc3a00aa7382e1edb47191eaf376a449c4"
     end
   end
 
