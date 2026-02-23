@@ -32,23 +32,13 @@ esac
 
 URL="https://github.com/$REPO/releases/download/$VERSION/${BIN_NAME}-${OS}-${ARCH}"
 
-DOWNLOAD_TMP=$(mktemp -d) || { echo "Error: Failed to create temporary directory. Exiting." >&2; exit 1; }
-echo "Downloading $BIN_NAME..." >&2
-curl -L "$URL" -o "${DOWNLOAD_TMP}/${BIN_NAME}" || { echo "Error: Failed to download $BIN_NAME from $URL. Exiting." >&2; exit 1; }
-
 DEST="${HOME}/.local/bin"
 TARGET_BIN_PATH="$DEST/$BIN_NAME"
-
 mkdir -p "$DEST"
 
 if [ -f "$TARGET_BIN_PATH" ]; then
-  printf "The binary %s already exists at %s. Overwrite? (y/N) " "$BIN_NAME" "$TARGET_BIN_PATH"
-  read -r REPLY
-  if [ "${REPLY}" != "y" ] && [ "${REPLY}" != "Y" ]; then
-    echo "Installation aborted."
-    rm -r "$DOWNLOAD_TMP"
-    exit 1
-  fi
+  echo "memy is already installed. If you wish to download it freshly/upgrade it, please delete $TARGET_BIN_PATH first."
+  exit 1
 fi
 
 mv "$DOWNLOAD_TMP/$BIN_NAME" "$TARGET_BIN_PATH"
