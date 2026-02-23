@@ -91,3 +91,70 @@ jobs:
           files: dist/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  update-homebrew:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get version from release tag
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+
+      - name: Download release binaries
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download "${{ github.event.release.tag_name }}" \
+            --pattern "memy-macos-aarch64" \
+            --pattern "memy-macos-x86_64" \
+            --pattern "memy-linux-aarch64" \
+            --pattern "memy-linux-x86_64" \
+            --dir /tmp/memy-release
+
+      - name: Compute sha256sums
+        run: |
+          echo "SHA256_MACOS_AARCH64=$(sha256sum /tmp/memy-release/memy-macos-aarch64 | cut -d' ' -f1)" >> "$GITHUB_ENV"
+          echo "SHA256_MACOS_X86_64=$(sha256sum /tmp/memy-release/memy-macos-x86_64 | cut -d' ' -f1)" >> "$GITHUB_ENV"
+          echo "SHA256_LINUX_AARCH64=$(sha256sum /tmp/memy-release/memy-linux-aarch64 | cut -d' ' -f1)" >> "$GITHUB_ENV"
+          echo "SHA256_LINUX_X86_64=$(sha256sum /tmp/memy-release/memy-linux-x86_64 | cut -d' ' -f1)" >> "$GITHUB_ENV"
+
+      - name: Update Homebrew formula
+        run: |
+          python3 << 'EOF'
+          import os
+          import re
+
+          version = os.environ['VERSION']
+          platforms = [
+              ('memy-macos-aarch64', os.environ['SHA256_MACOS_AARCH64']),
+              ('memy-macos-x86_64', os.environ['SHA256_MACOS_X86_64']),
+              ('memy-linux-aarch64', os.environ['SHA256_LINUX_AARCH64']),
+              ('memy-linux-x86_64', os.environ['SHA256_LINUX_X86_64']),
+          ]
+
+          with open('Formula/memy.rb') as f:
+              content = f.read()
+
+          content = re.sub(r'(\s*version ")[^"]*(")', r'\g<1>' + version + r'\2', content)
+
+          for filename, sha256 in platforms:
+              pattern = re.escape(filename) + r'"\n(\s+sha256 ")[^"]*(")'
+              replacement = filename + r'"\n\g<1>' + sha256 + r'\2'
+              content = re.sub(pattern, replacement, content)
+
+          with open('Formula/memy.rb', 'w') as f:
+              f.write(content)
+          EOF
+
+      - name: Commit and push updated formula
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/memy.rb
+          git commit -m "chore: update homebrew formula for v${VERSION}"
+          git push origin main
