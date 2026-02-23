@@ -11,7 +11,10 @@ echo "Fetching latest release version..." >&2
 VERSION=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" |
   grep '"tag_name":' |
   head -n 1 |
-  sed -E 's/.*"([^"]+)".*/\1/') || { echo "Error: Failed to fetch latest release version. Exiting." >&2; exit 1; }
+  sed -E 's/.*"([^"]+)".*/\1/') || {
+  echo "Error: Failed to fetch latest release version. Exiting." >&2
+  exit 1
+}
 
 if [ -z "$VERSION" ]; then
   echo "Error: Could not determine latest release version. Exiting." >&2
@@ -40,6 +43,18 @@ if [ -f "$TARGET_BIN_PATH" ]; then
   echo "memy is already installed. If you wish to download it freshly/upgrade it, please delete $TARGET_BIN_PATH first."
   exit 1
 fi
+
+DOWNLOAD_TMP=$(mktemp -d) || {
+  echo "Error: Failed to create temporary directory. Exiting." >&2
+  exit 1
+}
+
+echo "Downloading $BIN_NAME..." >&2
+
+curl -L "$URL" -o "${DOWNLOAD_TMP}/${BIN_NAME}" || {
+  echo "Error: Failed to download $BIN_NAME from $URL. Exiting." >&2
+  exit 1
+}
 
 mv "$DOWNLOAD_TMP/$BIN_NAME" "$TARGET_BIN_PATH"
 chmod +x "$TARGET_BIN_PATH"
