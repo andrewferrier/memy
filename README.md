@@ -90,7 +90,15 @@ To see the contents of a hook, type `memy hook <hookname>`. In future, we'll pro
 
 ## Installation
 
-### Download Debian / Ubuntu .deb-based package
+### Automated Install using Shell Script
+
+Use single shell script to install:
+
+```
+curl -sSL https://raw.githubusercontent.com/andrewferrier/memy/main/install.sh | sh
+```
+
+### Download .deb-based package for Debian / Ubuntu
 
 - [x86_64/amd64](https://github.com/andrewferrier/memy/releases/latest/download/memy_latest_amd64.deb)
 
@@ -98,7 +106,7 @@ To see the contents of a hook, type `memy hook <hookname>`. In future, we'll pro
 
 [Install using dpkg or apt](https://unix.stackexchange.com/a/159114/18985). Currently, Debian packages are not in a signed repository.
 
-### Download RHEL / Fedora / CentOS / OpenSUSE / SLES .rpm-based package
+### Download .rpm-based package for RHEL / Fedora / CentOS / OpenSUSE / SLES
 
 - [x86_64/amd64](https://github.com/andrewferrier/memy/releases/latest/download/memy_latest_amd64.rpm)
 
@@ -136,9 +144,7 @@ If you have [Cargo](https://doc.rust-lang.org/cargo/) installed, you can install
 cargo install --git https://github.com/andrewferrier/memy
 ```
 
-#### Don't have Cargo?
-
-Cargo is Rust's package manager and build tool. The easiest way to get Cargo (and Rust) is to use [rustup](https://rustup.rs/), which works on Linux, macOS, and Windows. See [the official instructions](https://doc.rust-lang.org/cargo/getting-started/installation.html).
+Don't have Cargo? It's Rust's package manager and build tool. The easiest way to get Cargo (and Rust) is to use [rustup](https://rustup.rs/), which works on Linux, macOS, and Windows. See [the official instructions](https://doc.rust-lang.org/cargo/getting-started/installation.html).
 
 ## Configuration & Under the Hood
 
