@@ -159,13 +159,11 @@ Don't have Cargo? It's Rust's package manager and build tool. The easiest way to
 
 By default, memy looks for its config file at `$XDG_CONFIG_HOME/memy/memy.toml` (typically `~/.config/memy/memy.toml`). You can override the config location by setting the `MEMY_CONFIG_DIR` environment variable to a directory of your choice.
 
-If you don't already have a config file, you can create a default/template one in the default location like this (be careful not to overwrite one that already exists):
+If you don't already have a config file, you can create a default/template one in the default location, annotated with comments explaining what each option does. Run this command to create it (being careful not to overwrite one that already exists):
 
 ```sh
 memy generate-config > ~/.config/memy/memy.toml
 ```
-
-The config file will be annotated with comments explaining what each option does.
 
 By default, memy stores its database in `$XDG_STATE_HOME/memy/memy.sqlite3` (typically `~/.local/state/memy/memy.sqlite3`). You can override the database location by setting the `MEMY_DB_DIR` environment variable to a directory of your choice.
 
