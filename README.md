@@ -98,6 +98,15 @@ Use single shell script to install:
 curl -sSL https://raw.githubusercontent.com/andrewferrier/memy/main/install.sh | sh
 ```
 
+### Homebrew (Linux or Mac)
+
+Install homebrew as per [the instructions](https://brew.sh/). Then run:
+
+```sh
+brew tap ferriera/memy https://github.com/andrewferrier/memy.git
+brew install ferriera/memy/memy
+```
+
 ### Download .deb-based package for Debian / Ubuntu
 
 - [x86_64/amd64](https://github.com/andrewferrier/memy/releases/latest/download/memy_latest_amd64.deb)
