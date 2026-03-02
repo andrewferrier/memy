@@ -1,5 +1,6 @@
 use clap::builder::PossibleValuesParser;
-use clap::{Args, Parser, Subcommand};
+use clap::error::ErrorKind;
+use clap::{Args, CommandFactory as _, Parser, Subcommand};
 
 #[derive(Parser, Debug)]
 #[command(
@@ -94,6 +95,19 @@ pub struct ListArgs {
     /// or ISO-8601 date/time strings (e.g., '2025-01-01', '2025-01-01T12:00:00')
     #[arg(long, value_name = "TIME")]
     pub newer_than: Option<String>,
+
+    /// Pipe output through a command, defaulting to an interactive filter like `fzf`
+    #[arg(short = 's', long = "output-filter", visible_alias = "select-filter")]
+    pub output_filter: bool,
+
+    /// Output filter command (overrides `MEMY_OUTPUT_FILTER` environment variable and `memy_output_filter` config)
+    #[arg(
+        long = "output-filter-command",
+        visible_alias = "select-filter-command",
+        value_name = "OUTPUT_FILTER_COMMAND",
+        requires = "output_filter"
+    )]
+    pub output_filter_command: Option<String>,
 }
 
 #[derive(Args, Debug)]
@@ -101,6 +115,25 @@ pub struct StatsArgs {
     /// Output format
     #[arg(long, default_value = "plain", value_name = "FORMAT", value_parser = PossibleValuesParser::new(["plain", "json"]))]
     pub format: String,
+}
+
+#[must_use]
+pub fn parse() -> Cli {
+    let cli = Cli::parse();
+
+    if let Commands::List(list_args) = &cli.command
+        && list_args.output_filter
+        && list_args.format != "plain"
+    {
+        Cli::command()
+            .error(
+                ErrorKind::ArgumentConflict,
+                "--output-filter (or --select) can only be used with --format plain",
+            )
+            .exit();
+    }
+
+    cli
 }
 
 #[allow(clippy::unwrap_used, reason = "unwrap() OK inside tests")]

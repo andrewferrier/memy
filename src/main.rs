@@ -14,10 +14,9 @@ mod types;
 mod utils;
 
 use clap::CommandFactory as _;
-use clap::Parser as _;
 use cli::{Cli, Commands};
 use core::error::Error;
-use log::{debug, warn};
+use log::debug;
 use std::io::stdout;
 use tracing::instrument;
 
@@ -61,7 +60,7 @@ fn configure_color(color: &str) -> Result<Option<bool>, Box<dyn Error>> {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let cli = Cli::parse();
+    let cli = cli::parse();
 
     let color_option = configure_color(&cli.color)?;
 

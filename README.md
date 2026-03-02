@@ -10,9 +10,9 @@
 <br/>
 </p>
 
-**memy** is a modern, fast, and simple command-line tool to help you track and recall the files and directories you use most often. Many similar tools support only directories, **but memy supports files too**. Inspired by [fasd](https://github.com/whjvenyl/fasd), memy (with the aid of hooks into your favourite tools) remembers the paths you interact with, lists them back to you by a combination of frequency and recency ("frecency"), and makes it easy to build a workflow around them using standard Linux/Unix tools. memy is written using Rust and a SQLite backend for speed and scalability.
+**memy** is a modern, fast, and simple command-line tool to help you track and recall the files and directories you use most often. Many similar tools support only directories, **but memy supports files too**. Inspired by [fasd](https://github.com/whjvenyl/fasd) and [zoxide](https://github.com/ajeetdsouza/zoxide), memy (with the aid of hooks into your favourite tools) remembers the paths you interact with, lists them back to you by a combination of frequency and recency ("frecency"), and makes it easy to build a workflow around them using standard Linux/Unix tools. memy is written using Rust and a SQLite backend for speed and scalability.
 
-Unlike tools such as [zoxide](https://github.com/ajeetdsouza/zoxide), memy is less focused on providing a direct "jump" command for navigating directories. Instead, memy is designed to be a flexible backend for tracking your usage, which you can combine with tools like [`fzf`](https://github.com/junegunn/fzf) and `cd` to jump around directories if you wish. Crucially, memy also supports tracking files you use - not just directories - unlike most other tools in this space (except for `fasd`, which for a longer time was not maintained).
+**memy** is intended to be a flexible backend for tracking your usage, which will integrate with tools like [`fzf`](https://github.com/junegunn/fzf) and `cd` to jump around your filesystem. Crucially, memy also supports tracking files you use - not just directories - unlike most other tools in this space (except for `fasd`, which for a longer time was not maintained).
 
 memy is ideal for developers, sysadmins, CLI power users, and anyone who works with many files and directories and wants a smarter way to recall them.
 
@@ -36,30 +36,29 @@ Currently, memy has been tested on Linux and MacOS (limited). It has not been te
 
   (`ls` is an alias for `list`, so `memy ls` works too.)
 
-- Open a recently used file in your editor, selecting it using `fzf` (assuming your editor is `vim`).
+- Open a recently used file in your editor, selecting it using `fzf` or other selector (assuming your editor is `vim`).
 
   ```sh
-  memy list -f | fzf | sed "s|^~|$HOME|" | xargs vim
+  memy list -f -s | xargs vim
   ```
 
 - Change to a directory from your remembered paths using [fzf](https://github.com/junegunn/fzf) as a wrapper:
 
   ```sh
-  selected=$(memy list -d | fzf); [[ -n "$selected" ]] && cd "${selected/#\~/$HOME}"
-
-  # (or just 'memy-cd' if you have the bash/zsh/fish hook installed)
+  cd $(memy list -d -s) # zsh/fish
+  memy-cd               # bash (install the bash 'hook' first - see below)
   ```
 
 - Change to the most frecent directory containing the string 'download' (case-insensitive):
 
   ```sh
-  cd $(memy list -d | grep -i download | tail -1 | sed "s|^~|$HOME|")
+  cd $(memy list -d -s --output-filter-command 'grep -i download | head -1')
   ```
 
 - (On Linux) Open a recently used path in your GUI file manager:
 
   ```sh
-  memy list -f | fzf | sed "s|^~|$HOME|" | xargs xdg-open
+  memy list -f -s | xargs xdg-open
   ```
 
 Many of these more advanced tricks would work well configured as [shell aliases](https://linuxize.com/post/how-to-create-bash-aliases/).

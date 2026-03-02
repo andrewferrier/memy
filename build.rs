@@ -1,6 +1,5 @@
 #![allow(clippy::unwrap_used, reason = "unwrap() OK inside build")]
 
-use clap::CommandFactory as _;
 use clap_complete::{
     generate_to,
     shells::{Bash, Fish, Zsh},

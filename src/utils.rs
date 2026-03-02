@@ -1,7 +1,9 @@
 use chrono::{DateTime, Local, TimeZone as _};
 use std::borrow::Cow;
+use std::env;
 use std::env::home_dir;
 use std::path::{Component, Path, PathBuf};
+use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::types::UnixTimestamp;
@@ -85,7 +87,15 @@ pub fn detect_shell() -> Option<clap_complete::Shell> {
     }
 }
 
-pub fn expand_tilde<P: AsRef<Path> + ?Sized>(path: &'_ P) -> Cow<'_, Path> {
+pub fn is_command_available(cmd: &str) -> bool {
+    Command::new(cmd)
+        .arg("--version")
+        .output()
+        .ok()
+        .is_some_and(|output| output.status.success())
+}
+
+pub fn expand_tilde_in_path<P: AsRef<Path> + ?Sized>(path: &'_ P) -> Cow<'_, Path> {
     let p = path.as_ref();
 
     if let Some(Component::Normal(first)) = p.components().next()
@@ -99,6 +109,32 @@ pub fn expand_tilde<P: AsRef<Path> + ?Sized>(path: &'_ P) -> Cow<'_, Path> {
     } else {
         Cow::Borrowed(p)
     }
+}
+
+fn expand_tilde_in_string(line: &str) -> Cow<'_, str> {
+    if (line == "~" || line.starts_with("~/"))
+        && let Ok(home) = env::var("HOME")
+    {
+        return Cow::Owned(format!("{home}{}", &line[1..]));
+    }
+
+    Cow::Borrowed(line)
+}
+
+pub fn expand_tildes_in_multiline_string(text: &str) -> String {
+    let had_trailing_newline = text.ends_with('\n');
+
+    let mut expanded = text
+        .lines()
+        .map(expand_tilde_in_string)
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    if had_trailing_newline {
+        expanded.push('\n');
+    }
+
+    expanded
 }
 
 pub fn collapse_to_tilde<P: AsRef<Path>>(path: P) -> String {
@@ -143,13 +179,19 @@ mod tests {
     #[test]
     fn test_expand_tilde() {
         let home = home_dir().expect("Could not get home dir");
-        assert_eq!(expand_tilde("~"), home);
-        assert_eq!(expand_tilde("~/"), home);
-        assert_eq!(expand_tilde("~/memy"), home.join("memy"));
-        assert_eq!(expand_tilde("~/memy/"), home.join("memy"));
-        assert_eq!(expand_tilde("/etc/hosts"), PathBuf::from("/etc/hosts"));
-        assert_eq!(expand_tilde("etc/hosts"), PathBuf::from("etc/hosts"));
-        assert_eq!(expand_tilde("hosts"), PathBuf::from("hosts"));
+        assert_eq!(expand_tilde_in_path("~"), home);
+        assert_eq!(expand_tilde_in_path("~/"), home);
+        assert_eq!(expand_tilde_in_path("~/memy"), home.join("memy"));
+        assert_eq!(expand_tilde_in_path("~/memy/"), home.join("memy"));
+        assert_eq!(
+            expand_tilde_in_path("/etc/hosts"),
+            PathBuf::from("/etc/hosts")
+        );
+        assert_eq!(
+            expand_tilde_in_path("etc/hosts"),
+            PathBuf::from("etc/hosts")
+        );
+        assert_eq!(expand_tilde_in_path("hosts"), PathBuf::from("hosts"));
     }
 
     #[test]
@@ -185,7 +227,7 @@ mod tests {
         fn test_tilde_expand_collapse(path in generate_unix_path()) {
             // Path normalization is needed for test paths like `~/.`
             let normalized_path = Path::new(&path).normalize();
-            let expanded = expand_tilde(&normalized_path);
+            let expanded = expand_tilde_in_path(&normalized_path);
             let collapsed = collapse_to_tilde(&expanded);
 
             prop_assert_eq!(collapsed, normalized_path.to_string_lossy());

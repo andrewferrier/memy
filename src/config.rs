@@ -38,6 +38,7 @@ pub struct MemyConfig {
     #[serde(default, deserialize_with = "validate_recency_bias")]
     pub recency_bias: Option<RecencyBias>,
     pub missing_files_delete_from_db_after: Option<i32>,
+    pub memy_output_filter: Option<String>,
 }
 
 fn validate_recency_bias<'de, D>(deserializer: D) -> Result<Option<RecencyBias>, D::Error>
@@ -191,7 +192,11 @@ pub fn get_denylist_matcher() -> Gitignore {
             .clone()
             .unwrap_or_default()
             .into_iter()
-            .map(|pattern| utils::expand_tilde(&pattern).to_string_lossy().to_string())
+            .map(|pattern| {
+                utils::expand_tilde_in_path(&pattern)
+                    .to_string_lossy()
+                    .to_string()
+            })
             .collect(),
     );
 
@@ -231,6 +236,14 @@ pub fn get_missing_files_delete_from_db_after() -> i32 {
     get_config()
         .missing_files_delete_from_db_after
         .unwrap_or(30)
+}
+
+pub fn get_memy_output_filter() -> Option<String> {
+    get_config()
+        .memy_output_filter
+        .as_ref()
+        .filter(|cmd| !cmd.is_empty())
+        .cloned()
 }
 
 #[cfg(test)]

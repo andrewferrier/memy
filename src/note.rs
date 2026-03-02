@@ -23,7 +23,7 @@ fn normalize_path_if_needed(path: Cow<'_, Path>) -> std::io::Result<Cow<'_, Path
 }
 
 fn note_path(tx: &Transaction, raw_path: &str) -> Result<(), Box<dyn Error + 'static>> {
-    let path = utils::expand_tilde(raw_path);
+    let path = utils::expand_tilde_in_path(raw_path);
 
     if !path.exists() {
         if config::get_missing_files_warn_on_note() {

@@ -17,4 +17,4 @@ autoload -Uz add-zsh-hook
 
 add-zsh-hook preexec memy_preexec
 
-alias memy-cd='selected=$(memy list -d | fzf); [[ -n "$selected" ]] && cd "${selected/#\~/$HOME}"'
+alias memy-cd='cd $(memy list -d -s)'

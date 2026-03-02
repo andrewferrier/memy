@@ -18,9 +18,8 @@ function fish_preexec --on-event fish_preexec
 end
 
 function memy-cd
-    set selected (memy list -d | fzf)
+    set selected (memy list -d -s)
     if test -n "$selected"
-        set selected (string replace -r '^~' $HOME $selected)
         cd "$selected"
     end
 end

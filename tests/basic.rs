@@ -277,7 +277,6 @@ fn test_ls_alias_for_list() {
     assert!(stdout.contains(dir_a.to_str().unwrap()));
 }
 
-
 #[test]
 fn test_graceful_when_configdir_missing() {
     // If the config path doesn't exist we just silently ignore it, it's the user's responsibility
