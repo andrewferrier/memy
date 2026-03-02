@@ -63,14 +63,17 @@ jobs:
             cargo build --release --target ${{ matrix.target }}
           fi
 
-      - name: Prepare binary and release tarball
+      - name: Prepare binary and release tarball (used by homebrew)
         run: |
-          mkdir -p dist dist_pkg/man
+          mkdir -p dist
+
           SRC_PATH=target/${{ matrix.target }}/release/memy
           DEST_NAME="memy-${{ matrix.filename }}"
 
           cp "$SRC_PATH" "dist/$DEST_NAME"
           chmod +x "dist/$DEST_NAME"
+
+          mkdir -p dist_pkg/man
 
           cp "$SRC_PATH" dist_pkg/memy
           chmod +x dist_pkg/memy
@@ -173,5 +176,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add Formula/memy.rb
-          git commit -m "chore: update homebrew formula for v${VERSION}"
+          git commit -m "chore: update homebrew formula for ${TAG}"
           git push origin main
