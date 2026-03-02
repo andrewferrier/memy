@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.18.0](https://github.com/andrewferrier/memy/compare/v0.17.1...v0.18.0) (2026-03-02)
+
+
+### Features
+
+* **formula:** add man pages, README, and shell completions to Homebrew formula ([2652cf5](https://github.com/andrewferrier/memy/commit/2652cf50d204b8eb151a247d2d4cedbe1f056c94))
+
 ## [0.17.1](https://github.com/andrewferrier/memy/compare/v0.17.0...v0.17.1) (2026-03-02)
 
 
