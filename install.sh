@@ -51,7 +51,7 @@ DOWNLOAD_TMP=$(mktemp -d) || {
 
 echo "Downloading $BIN_NAME..." >&2
 
-curl -L "$URL" -o "${DOWNLOAD_TMP}/${BIN_NAME}" || {
+curl --fail -L "$URL" -o "${DOWNLOAD_TMP}/${BIN_NAME}" || {
   echo "Error: Failed to download $BIN_NAME from $URL. Exiting." >&2
   exit 1
 }
