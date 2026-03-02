@@ -149,7 +149,7 @@ jobs:
 
           for filename, sha256 in platforms:
               content = re.sub(
-                  r'(releases/download/)[^/]+(/' + re.escape(filename) + r'")',
+                  r'(download/)[^/]+(/' + re.escape(filename) + r'")',
                   r'\g<1>' + tag + r'\2',
                   content,
               )
