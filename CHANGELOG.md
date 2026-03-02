@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.17.1](https://github.com/andrewferrier/memy/compare/v0.17.0...v0.17.1) (2026-03-02)
+
+
+### Bug Fixes
+
+* **release:** fix regex to match any tag in Formula URL, not just v-prefixed ones ([1bd873e](https://github.com/andrewferrier/memy/commit/1bd873e1c5fdfaa0e25ee47d600e7791983b76ef))
+
 ## [0.17.0](https://github.com/andrewferrier/memy/compare/v0.16.0...v0.17.0) (2026-02-23)
 
 
