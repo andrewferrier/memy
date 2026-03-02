@@ -63,14 +63,21 @@ jobs:
             cargo build --release --target ${{ matrix.target }}
           fi
 
-      - name: Prepare binary with OS and arch in filename
+      - name: Prepare binary and release tarball
         run: |
-          mkdir -p dist
+          mkdir -p dist dist_pkg/man
           SRC_PATH=target/${{ matrix.target }}/release/memy
           DEST_NAME="memy-${{ matrix.filename }}"
 
           cp "$SRC_PATH" "dist/$DEST_NAME"
           chmod +x "dist/$DEST_NAME"
+
+          cp "$SRC_PATH" dist_pkg/memy
+          chmod +x dist_pkg/memy
+          cp target/man/*.1 dist_pkg/man/
+          cp target/man/*.5 dist_pkg/man/
+          cp README.md dist_pkg/
+          tar czf "dist/${DEST_NAME}.tar.gz" -C dist_pkg .
 
       - name: Build .deb package (non-MUSL Linux only)
         if: runner.os == 'Linux' && !contains(matrix.target, 'musl')
@@ -107,24 +114,24 @@ jobs:
           echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
           echo "TAG=${GITHUB_REF_NAME}" >> "$GITHUB_ENV"
 
-      - name: Download release binaries
+      - name: Download release tarballs
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release download "${{ github.event.release.tag_name }}" \
-            --pattern "memy-macos-aarch64" \
-            --pattern "memy-macos-x86_64" \
-            --pattern "memy-linux-aarch64" \
-            --pattern "memy-linux-x86_64" \
+            --pattern "memy-macos-aarch64.tar.gz" \
+            --pattern "memy-macos-x86_64.tar.gz" \
+            --pattern "memy-linux-aarch64.tar.gz" \
+            --pattern "memy-linux-x86_64.tar.gz" \
             --dir /tmp/memy-release
 
       - name: Compute sha256sums
         run: |
           {
-            echo "SHA256_MACOS_AARCH64=$(sha256sum /tmp/memy-release/memy-macos-aarch64 | cut -d' ' -f1)";
-            echo "SHA256_MACOS_X86_64=$(sha256sum /tmp/memy-release/memy-macos-x86_64 | cut -d' ' -f1)";
-            echo "SHA256_LINUX_AARCH64=$(sha256sum /tmp/memy-release/memy-linux-aarch64 | cut -d' ' -f1)";
-            echo "SHA256_LINUX_X86_64=$(sha256sum /tmp/memy-release/memy-linux-x86_64 | cut -d' ' -f1)"
+            echo "SHA256_MACOS_AARCH64=$(sha256sum /tmp/memy-release/memy-macos-aarch64.tar.gz | cut -d' ' -f1)";
+            echo "SHA256_MACOS_X86_64=$(sha256sum /tmp/memy-release/memy-macos-x86_64.tar.gz | cut -d' ' -f1)";
+            echo "SHA256_LINUX_AARCH64=$(sha256sum /tmp/memy-release/memy-linux-aarch64.tar.gz | cut -d' ' -f1)";
+            echo "SHA256_LINUX_X86_64=$(sha256sum /tmp/memy-release/memy-linux-x86_64.tar.gz | cut -d' ' -f1)"
           } >> "$GITHUB_ENV"
 
       - name: Update Homebrew formula
@@ -136,10 +143,10 @@ jobs:
           version = os.environ['VERSION']
           tag = os.environ['TAG']
           platforms = [
-              ('memy-macos-aarch64', os.environ['SHA256_MACOS_AARCH64']),
-              ('memy-macos-x86_64', os.environ['SHA256_MACOS_X86_64']),
-              ('memy-linux-aarch64', os.environ['SHA256_LINUX_AARCH64']),
-              ('memy-linux-x86_64', os.environ['SHA256_LINUX_X86_64']),
+              ('memy-macos-aarch64.tar.gz', os.environ['SHA256_MACOS_AARCH64']),
+              ('memy-macos-x86_64.tar.gz', os.environ['SHA256_MACOS_X86_64']),
+              ('memy-linux-aarch64.tar.gz', os.environ['SHA256_LINUX_AARCH64']),
+              ('memy-linux-x86_64.tar.gz', os.environ['SHA256_LINUX_X86_64']),
           ]
 
           with open('Formula/memy.rb') as f:
