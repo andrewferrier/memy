@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
 
 _memy_note_hook() {
-  local cmd="$BASH_COMMAND"
-  eval "set -- $cmd"
-  for word in "$@"; do
+  # For performance
+  [[ -n "$BASH_COMMAND" ]] || return
+
+  local -a words
+  IFS=' ' read -r -a words <<<"$BASH_COMMAND"
+
+  for word in "${words[@]}"; do
     # shellcheck disable=SC2154
     if [[ -e "$word" ]]; then
       memy \
@@ -14,12 +18,25 @@ _memy_note_hook() {
   done
 }
 
-trap _memy_note_hook DEBUG
-PROMPT_COMMAND="_memy_note_hook; ${PROMPT_COMMAND:-}"
+_memy_install_debug_trap() {
+  if [[ -n "${_MEMY_BASH_HOOK_INSTALLED:-}" ]]; then
+    return 0
+  fi
+
+  # FIXME: This is not very reliable as it will still overwrite existing DEBUG traps -
+  # should improve this with something like
+  # https://github.com/rcaloras/bash-preexec
+  trap "_memy_note_hook" DEBUG
+
+  _MEMY_BASH_HOOK_INSTALLED=1
+}
+
+_memy_install_debug_trap
 
 _memy_cd() {
   local selected
   selected=$(memy list -d -s)
+  # shellcheck disable=SC2164
   [[ -n "$selected" ]] && cd "${selected/#\~/$HOME}"
 }
 
