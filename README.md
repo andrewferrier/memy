@@ -45,8 +45,7 @@ Currently, memy has been tested on Linux and MacOS (limited). It has not been te
 - Change to a directory from your remembered paths using [fzf](https://github.com/junegunn/fzf) as a wrapper:
 
   ```sh
-  cd $(memy list -d -s) # zsh/fish
-  memy-cd               # bash (install the bash 'hook' first - see below)
+  cd $(memy list -d -s)
   ```
 
 - Change to the most frecent directory containing the string 'download' (case-insensitive):
