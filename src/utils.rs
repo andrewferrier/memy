@@ -206,6 +206,48 @@ mod tests {
         assert_eq!(collapse_to_tilde("hosts"), "hosts");
     }
 
+    #[test]
+    fn test_expand_tildes_in_multiline_string() {
+        let home = env::var("HOME").expect("HOME environment variable not set for test");
+
+        assert_eq!(expand_tildes_in_multiline_string(""), "");
+        assert_eq!(expand_tildes_in_multiline_string("~"), home);
+        assert_eq!(expand_tildes_in_multiline_string("\n"), "\n");
+        assert_eq!(
+            expand_tildes_in_multiline_string("/etc/hosts"),
+            "/etc/hosts"
+        );
+        assert_eq!(
+            expand_tildes_in_multiline_string("~/config"),
+            format!("{}/config", home)
+        );
+        assert_eq!(
+            expand_tildes_in_multiline_string("~/file1\n~/dir/file2"),
+            format!("{}/file1\n{}/dir/file2", home, home)
+        );
+        assert_eq!(
+            expand_tildes_in_multiline_string("/absolute/path\nrelative/path"),
+            "/absolute/path\nrelative/path"
+        );
+        assert_eq!(
+            expand_tildes_in_multiline_string(
+                "~/file1\n/absolute/path\n~/dir/file2\nrelative/path"
+            ),
+            format!(
+                "{}/file1\n/absolute/path\n{}/dir/file2\nrelative/path",
+                home, home
+            )
+        );
+        assert_eq!(
+            expand_tildes_in_multiline_string("~/file~name"),
+            format!("{}/file~name", home)
+        );
+        assert_eq!(
+            expand_tildes_in_multiline_string("~/file1\n/absolute/path\n"),
+            format!("{}/file1\n/absolute/path\n", home)
+        );
+    }
+
     use normalize_path::NormalizePath as _;
     use proptest::prelude::*;
     use proptest::strategy::Strategy;
