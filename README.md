@@ -6,7 +6,7 @@
 <img src="./logo.svg" />
 </p>
 <p align="center">
-<strong><a href="https://youtu.be/YKfYz_56nkg">YouTube Demo</a></strong>
+<strong><a href="https://youtu.be/YKfYz_56nkg">YouTube Demo</a></strong><br/>(<a href="https://www.youtube.com/watch?v=-HqFrcwgwPg&list=PLFbUBvOvJa4S7aoNOY6lf155NCj_nfrQm">other videos on memy</a>)
 <br/>
 </p>
 
