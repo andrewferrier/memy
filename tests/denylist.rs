@@ -328,5 +328,8 @@ fn test_denylist_dontexclude_notbuiltin() {
 
     let lines: Vec<String> = list_paths(&db_path, None, &[], &[]);
     assert_eq!(lines.len(), 1);
-    assert_eq!(lines[0], "/etc");
+    let expected = std::path::Path::new("/etc")
+        .canonicalize()
+        .unwrap_or_else(|_| std::path::PathBuf::from("/etc"));
+    assert_eq!(lines[0], expected.to_string_lossy().as_ref());
 }
