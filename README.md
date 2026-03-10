@@ -167,7 +167,7 @@ By default, memy stores its database in `$XDG_STATE_HOME/memy/memy.sqlite3` (typ
 
 ## More Information
 
-- For a full list of commands and flags, run `memy --help`. If you are using one of the `.deb`-packaged versions of memy, you can also bring up the manpage: `man memy`.
+- For a full list of commands and flags, run `memy --help`. Depending on your memy installation method, you may also be able to bring up a manpage: `man memy`.
 
 - For release notes, see [CHANGELOG.md](CHANGELOG.md)
 
