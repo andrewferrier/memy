@@ -3,12 +3,19 @@ RUN apt-get update && apt-get install -y \
     fzf \
     git \
     neovim \
-    sqlite3
+    sqlite3 \
+    sudo
 
-RUN useradd -m demo
+RUN useradd -m demo && \
+    echo "demo:demo" | chpasswd && \
+    usermod -aG sudo demo && \
+    echo "demo ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 USER demo
 WORKDIR /home/demo
 ENV HOME=/home/demo
+
+RUN NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" && \
+    echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/demo/.bashrc
 
 ARG CACHE_BUST
 RUN git clone https://github.com/andrewferrier/memy.git
@@ -25,4 +32,7 @@ RUN mkdir -p /home/demo/docs /home/demo/projects/my_project /home/demo/tmp && \
     echo "Temporary log file content." > /home/demo/tmp/temp_log.txt
 
 ENV PATH="/home/demo/memy/target/debug:${PATH}"
-RUN echo "export PATH=/home/demo/memy/target/debug:\$PATH" >> ~/.bashrc
+RUN echo "export PATH=/home/demo/memy/target/debug:\$PATH" >> ~/.bashrc && \
+    echo "source ~/memy/hooks/bash" >> ~/.bashrc
+
+WORKDIR /home/demo

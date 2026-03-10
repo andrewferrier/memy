@@ -1,13 +1,8 @@
 .PHONY: run
 
-CACHE_BUST ?= $(shell date +%s)
-
-run:
-	podman build -t memy-demo \
-		--build-arg CACHE_BUST=$(CACHE_BUST) \
-		.
+run: build
 	clear
-	@podman run -it \
-		--rm \
-		--hostname memy-demo \
-		memy-demo bash
+	@podman run -it --rm --hostname memy-demo memy-demo bash
+
+build:
+	podman build -f demos/Dockerfile -t memy-demo ..
