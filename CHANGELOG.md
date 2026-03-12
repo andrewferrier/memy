@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.19.0](https://github.com/andrewferrier/memy/compare/v0.18.0...v0.19.0) (2026-03-12)
+
+
+### Features
+
+* Add --output-filter to pipe through fzf etc. - closes [#116](https://github.com/andrewferrier/memy/issues/116) ([0b5faf4](https://github.com/andrewferrier/memy/commit/0b5faf4da926eb78a68f894724870e49cf232884))
+
+
+### Bug Fixes
+
+* --fail on curl in install.sh ([299623a](https://github.com/andrewferrier/memy/commit/299623af1b98c1cd57ad4a688984f092105b4faa))
+* Improve import error message ([828d994](https://github.com/andrewferrier/memy/commit/828d994d3dbc63b2ef000f6af57b950dd055cbeb))
+* Improve robustness of bash hook - closes [#137](https://github.com/andrewferrier/memy/issues/137) ([903bf7e](https://github.com/andrewferrier/memy/commit/903bf7e5936f7f6b6a38902f29b981ae87893643))
+
+
+### Performance Improvements
+
+* Misc improvements ([5f4861e](https://github.com/andrewferrier/memy/commit/5f4861ed8578c6a6662e5da893a857e2e80eeb1e))
+* Parallelize list loop ([1013c32](https://github.com/andrewferrier/memy/commit/1013c32a05c894c08be0ea73529b506f9a8d9882))
+
 ## [0.18.0](https://github.com/andrewferrier/memy/compare/v0.17.1...v0.18.0) (2026-03-02)
 
 
