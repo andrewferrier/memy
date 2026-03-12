@@ -25,9 +25,7 @@ fn test_note_and_list_paths() {
     let dir_a = create_test_directory(&working_path, "dir_a");
     let dir_b = create_test_directory(&working_path, "dir_b");
 
-    note_path(&db_path, None, dir_a.to_str().unwrap(), 1, &[], &[]);
-    sleep(1000);
-    note_path(&db_path, None, dir_b.to_str().unwrap(), 1, &[], &[]);
+    note_paths_with_delay(&db_path, None, &[&dir_a, &dir_b]);
 
     let lines = list_paths(&db_path, None, &[], &[]);
 

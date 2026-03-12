@@ -160,3 +160,52 @@ pub fn list_paths(
         .map(str::to_string)
         .collect()
 }
+
+pub fn age_all_paths(db_path: &std::path::Path, days: u32) {
+    let seconds = u64::from(days) * 24 * 60 * 60;
+    execute_sql(
+        db_path,
+        &format!("UPDATE paths SET last_noted_timestamp = strftime('%s', 'now') - {seconds};"),
+    );
+}
+
+pub fn age_path_by(db_path: &std::path::Path, path: &std::path::Path, seconds: u64) {
+    execute_sql(
+        db_path,
+        &format!(
+            "UPDATE paths SET last_noted_timestamp = last_noted_timestamp - {seconds} WHERE path = '{}'",
+            path.to_str().unwrap()
+        ),
+    );
+}
+
+/// Notes each path in order, sleeping between each one.
+pub fn note_paths_with_delay(
+    db_path: &std::path::Path,
+    config_path: Option<&std::path::Path>,
+    paths: &[&std::path::Path],
+) {
+    for (idx, path) in paths.iter().enumerate() {
+        note_path(db_path, config_path, path.to_str().unwrap(), 1, &[], &[]);
+        if idx < paths.len() - 1 {
+            sleep(250);
+        }
+    }
+}
+
+/// Asserts that the line containing `first_contains` appears before the line containing
+/// `second_contains` in `lines`, with a descriptive panic message on failure.
+pub fn assert_path_before(lines: &[String], first_contains: &str, second_contains: &str) {
+    let first_pos = lines
+        .iter()
+        .position(|line| line.contains(first_contains))
+        .unwrap_or_else(|| panic!("'{first_contains}' not found in lines: {lines:?}"));
+    let second_pos = lines
+        .iter()
+        .position(|line| line.contains(second_contains))
+        .unwrap_or_else(|| panic!("'{second_contains}' not found in lines: {lines:?}"));
+    assert!(
+        first_pos < second_pos,
+        "Expected '{first_contains}' before '{second_contains}', got positions {first_pos} and {second_pos}\nLines: {lines:?}"
+    );
+}

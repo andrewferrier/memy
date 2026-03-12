@@ -60,10 +60,7 @@ fn test_not_deleted_file_still_present() {
         test_file_path.to_str().unwrap()
     );
 
-    execute_sql(
-        &db_path,
-        "UPDATE paths SET last_noted_timestamp = strftime('%s', 'now') - (45 * 24 * 60 * 60);",
-    );
+    age_all_paths(&db_path, 45);
 
     let lines_after_update_timestamp: Vec<String> = list_paths(&db_path, None, &["-vvv"], &[]);
     assert_eq!(lines_after_update_timestamp.len(), 1);
@@ -89,10 +86,7 @@ fn test_note_deleted_file_fake_expiry() {
         &[],
     );
 
-    execute_sql(
-        &db_path,
-        "UPDATE paths SET last_noted_timestamp = strftime('%s', 'now') - (45 * 24 * 60 * 60);",
-    );
+    age_all_paths(&db_path, 45);
 
     let lines_before: Vec<String> = list_paths(&db_path, None, &["-vvv"], &[]);
     assert_eq!(lines_before.len(), 1);
@@ -125,10 +119,7 @@ fn test_note_deleted_file_fake_expiry_space_in_filename() {
         &[],
     );
 
-    execute_sql(
-        &db_path,
-        "UPDATE paths SET last_noted_timestamp = strftime('%s', 'now') - (45 * 24 * 60 * 60);",
-    );
+    age_all_paths(&db_path, 45);
 
     let lines_before: Vec<String> = list_paths(&db_path, None, &["-vvv"], &[]);
     assert_eq!(lines_before.len(), 1);
@@ -158,10 +149,7 @@ fn test_note_multiple_deleted_files_fake_expiry_one_retained() {
         note_path(&db_path, None, path.to_str().unwrap(), 1, &[], &[]);
     }
 
-    execute_sql(
-        &db_path,
-        "UPDATE paths SET last_noted_timestamp = strftime('%s', 'now') - (45 * 24 * 60 * 60);",
-    );
+    age_all_paths(&db_path, 45);
 
     let lines_before: Vec<String> = list_paths(&db_path, None, &["-vvv"], &[]);
     assert_eq!(lines_before.len(), 3);
@@ -190,10 +178,7 @@ fn test_note_deleted_file_not_quite_expired() {
         &[],
     );
 
-    execute_sql(
-        &db_path,
-        "UPDATE paths SET last_noted_timestamp = strftime('%s', 'now') - (29 * 24 * 60 * 60);",
-    );
+    age_all_paths(&db_path, 29);
 
     let lines_before: Vec<String> = list_paths(&db_path, None, &["-vvv"], &[]);
     assert_eq!(lines_before.len(), 1);

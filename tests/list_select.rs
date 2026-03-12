@@ -14,11 +14,7 @@ fn test_output_filter_basic_with_head() {
     let file_b = create_test_file(&working_path, "file_b.txt", "content b");
     let file_c = create_test_file(&working_path, "file_c.txt", "content c");
 
-    note_path(&db_path, None, file_a.to_str().unwrap(), 1, &[], &[]);
-    sleep(100);
-    note_path(&db_path, None, file_b.to_str().unwrap(), 1, &[], &[]);
-    sleep(100);
-    note_path(&db_path, None, file_c.to_str().unwrap(), 1, &[], &[]);
+    note_paths_with_delay(&db_path, None, &[&file_a, &file_b, &file_c]);
 
     let args = vec![
         "--config",
@@ -50,9 +46,7 @@ fn test_output_filter_with_command_flag() {
     let file_a = create_test_file(&working_path, "file_a.txt", "content a");
     let file_b = create_test_file(&working_path, "file_b.txt", "content b");
 
-    note_path(&db_path, None, file_a.to_str().unwrap(), 1, &[], &[]);
-    sleep(100);
-    note_path(&db_path, None, file_b.to_str().unwrap(), 1, &[], &[]);
+    note_paths_with_delay(&db_path, None, &[&file_a, &file_b]);
 
     let args = vec![
         "list",
@@ -144,23 +138,7 @@ memy_output_filter = "head -1"
 "#,
     );
 
-    note_path(
-        &db_path,
-        Some(&config_path),
-        file_a.to_str().unwrap(),
-        1,
-        &[],
-        &[],
-    );
-    sleep(100);
-    note_path(
-        &db_path,
-        Some(&config_path),
-        file_b.to_str().unwrap(),
-        1,
-        &[],
-        &[],
-    );
+    note_paths_with_delay(&db_path, Some(&config_path), &[&file_a, &file_b]);
 
     let output = memy_cmd_test_defaults(&db_path, Some(&config_path), &["list", "--output-filter"]);
 
@@ -181,9 +159,7 @@ fn test_output_filter_priority_command_flag_over_env() {
     let file_a = create_test_file(&working_path, "file_a.txt", "content a");
     let file_b = create_test_file(&working_path, "file_b.txt", "content b");
 
-    note_path(&db_path, None, file_a.to_str().unwrap(), 1, &[], &[]);
-    sleep(100);
-    note_path(&db_path, None, file_b.to_str().unwrap(), 1, &[], &[]);
+    note_paths_with_delay(&db_path, None, &[&file_a, &file_b]);
 
     let args = vec![
         "--config",
@@ -227,23 +203,7 @@ memy_output_filter = "tail -1"
 "#,
     );
 
-    note_path(
-        &db_path,
-        Some(&config_path),
-        file_a.to_str().unwrap(),
-        1,
-        &[],
-        &[],
-    );
-    sleep(100);
-    note_path(
-        &db_path,
-        Some(&config_path),
-        file_b.to_str().unwrap(),
-        1,
-        &[],
-        &[],
-    );
+    note_paths_with_delay(&db_path, Some(&config_path), &[&file_a, &file_b]);
 
     // MEMY_OUTPUT_FILTER env var should take priority over config
     let args = vec!["list", "--output-filter"];
@@ -304,9 +264,7 @@ fn test_output_filter_supports_shell_pipes_and_quotes() {
     let file_a = create_test_file(&working_path, "file_a.txt", "content a");
     let file_b = create_test_file(&working_path, "file_b.txt", "content b");
 
-    note_path(&db_path, None, file_a.to_str().unwrap(), 1, &[], &[]);
-    sleep(100);
-    note_path(&db_path, None, file_b.to_str().unwrap(), 1, &[], &[]);
+    note_paths_with_delay(&db_path, None, &[&file_a, &file_b]);
 
     let args = vec![
         "--config",

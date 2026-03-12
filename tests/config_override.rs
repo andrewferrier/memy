@@ -20,10 +20,7 @@ fn test_config_override_float() {
 
     let lines = list_paths(&db_path, None, &["--config", "recency_bias=0"], &[]);
 
-    assert!(
-        lines.iter().position(|line| line.contains("dir_b"))
-            < lines.iter().position(|line| line.contains("dir_a"))
-    );
+    assert_path_before(&lines, "dir_b", "dir_a");
 }
 
 #[test]
@@ -40,10 +37,7 @@ fn test_config_override_float_2() {
 
     let lines = list_paths(&db_path, None, &["--config", "recency_bias=1"], &[]);
 
-    assert!(
-        lines.iter().position(|line| line.contains("dir_a"))
-            < lines.iter().position(|line| line.contains("dir_b")),
-    );
+    assert_path_before(&lines, "dir_a", "dir_b");
 }
 
 #[test]
@@ -78,10 +72,7 @@ fn test_config_override_float_with_config_file() {
 
     let lines = list_paths(&db_path, None, &["--config", "recency_bias=1"], &[]);
 
-    assert!(
-        lines.iter().position(|line| line.contains("dir_a"))
-            < lines.iter().position(|line| line.contains("dir_b")),
-    );
+    assert_path_before(&lines, "dir_a", "dir_b");
 }
 
 #[test]

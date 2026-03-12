@@ -13,37 +13,14 @@ fn test_newer_than_with_duration_filters_correctly() {
     let file2 = create_test_file(&working_path, "file2.txt", "content2");
     let file3 = create_test_file(&working_path, "file3.txt", "content3");
 
-    // Note file1
-    note_path(&db_path, None, file1.to_str().unwrap(), 1, &[], &[]);
-    sleep(200);
-
-    // Note file2
-    note_path(&db_path, None, file2.to_str().unwrap(), 1, &[], &[]);
-    sleep(200);
-
-    // Note file3
-    note_path(&db_path, None, file3.to_str().unwrap(), 1, &[], &[]);
+    note_paths_with_delay(&db_path, None, &[&file1, &file2, &file3]);
 
     // Manually update timestamps in database to simulate different noted times
     // Set file1 to 10 days ago
-    execute_sql(
-        &db_path,
-        &format!(
-            "UPDATE paths SET last_noted_timestamp = last_noted_timestamp - {} WHERE path = '{}'",
-            10 * 24 * 3600,
-            file1.to_str().unwrap()
-        ),
-    );
+    age_path_by(&db_path, &file1, 10 * 24 * 3600);
 
     // Set file2 to 2 days ago
-    execute_sql(
-        &db_path,
-        &format!(
-            "UPDATE paths SET last_noted_timestamp = last_noted_timestamp - {} WHERE path = '{}'",
-            2 * 24 * 3600,
-            file2.to_str().unwrap()
-        ),
-    );
+    age_path_by(&db_path, &file2, 2 * 24 * 3600);
 
     // file3 remains with current timestamp
 
@@ -89,9 +66,7 @@ fn test_newer_than_with_iso8601_date() {
     let file2 = create_test_file(&working_path, "file2.txt", "content2");
 
     // Note both files
-    note_path(&db_path, None, file1.to_str().unwrap(), 1, &[], &[]);
-    sleep(200);
-    note_path(&db_path, None, file2.to_str().unwrap(), 1, &[], &[]);
+    note_paths_with_delay(&db_path, None, &[&file1, &file2]);
 
     // Set file1 to be noted on 2020-01-01 (arbitrary old date)
     execute_sql(
@@ -139,19 +114,10 @@ fn test_newer_than_with_combined_duration() {
     let file1 = create_test_file(&working_path, "file1.txt", "content1");
     let file2 = create_test_file(&working_path, "file2.txt", "content2");
 
-    note_path(&db_path, None, file1.to_str().unwrap(), 1, &[], &[]);
-    sleep(200);
-    note_path(&db_path, None, file2.to_str().unwrap(), 1, &[], &[]);
+    note_paths_with_delay(&db_path, None, &[&file1, &file2]);
 
     // Set file1 to 2 days and 5 hours ago
-    execute_sql(
-        &db_path,
-        &format!(
-            "UPDATE paths SET last_noted_timestamp = last_noted_timestamp - {} WHERE path = '{}'",
-            (2 * 24 * 3600) + (5 * 3600),
-            file1.to_str().unwrap()
-        ),
-    );
+    age_path_by(&db_path, &file1, (2 * 24 * 3600) + (5 * 3600));
 
     // file2 remains with current timestamp
 
