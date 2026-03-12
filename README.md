@@ -46,6 +46,7 @@ Currently, memy has been tested on Linux and MacOS (limited). It has not been te
 
   ```sh
   cd $(memy list -d -s)
+  # or use the `memy-cd` convenience command if the memy hook is installed for your shell (see below)
   ```
 
 - Change to the most frecent directory containing the string 'download' (case-insensitive):
