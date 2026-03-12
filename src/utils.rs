@@ -219,11 +219,11 @@ mod tests {
         );
         assert_eq!(
             expand_tildes_in_multiline_string("~/config"),
-            format!("{}/config", home)
+            format!("{home}/config")
         );
         assert_eq!(
             expand_tildes_in_multiline_string("~/file1\n~/dir/file2"),
-            format!("{}/file1\n{}/dir/file2", home, home)
+            format!("{home}/file1\n{home}/dir/file2")
         );
         assert_eq!(
             expand_tildes_in_multiline_string("/absolute/path\nrelative/path"),
@@ -233,18 +233,15 @@ mod tests {
             expand_tildes_in_multiline_string(
                 "~/file1\n/absolute/path\n~/dir/file2\nrelative/path"
             ),
-            format!(
-                "{}/file1\n/absolute/path\n{}/dir/file2\nrelative/path",
-                home, home
-            )
+            format!("{home}/file1\n/absolute/path\n{home}/dir/file2\nrelative/path",)
         );
         assert_eq!(
             expand_tildes_in_multiline_string("~/file~name"),
-            format!("{}/file~name", home)
+            format!("{home}/file~name")
         );
         assert_eq!(
             expand_tildes_in_multiline_string("~/file1\n/absolute/path\n"),
-            format!("{}/file1\n/absolute/path\n", home)
+            format!("{home}/file1\n/absolute/path\n")
         );
     }
 
