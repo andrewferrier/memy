@@ -105,8 +105,7 @@ fn test_newer_than_with_combined_duration() {
     // file2 remains with current timestamp
 
     let newer_lines = list_paths(&ctx.db_path, None, &[], &["--newer-than", "2d4h"]);
-    assert_eq!(newer_lines.len(), 1, "Should have 1 file newer than 2d4h");
-    assert!(newer_lines.iter().any(|s| s.contains("file2.txt")));
+    assert_lines_eq(&newer_lines, &[file2.to_str().unwrap()]);
 }
 
 #[test]

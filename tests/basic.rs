@@ -13,8 +13,7 @@ fn test_list_empty_db() {
     let ctx = TestContext::new();
 
     let lines = list_paths(&ctx.db_path, None, &[], &[]);
-
-    assert_eq!(lines.len(), 0);
+    assert_lines_eq(&lines, &[]);
 }
 
 #[test]
@@ -27,10 +26,7 @@ fn test_note_and_list_paths() {
     note_paths_with_delay(&ctx.db_path, None, &[&dir_a, &dir_b]);
 
     let lines = list_paths(&ctx.db_path, None, &[], &[]);
-
-    assert_eq!(lines.len(), 2);
-    assert_eq!(lines[0], dir_a.to_str().unwrap());
-    assert_eq!(lines[1], dir_b.to_str().unwrap());
+    assert_lines_eq(&lines, &[dir_a.to_str().unwrap(), dir_b.to_str().unwrap()]);
 }
 
 #[test]
@@ -40,9 +36,7 @@ fn test_note_homedir() {
     note_path(&ctx.db_path, None, "~", 1, &[], &[]);
 
     let lines = list_paths(&ctx.db_path, None, &[], &[]);
-
-    assert_eq!(lines.len(), 1);
-    assert_eq!(lines[0], "~");
+    assert_lines_eq(&lines, &["~"]);
 }
 
 #[test]
@@ -58,8 +52,8 @@ fn test_note_homedir_dont_use_tilde_on_list() {
         &[],
     );
 
-    assert_eq!(lines.len(), 1);
-    assert_eq!(lines[0], home_dir().unwrap().to_string_lossy());
+    let home = home_dir().unwrap();
+    assert_lines_eq(&lines, &[home.to_str().unwrap()]);
 }
 
 #[test]
@@ -100,8 +94,7 @@ fn test_note_relative_path() {
     std::env::set_current_dir(orig_dir).expect("failed to restore dir");
 
     let lines = list_paths(&ctx.db_path, None, &[], &[]);
-    assert_eq!(lines.len(), 1);
-    assert_eq!(lines[0], test_file_path.to_str().unwrap());
+    assert_lines_eq(&lines, &[test_file_path.to_str().unwrap()]);
 }
 
 #[test]
@@ -119,11 +112,14 @@ fn test_frecency_ordering() {
     note_path(&ctx.db_path, None, dir_c.to_str().unwrap(), 10, &[], &[]);
 
     let lines = list_paths(&ctx.db_path, None, &[], &[]);
-
-    assert_eq!(lines.len(), 3);
-    assert_eq!(lines[0], dir_b.to_str().unwrap());
-    assert_eq!(lines[1], dir_a.to_str().unwrap());
-    assert_eq!(lines[2], dir_c.to_str().unwrap());
+    assert_lines_eq(
+        &lines,
+        &[
+            dir_b.to_str().unwrap(),
+            dir_a.to_str().unwrap(),
+            dir_c.to_str().unwrap(),
+        ],
+    );
 }
 
 #[test]
@@ -200,45 +196,28 @@ fn test_help_flag() {
 fn test_files_only_flag() {
     let ctx = TestContext::new();
 
-    let test_file_path = create_test_file(&ctx.working_path, "test_file", "test content");
+    let test_file = create_test_file(&ctx.working_path, "test_file", "test content");
     let test_dir = create_test_directory(&ctx.working_path, "test_dir");
 
-    note_path(
-        &ctx.db_path,
-        None,
-        test_file_path.to_str().unwrap(),
-        1,
-        &[],
-        &[],
-    );
+    note_path(&ctx.db_path, None, test_file.to_str().unwrap(), 1, &[], &[]);
     note_path(&ctx.db_path, None, test_dir.to_str().unwrap(), 1, &[], &[]);
 
     let lines = list_paths(&ctx.db_path, None, &[], &["--files-only"]);
-
-    assert_eq!(lines.len(), 1);
-    assert_eq!(lines[0], test_file_path.to_str().unwrap());
+    assert_lines_eq(&lines, &[test_file.to_str().unwrap()]);
 }
 
 #[test]
 fn test_directories_only_flag() {
     let ctx = TestContext::new();
 
-    let test_file_path = create_test_file(&ctx.working_path, "test_file", "test content");
+    let test_file = create_test_file(&ctx.working_path, "test_file", "test content");
     let test_dir = create_test_directory(&ctx.working_path, "test_dir");
 
-    note_path(
-        &ctx.db_path,
-        None,
-        test_file_path.to_str().unwrap(),
-        1,
-        &[],
-        &[],
-    );
+    note_path(&ctx.db_path, None, test_file.to_str().unwrap(), 1, &[], &[]);
     note_path(&ctx.db_path, None, test_dir.to_str().unwrap(), 1, &[], &[]);
 
     let lines = list_paths(&ctx.db_path, None, &[], &["--directories-only"]);
-
-    assert_eq!(lines[0], test_dir.to_str().unwrap());
+    assert_lines_eq(&lines, &[test_dir.to_str().unwrap()]);
 }
 
 #[test]

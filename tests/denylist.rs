@@ -31,7 +31,7 @@ fn test_denylist_excludes_file() {
     assert!(stderr.contains("denied"));
 
     let lines: Vec<String> = list_paths(&ctx.db_path, Some(&ctx.config_path), &[], &[]);
-    assert_eq!(lines.len(), 0);
+    assert_lines_eq(&lines, &[]);
 }
 
 #[test]
@@ -71,8 +71,7 @@ fn test_denylist_excludes_file_wildcard() {
     assert!(stderr2.is_empty());
 
     let lines: Vec<String> = list_paths(&ctx.db_path, Some(&ctx.config_path), &[], &[]);
-    assert_eq!(lines.len(), 1);
-    assert_eq!(lines[0], allow_file.to_str().unwrap());
+    assert_lines_eq(&lines, &[allow_file.to_str().unwrap()]);
 }
 
 #[test]
@@ -99,7 +98,7 @@ fn test_denylist_excludes_file_based_on_directory() {
     assert!(stderr.contains("denied"));
 
     let lines: Vec<String> = list_paths(&ctx.db_path, Some(&ctx.config_path), &[], &[]);
-    assert_eq!(lines.len(), 0);
+    assert_lines_eq(&lines, &[]);
 }
 
 #[test]
@@ -143,7 +142,7 @@ fn test_denylist_excludes_multiple_patterns() {
     assert!(stderr2.contains("denied"));
 
     let lines: Vec<String> = list_paths(&ctx.db_path, Some(&ctx.config_path), &[], &[]);
-    assert_eq!(lines.len(), 0);
+    assert_lines_eq(&lines, &[]);
 }
 
 #[test]
@@ -171,7 +170,7 @@ fn test_denylist_excludes_file_no_warning_when_warn_disabled() {
     assert!(stderr.is_empty());
 
     let lines: Vec<String> = list_paths(&ctx.db_path, Some(&ctx.config_path), &[], &[]);
-    assert_eq!(lines.len(), 0);
+    assert_lines_eq(&lines, &[]);
 }
 
 #[test]
@@ -301,7 +300,7 @@ fn test_denylist_excludes_builtin() {
     assert!(stderr.contains("denied"));
 
     let lines: Vec<String> = list_paths(&ctx.db_path, None, &[], &[]);
-    assert_eq!(lines.len(), 0);
+    assert_lines_eq(&lines, &[]);
 }
 
 #[test]
@@ -315,9 +314,8 @@ fn test_denylist_dontexclude_notbuiltin() {
     assert!(stderr.is_empty());
 
     let lines: Vec<String> = list_paths(&ctx.db_path, None, &[], &[]);
-    assert_eq!(lines.len(), 1);
     let expected = std::path::Path::new("/etc")
         .canonicalize()
         .unwrap_or_else(|_| std::path::PathBuf::from("/etc"));
-    assert_eq!(lines[0], expected.to_string_lossy().as_ref());
+    assert_lines_eq(&lines, &[expected.to_str().unwrap()]);
 }

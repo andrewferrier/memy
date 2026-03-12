@@ -71,11 +71,7 @@ fn test_recency_bias_1() {
     create_config_file(&ctx.config_path, config_contents);
 
     let lines = list_paths(&ctx.db_path, Some(&ctx.config_path), &[], &[]);
-
-    assert!(
-        lines.iter().position(|line| line.contains("dir_a"))
-            < lines.iter().position(|line| line.contains("dir_b")),
-    );
+    assert_path_before(&lines, "dir_a", "dir_b");
 }
 
 #[test]

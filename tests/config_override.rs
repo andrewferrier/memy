@@ -18,7 +18,6 @@ fn test_config_override_float() {
     note_path(&ctx.db_path, None, dir_b.to_str().unwrap(), 1, &[], &[]);
 
     let lines = list_paths(&ctx.db_path, None, &["--config", "recency_bias=0"], &[]);
-
     assert_path_before(&lines, "dir_b", "dir_a");
 }
 
@@ -34,7 +33,6 @@ fn test_config_override_float_2() {
     note_path(&ctx.db_path, None, dir_b.to_str().unwrap(), 1, &[], &[]);
 
     let lines = list_paths(&ctx.db_path, None, &["--config", "recency_bias=1"], &[]);
-
     assert_path_before(&lines, "dir_a", "dir_b");
 }
 
@@ -67,7 +65,6 @@ fn test_config_override_float_with_config_file() {
     );
 
     let lines = list_paths(&ctx.db_path, None, &["--config", "recency_bias=1"], &[]);
-
     assert_path_before(&lines, "dir_a", "dir_b");
 }
 
@@ -89,8 +86,7 @@ fn test_config_boolean() {
     );
 
     let lines = list_paths(&ctx.db_path, None, &[], &[]);
-    assert_eq!(lines.len(), 1);
-    assert_eq!(lines[0], symlink_path.to_str().unwrap());
+    assert_lines_eq(&lines, &[symlink_path.to_str().unwrap()]);
 }
 
 #[test]
@@ -98,7 +94,6 @@ fn test_denylist_excludes_file_override_quoted_filenames() {
     let ctx = TestContext::new();
 
     let deny_file = create_test_file(&ctx.working_path, "denyme.txt", "deny me");
-
     let deny_pattern = deny_file.to_str().unwrap();
 
     let output = note_path(
@@ -115,7 +110,7 @@ fn test_denylist_excludes_file_override_quoted_filenames() {
     assert!(stderr.contains("denied"));
 
     let lines: Vec<String> = list_paths(&ctx.db_path, None, &[], &[]);
-    assert_eq!(lines.len(), 0);
+    assert_lines_eq(&lines, &[]);
 }
 
 #[test]
@@ -123,7 +118,6 @@ fn test_denylist_excludes_file_override_quoted_value() {
     let ctx = TestContext::new();
 
     let deny_file = create_test_file(&ctx.working_path, "denyme.txt", "deny me");
-
     let deny_pattern = deny_file.to_str().unwrap();
 
     let output = note_path(
@@ -143,7 +137,7 @@ fn test_denylist_excludes_file_override_quoted_value() {
     assert!(stderr.contains("denied"));
 
     let lines: Vec<String> = list_paths(&ctx.db_path, None, &[], &[]);
-    assert_eq!(lines.len(), 0);
+    assert_lines_eq(&lines, &[]);
 }
 
 #[test]

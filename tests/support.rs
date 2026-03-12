@@ -26,11 +26,13 @@ pub fn temp_dir() -> (TempDir, PathBuf) {
 /// Bundles the standard temp directories used by most tests.
 /// The `TempDir` objects are kept alive for the lifetime of the struct
 pub struct TestContext {
-    _dirs: [TempDir; 4],
+    _dirs: [TempDir; 6],
     pub db_path: PathBuf,
     pub config_path: PathBuf,
     pub working_path: PathBuf,
     pub data_path: PathBuf,
+    pub cache_path: PathBuf,
+    pub empty_path: PathBuf,
 }
 
 impl TestContext {
@@ -40,12 +42,16 @@ impl TestContext {
         let (d2, config_path) = temp_dir();
         let (d3, working_path) = temp_dir();
         let (d4, data_path) = temp_dir();
+        let (d5, cache_path) = temp_dir();
+        let (d6, empty_path) = temp_dir();
         Self {
-            _dirs: [d1, d2, d3, d4],
+            _dirs: [d1, d2, d3, d4, d5, d6],
             db_path,
             config_path,
             working_path,
             data_path,
+            cache_path,
+            empty_path,
         }
     }
 }
@@ -217,6 +223,19 @@ pub fn note_paths_with_delay(
         if idx < paths.len() - 1 {
             sleep(250);
         }
+    }
+}
+
+pub fn assert_lines_eq<S: AsRef<str> + core::fmt::Debug>(lines: &[S], expected: &[&str]) {
+    assert_eq!(
+        lines.len(),
+        expected.len(),
+        "Expected {} line(s), got {}.\nLines: {lines:?}",
+        expected.len(),
+        lines.len(),
+    );
+    for (i, (line, exp)) in lines.iter().zip(expected.iter()).enumerate() {
+        assert_eq!(line.as_ref(), *exp, "Line {i} mismatch");
     }
 }
 

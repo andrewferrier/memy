@@ -13,8 +13,7 @@ fn test_file_with_space_in_filename() {
     note_path(&ctx.db_path, None, file_path.to_str().unwrap(), 1, &[], &[]);
 
     let lines = list_paths(&ctx.db_path, None, &[], &[]);
-    assert_eq!(lines.len(), 1);
-    assert_eq!(lines[0], file_path.to_str().unwrap());
+    assert_lines_eq(&lines, &[file_path.to_str().unwrap()]);
 }
 
 #[test]
@@ -27,6 +26,5 @@ fn test_file_with_emoji_in_filename() {
     note_path(&ctx.db_path, None, file_path.to_str().unwrap(), 1, &[], &[]);
 
     let lines = list_paths(&ctx.db_path, None, &[], &[]);
-    assert_eq!(lines.len(), 1);
-    assert_eq!(lines[0], file_path.to_str().unwrap());
+    assert_lines_eq(&lines, &[file_path.to_str().unwrap()]);
 }

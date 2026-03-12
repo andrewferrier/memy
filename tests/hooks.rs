@@ -97,11 +97,7 @@ fn test_bash_hook_notes_file() {
     assert!(output.status.success());
 
     let paths = list_paths(&ctx.db_path, Some(&ctx.config_path), &[], &[]);
-    assert_eq!(
-        paths,
-        [test_file.to_string_lossy().as_ref()],
-        "expected only {test_file:?} to be noted"
-    );
+    assert_lines_eq(&paths, &[test_file.to_string_lossy().as_ref()]);
 }
 
 #[test]
@@ -143,11 +139,7 @@ fn test_bash_hook_notes_cd_target() {
     assert!(output.status.success());
 
     let paths = list_paths(&ctx.db_path, Some(&ctx.config_path), &[], &[]);
-    assert_eq!(
-        paths,
-        [test_dir.to_string_lossy().as_ref()],
-        "expected only {test_dir:?} to be noted after cd"
-    );
+    assert_lines_eq(&paths, &[test_dir.to_string_lossy().as_ref()]);
 }
 
 #[test]
@@ -168,11 +160,7 @@ fn test_zsh_hook_notes_file() {
     assert!(output.status.success());
 
     let paths = list_paths(&ctx.db_path, Some(&ctx.config_path), &[], &[]);
-    assert_eq!(
-        paths,
-        [test_file.to_string_lossy().as_ref()],
-        "expected only {test_file:?} to be noted"
-    );
+    assert_lines_eq(&paths, &[test_file.to_string_lossy().as_ref()]);
 }
 
 fn run_nvim_with_hook(
@@ -219,9 +207,5 @@ fn test_neovim_hook_notes_opened_file() {
     );
 
     let paths = list_paths(&ctx.db_path, Some(&ctx.config_path), &[], &[]);
-    assert_eq!(
-        paths,
-        [test_file.to_string_lossy().as_ref()],
-        "expected only {test_file:?} to be noted"
-    );
+    assert_lines_eq(&paths, &[test_file.to_string_lossy().as_ref()]);
 }

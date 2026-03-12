@@ -32,9 +32,7 @@ fn test_output_filter_basic_with_head() {
 
     let result = String::from_utf8_lossy(&output.stdout);
     let lines: Vec<&str> = result.lines().collect();
-
-    assert_eq!(lines.len(), 1, "Should only return one line");
-    assert_eq!(lines[0], file_a.to_str().unwrap());
+    assert_lines_eq(&lines, &[file_a.to_str().unwrap()]);
 }
 
 #[test]
@@ -58,9 +56,7 @@ fn test_output_filter_with_command_flag() {
 
     let result = String::from_utf8_lossy(&output.stdout);
     let lines: Vec<&str> = result.lines().collect();
-
-    assert_eq!(lines.len(), 1, "Should only return one line");
-    assert_eq!(lines[0], file_a.to_str().unwrap());
+    assert_lines_eq(&lines, &[file_a.to_str().unwrap()]);
 }
 
 #[test]
@@ -81,7 +77,7 @@ fn test_output_filter_tilde_expansion_in_home_directory() {
 
     assert!(output.status.success(), "Command should succeed");
 
-    let result = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    let result = String::from_utf8_lossy(&output.stdout).trim().to_owned();
 
     assert!(
         !result.starts_with('~'),
@@ -145,9 +141,7 @@ memy_output_filter = "head -1"
 
     let result = String::from_utf8_lossy(&output.stdout);
     let lines: Vec<&str> = result.lines().collect();
-
-    assert_eq!(lines.len(), 1, "Should only return one line");
-    assert_eq!(lines[0], file_a.to_str().unwrap());
+    assert_lines_eq(&lines, &[file_a.to_str().unwrap()]);
 }
 
 #[test]
@@ -178,10 +172,8 @@ fn test_output_filter_priority_command_flag_over_env() {
 
     let result = String::from_utf8_lossy(&output.stdout);
     let lines: Vec<&str> = result.lines().collect();
-
     // Should use head, not tail, so first file
-    assert_eq!(lines.len(), 1, "Should only return one line");
-    assert_eq!(lines[0], file_a.to_str().unwrap());
+    assert_lines_eq(&lines, &[file_a.to_str().unwrap()]);
 }
 
 #[test]
@@ -214,10 +206,8 @@ memy_output_filter = "tail -1"
 
     let result = String::from_utf8_lossy(&output.stdout);
     let lines: Vec<&str> = result.lines().collect();
-
     // Should use head, not tail, so first file
-    assert_eq!(lines.len(), 1, "Should only return one line");
-    assert_eq!(lines[0], file_a.to_str().unwrap());
+    assert_lines_eq(&lines, &[file_a.to_str().unwrap()]);
 }
 
 #[test]
@@ -274,9 +264,7 @@ fn test_output_filter_supports_shell_pipes_and_quotes() {
 
     let result = String::from_utf8_lossy(&output.stdout);
     let lines: Vec<&str> = result.lines().collect();
-
-    assert_eq!(lines.len(), 1, "Should only return one line");
-    assert_eq!(lines[0], file_a.to_str().unwrap());
+    assert_lines_eq(&lines, &[file_a.to_str().unwrap()]);
 }
 
 #[test]

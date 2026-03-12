@@ -23,9 +23,7 @@ fn test_note_symlink_resolves_to_target() {
     );
 
     let lines = list_paths(&ctx.db_path, None, &[], &[]);
-
-    assert_eq!(lines.len(), 1);
-    assert_eq!(lines[0], dummy_file_path.to_str().unwrap());
+    assert_lines_eq(&lines, &[dummy_file_path.to_str().unwrap()]);
 }
 
 #[test]
@@ -49,6 +47,5 @@ fn test_note_symlink_with_no_normalize_option() {
     );
 
     let lines = list_paths(&ctx.db_path, Some(&ctx.config_path), &[], &[]);
-    assert_eq!(lines.len(), 1);
-    assert_eq!(lines[0], symlink_path.to_str().unwrap());
+    assert_lines_eq(&lines, &[symlink_path.to_str().unwrap()]);
 }
