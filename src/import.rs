@@ -111,7 +111,7 @@ fn insert_into_db(conn: &mut Connection, entries: Vec<MemyEntry>) -> Result<(), 
         debug!("Imported entry for file {}", entry.filename);
     }
 
-    tx.commit().expect("Cannot commit transaction");
+    tx.commit().expect("Cannot commit import transaction");
 
     Ok(())
 }
