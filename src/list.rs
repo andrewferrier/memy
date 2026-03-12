@@ -6,6 +6,7 @@ use core::fmt::Write as _;
 use log::{info, warn};
 use rayon::prelude::*;
 use rusqlite::{Connection, params_from_iter};
+use std::borrow::Cow;
 use std::env;
 use std::fs::{FileType, metadata};
 use std::io::{Write as _, stdout};
@@ -168,11 +169,7 @@ fn calculate(conn: &Connection, args: &ListArgs) -> Result<Vec<PathFrecency>, Bo
             .expect("Deleting paths from DB failed");
     }
 
-    to_output.par_sort_unstable_by(|a, b| {
-        a.frecency
-            .partial_cmp(&b.frecency)
-            .expect("Sort results failed")
-    });
+    to_output.par_sort_unstable_by_key(|x| x.frecency.to_bits());
 
     Ok(to_output)
 }
@@ -222,28 +219,28 @@ fn format_results(results: &[PathFrecency], args: &ListArgs) -> Result<String, B
             Ok(String::from_utf8(wtr.into_inner()?)?)
         }
         _ => {
-            let mut output = String::new();
-
             // plain format
+
+            let mut output = String::with_capacity(results.len() * 256);
+            let use_tilde_on_list = config::get_use_tilde_on_list();
+
             for result in results {
-                let processed_path = if config::get_use_tilde_on_list() {
-                    utils::collapse_to_tilde(result.path.clone())
+                let processed_path: Cow<str> = if use_tilde_on_list {
+                    Cow::Owned(utils::collapse_to_tilde(&result.path))
                 } else {
-                    result.path.clone()
+                    Cow::Borrowed(result.path.as_str())
                 };
 
-                let path_parts: Vec<&str> = processed_path.rsplitn(2, '/').collect();
-
-                if path_parts.len() == 2 {
+                if let Some((parent, base)) = processed_path.rsplit_once('/') {
                     if result.file_type.is_dir() {
-                        let _ = writeln!(output, "{}/{}", path_parts[1], path_parts[0].blue());
+                        let _ = writeln!(output, "{}/{}", parent, base.blue());
                     } else if result.file_type.is_file() {
-                        let _ = writeln!(output, "{}/{}", path_parts[1], path_parts[0].green());
+                        let _ = writeln!(output, "{}/{}", parent, base.green());
                     }
                 } else if result.file_type.is_dir() {
-                    let _ = writeln!(output, "{}", processed_path.blue());
+                    let _ = writeln!(output, "{}", processed_path.as_ref().blue());
                 } else if result.file_type.is_file() {
-                    let _ = writeln!(output, "{}", processed_path.green());
+                    let _ = writeln!(output, "{}", processed_path.as_ref().green());
                 }
             }
 

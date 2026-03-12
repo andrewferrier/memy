@@ -29,33 +29,33 @@ pub struct StatsOutput {
     pub highest_count: Option<PathCount>,
 }
 
+fn query_path_limit_timestamp(
+    conn: &Connection,
+    order: &str,
+) -> Result<Option<PathTimestamp>, Box<dyn Error>> {
+    let result = conn
+        .query_row(
+            &format!(
+                "SELECT path, last_noted_timestamp FROM paths ORDER BY last_noted_timestamp {order} LIMIT 1"
+            ),
+            params![],
+            |row| {
+                Ok(PathTimestamp {
+                    path: PathBuf::from(row.get::<_, String>(0)?),
+                    timestamp: row.get::<_, UnixTimestamp>(1)?,
+                })
+            },
+        )
+        .optional()?;
+    Ok(result)
+}
+
 #[instrument(level = "trace")]
 pub fn get(conn: &Connection) -> Result<StatsOutput, Box<dyn Error>> {
     let row_count = conn.query_row("SELECT COUNT(*) FROM paths", [], |row| row.get(0))?;
 
-    let oldest = conn.query_row(
-        "SELECT path, last_noted_timestamp FROM paths ORDER BY last_noted_timestamp ASC LIMIT 1",
-        params![],
-        |row| {
-            Ok(PathTimestamp{
-                path: PathBuf::from(row.get::<_, String>(0)?),
-                timestamp: row.get::<_, UnixTimestamp>(1)?,
-            })
-        },
-    )
-    .optional()?;
-
-    let newest = conn.query_row(
-        "SELECT path, last_noted_timestamp FROM paths ORDER BY last_noted_timestamp DESC LIMIT 1",
-        params![],
-        |row| {
-            Ok(PathTimestamp{
-                path: PathBuf::from(row.get::<_, String>(0)?),
-                timestamp: row.get::<_, UnixTimestamp>(1)?,
-            })
-        },
-    )
-    .optional()?;
+    let oldest = query_path_limit_timestamp(conn, "ASC")?;
+    let newest = query_path_limit_timestamp(conn, "DESC")?;
 
     let highest_count = conn
         .query_row(
