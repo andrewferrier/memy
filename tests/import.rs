@@ -7,7 +7,7 @@ use support::*;
 
 #[test]
 fn test_import_fasd_state_file() {
-    let (_db_temp, db_path) = temp_dir();
+    let ctx = TestContext::new();
     let (_cache_temp, cache_path) = temp_dir();
     let (_empty_temp, empty_path) = temp_dir();
     let (_working_temp, working_path) = temp_dir();
@@ -24,7 +24,7 @@ fn test_import_fasd_state_file() {
     fs::write(&fasd_state_file, fasd_contents).expect("Failed to write mock fasd state file");
 
     let output = memy_cmd(
-        Some(&db_path),
+        Some(&ctx.db_path),
         None,
         &["list"],
         vec![
@@ -38,7 +38,7 @@ fn test_import_fasd_state_file() {
 
     assert!(output.status.success());
 
-    let lines = list_paths(&db_path, None, &[], &[]);
+    let lines = list_paths(&ctx.db_path, None, &[], &[]);
     assert_eq!(lines.len(), 2);
     assert_eq!(lines[0], test_file_path_1.to_string_lossy());
     assert_eq!(lines[1], test_file_path_2.to_string_lossy());
@@ -46,7 +46,7 @@ fn test_import_fasd_state_file() {
 
 #[test]
 fn test_import_autojump_state_file() {
-    let (_db_temp, db_path) = temp_dir();
+    let ctx = TestContext::new();
     let (_empty_temp, empty_path) = temp_dir();
     let (_data_temp, data_path) = temp_dir();
     let (_working_temp, working_path) = temp_dir();
@@ -66,7 +66,7 @@ fn test_import_autojump_state_file() {
         .expect("Failed to write mock autojump state file");
 
     let output = memy_cmd(
-        Some(&db_path),
+        Some(&ctx.db_path),
         None,
         &["list", "-vv"],
         vec![
@@ -80,7 +80,7 @@ fn test_import_autojump_state_file() {
 
     assert!(output.status.success());
 
-    let lines = list_paths(&db_path, None, &[], &[]);
+    let lines = list_paths(&ctx.db_path, None, &[], &[]);
     assert_eq!(lines.len(), 2);
     assert_eq!(lines[0], test_file_path_1.to_string_lossy());
     assert_eq!(lines[1], test_file_path_2.to_string_lossy());

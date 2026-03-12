@@ -7,14 +7,13 @@ use serde_json::Value;
 
 #[test]
 fn test_memy_stats_plain_format() {
-    let (_db_temp, db_path) = temp_dir();
-    let (_working_temp, working_path) = temp_dir();
+    let ctx = TestContext::new();
 
-    let test_file = create_test_file(&working_path, "test_note.txt", "Test content");
-    note_path(&db_path, None, test_file.to_str().unwrap(), 1, &[], &[]);
+    let test_file = create_test_file(&ctx.working_path, "test_note.txt", "Test content");
+    note_path(&ctx.db_path, None, test_file.to_str().unwrap(), 1, &[], &[]);
 
     let output = memy_cmd(
-        Some(&db_path),
+        Some(&ctx.db_path),
         None,
         &["stats", "--format", "plain"],
         vec![],
@@ -29,13 +28,17 @@ fn test_memy_stats_plain_format() {
 
 #[test]
 fn test_memy_stats_json_format() {
-    let (_db_temp, db_path) = temp_dir();
-    let (_working_temp, working_path) = temp_dir();
+    let ctx = TestContext::new();
 
-    let test_file = create_test_file(&working_path, "test_note.txt", "Test content");
-    note_path(&db_path, None, test_file.to_str().unwrap(), 1, &[], &[]);
+    let test_file = create_test_file(&ctx.working_path, "test_note.txt", "Test content");
+    note_path(&ctx.db_path, None, test_file.to_str().unwrap(), 1, &[], &[]);
 
-    let output = memy_cmd(Some(&db_path), None, &["stats", "--format", "json"], vec![]);
+    let output = memy_cmd(
+        Some(&ctx.db_path),
+        None,
+        &["stats", "--format", "json"],
+        vec![],
+    );
     let stdout = String::from_utf8(output.stdout).expect("Invalid UTF-8 in output");
 
     let parsed_json: Result<Value, _> = serde_json::from_str(&stdout);

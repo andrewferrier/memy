@@ -23,6 +23,33 @@ pub fn temp_dir() -> (TempDir, PathBuf) {
     (temp_dir, path)
 }
 
+/// Bundles the standard temp directories used by most tests.
+/// The `TempDir` objects are kept alive for the lifetime of the struct
+pub struct TestContext {
+    _dirs: [TempDir; 4],
+    pub db_path: PathBuf,
+    pub config_path: PathBuf,
+    pub working_path: PathBuf,
+    pub data_path: PathBuf,
+}
+
+impl TestContext {
+    #![allow(clippy::new_without_default, reason = "Not needed")]
+    pub fn new() -> Self {
+        let (d1, db_path) = temp_dir();
+        let (d2, config_path) = temp_dir();
+        let (d3, working_path) = temp_dir();
+        let (d4, data_path) = temp_dir();
+        Self {
+            _dirs: [d1, d2, d3, d4],
+            db_path,
+            config_path,
+            working_path,
+            data_path,
+        }
+    }
+}
+
 pub fn create_test_file(
     dir: &std::path::Path,
     filename: &str,

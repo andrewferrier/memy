@@ -8,16 +8,14 @@ use std::thread::sleep;
 
 #[test]
 fn test_recency_bias_0() {
-    let (_db_temp, db_path) = temp_dir();
-    let (_working_temp, working_path) = temp_dir();
-    let (_config_temp_dir, config_path) = temp_dir();
+    let ctx = TestContext::new();
 
-    let dir_a = create_test_directory(&working_path, "dir_a");
-    let dir_b = create_test_directory(&working_path, "dir_b");
+    let dir_a = create_test_directory(&ctx.working_path, "dir_a");
+    let dir_b = create_test_directory(&ctx.working_path, "dir_b");
 
     note_path(
-        &db_path,
-        Some(&config_path),
+        &ctx.db_path,
+        Some(&ctx.config_path),
         dir_a.to_str().unwrap(),
         2,
         &[],
@@ -25,8 +23,8 @@ fn test_recency_bias_0() {
     );
     sleep(Duration::from_secs(1));
     note_path(
-        &db_path,
-        Some(&config_path),
+        &ctx.db_path,
+        Some(&ctx.config_path),
         dir_b.to_str().unwrap(),
         1,
         &[],
@@ -34,9 +32,9 @@ fn test_recency_bias_0() {
     );
 
     let config_contents = "recency_bias=0\n";
-    create_config_file(&config_path, config_contents);
+    create_config_file(&ctx.config_path, config_contents);
 
-    let lines = list_paths(&db_path, Some(&config_path), &[], &[]);
+    let lines = list_paths(&ctx.db_path, Some(&ctx.config_path), &[], &[]);
 
     assert!(
         lines.iter().position(|line| line.contains("dir_b"))
@@ -46,16 +44,14 @@ fn test_recency_bias_0() {
 
 #[test]
 fn test_recency_bias_1() {
-    let (_db_temp, db_path) = temp_dir();
-    let (_working_temp, working_path) = temp_dir();
-    let (_config_temp_dir, config_path) = temp_dir();
+    let ctx = TestContext::new();
 
-    let dir_a = create_test_directory(&working_path, "dir_a");
-    let dir_b = create_test_directory(&working_path, "dir_b");
+    let dir_a = create_test_directory(&ctx.working_path, "dir_a");
+    let dir_b = create_test_directory(&ctx.working_path, "dir_b");
 
     note_path(
-        &db_path,
-        Some(&config_path),
+        &ctx.db_path,
+        Some(&ctx.config_path),
         dir_a.to_str().unwrap(),
         2,
         &[],
@@ -63,8 +59,8 @@ fn test_recency_bias_1() {
     );
     sleep(Duration::from_secs(1));
     note_path(
-        &db_path,
-        Some(&config_path),
+        &ctx.db_path,
+        Some(&ctx.config_path),
         dir_b.to_str().unwrap(),
         1,
         &[],
@@ -72,9 +68,9 @@ fn test_recency_bias_1() {
     );
 
     let config_contents = "recency_bias=1\n";
-    create_config_file(&config_path, config_contents);
+    create_config_file(&ctx.config_path, config_contents);
 
-    let lines = list_paths(&db_path, Some(&config_path), &[], &[]);
+    let lines = list_paths(&ctx.db_path, Some(&ctx.config_path), &[], &[]);
 
     assert!(
         lines.iter().position(|line| line.contains("dir_a"))
@@ -84,12 +80,12 @@ fn test_recency_bias_1() {
 
 #[test]
 fn test_recency_bias_below_0() {
-    let (_config_temp_dir, config_path) = temp_dir();
+    let ctx = TestContext::new();
 
     let config_contents = "recency_bias=-1\n";
-    create_config_file(&config_path, config_contents);
+    create_config_file(&ctx.config_path, config_contents);
 
-    let output = memy_cmd(None, Some(&config_path), &["list"], vec![]);
+    let output = memy_cmd(None, Some(&ctx.config_path), &["list"], vec![]);
     assert!(!output.status.success());
 
     let stderr = String::from_utf8_lossy(&output.stderr);
@@ -98,12 +94,12 @@ fn test_recency_bias_below_0() {
 
 #[test]
 fn test_recency_bias_above_1() {
-    let (_config_temp_dir, config_path) = temp_dir();
+    let ctx = TestContext::new();
 
     let config_contents = "recency_bias=1.5\n";
-    create_config_file(&config_path, config_contents);
+    create_config_file(&ctx.config_path, config_contents);
 
-    let output = memy_cmd(None, Some(&config_path), &["list"], vec![]);
+    let output = memy_cmd(None, Some(&ctx.config_path), &["list"], vec![]);
     assert!(!output.status.success());
 
     let stderr = String::from_utf8_lossy(&output.stderr);

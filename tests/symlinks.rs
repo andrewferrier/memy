@@ -6,17 +6,23 @@ use support::*;
 
 #[test]
 fn test_note_symlink_resolves_to_target() {
-    let (_db_temp, db_path) = temp_dir();
-    let (_working_temp, working_path) = temp_dir();
+    let ctx = TestContext::new();
 
-    let dummy_file_path = create_test_file(&working_path, "dummy_file_A", "dummy content");
+    let dummy_file_path = create_test_file(&ctx.working_path, "dummy_file_A", "dummy content");
 
-    let symlink_path = working_path.join("symlink_B");
+    let symlink_path = ctx.working_path.join("symlink_B");
     symlink(&dummy_file_path, &symlink_path).expect("failed to create symlink");
 
-    note_path(&db_path, None, symlink_path.to_str().unwrap(), 1, &[], &[]);
+    note_path(
+        &ctx.db_path,
+        None,
+        symlink_path.to_str().unwrap(),
+        1,
+        &[],
+        &[],
+    );
 
-    let lines = list_paths(&db_path, None, &[], &[]);
+    let lines = list_paths(&ctx.db_path, None, &[], &[]);
 
     assert_eq!(lines.len(), 1);
     assert_eq!(lines[0], dummy_file_path.to_str().unwrap());
@@ -24,27 +30,25 @@ fn test_note_symlink_resolves_to_target() {
 
 #[test]
 fn test_note_symlink_with_no_normalize_option() {
-    let (_db_temp, db_path) = temp_dir();
-    let (_working_temp, working_path) = temp_dir();
-    let (_config_temp_dir, config_path) = temp_dir();
+    let ctx = TestContext::new();
 
-    let dummy_file_path = create_test_file(&working_path, "dummy_file_A", "dummy content");
-    let symlink_path = working_path.join("symlink_B");
+    let dummy_file_path = create_test_file(&ctx.working_path, "dummy_file_A", "dummy content");
+    let symlink_path = ctx.working_path.join("symlink_B");
     symlink(&dummy_file_path, &symlink_path).expect("failed to create symlink");
 
     let config_contents = "normalize_symlinks_on_note = false\n";
-    create_config_file(&config_path, config_contents);
+    create_config_file(&ctx.config_path, config_contents);
 
     note_path(
-        &db_path,
-        Some(&config_path),
+        &ctx.db_path,
+        Some(&ctx.config_path),
         symlink_path.to_str().unwrap(),
         1,
         &[],
         &[],
     );
 
-    let lines = list_paths(&db_path, Some(&config_path), &[], &[]);
+    let lines = list_paths(&ctx.db_path, Some(&ctx.config_path), &[], &[]);
     assert_eq!(lines.len(), 1);
     assert_eq!(lines[0], symlink_path.to_str().unwrap());
 }

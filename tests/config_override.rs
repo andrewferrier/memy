@@ -8,53 +8,49 @@ use std::thread::sleep;
 
 #[test]
 fn test_config_override_float() {
-    let (_db_temp, db_path) = temp_dir();
-    let (_working_temp, working_path) = temp_dir();
+    let ctx = TestContext::new();
 
-    let dir_a = create_test_directory(&working_path, "dir_a");
-    let dir_b = create_test_directory(&working_path, "dir_b");
+    let dir_a = create_test_directory(&ctx.working_path, "dir_a");
+    let dir_b = create_test_directory(&ctx.working_path, "dir_b");
 
-    note_path(&db_path, None, dir_a.to_str().unwrap(), 2, &[], &[]);
+    note_path(&ctx.db_path, None, dir_a.to_str().unwrap(), 2, &[], &[]);
     sleep(Duration::from_secs(1));
-    note_path(&db_path, None, dir_b.to_str().unwrap(), 1, &[], &[]);
+    note_path(&ctx.db_path, None, dir_b.to_str().unwrap(), 1, &[], &[]);
 
-    let lines = list_paths(&db_path, None, &["--config", "recency_bias=0"], &[]);
+    let lines = list_paths(&ctx.db_path, None, &["--config", "recency_bias=0"], &[]);
 
     assert_path_before(&lines, "dir_b", "dir_a");
 }
 
 #[test]
 fn test_config_override_float_2() {
-    let (_db_temp, db_path) = temp_dir();
-    let (_working_temp, working_path) = temp_dir();
+    let ctx = TestContext::new();
 
-    let dir_a = create_test_directory(&working_path, "dir_a");
-    let dir_b = create_test_directory(&working_path, "dir_b");
+    let dir_a = create_test_directory(&ctx.working_path, "dir_a");
+    let dir_b = create_test_directory(&ctx.working_path, "dir_b");
 
-    note_path(&db_path, None, dir_a.to_str().unwrap(), 2, &[], &[]);
+    note_path(&ctx.db_path, None, dir_a.to_str().unwrap(), 2, &[], &[]);
     sleep(Duration::from_secs(1));
-    note_path(&db_path, None, dir_b.to_str().unwrap(), 1, &[], &[]);
+    note_path(&ctx.db_path, None, dir_b.to_str().unwrap(), 1, &[], &[]);
 
-    let lines = list_paths(&db_path, None, &["--config", "recency_bias=1"], &[]);
+    let lines = list_paths(&ctx.db_path, None, &["--config", "recency_bias=1"], &[]);
 
     assert_path_before(&lines, "dir_a", "dir_b");
 }
 
 #[test]
 fn test_config_override_float_with_config_file() {
-    let (_db_temp, db_path) = temp_dir();
-    let (_config_temp_dir, config_path) = temp_dir();
-    let (_working_temp, working_path) = temp_dir();
+    let ctx = TestContext::new();
 
     let config_contents = "recency_bias=0\n";
-    create_config_file(&config_path, config_contents);
+    create_config_file(&ctx.config_path, config_contents);
 
-    let dir_a = create_test_directory(&working_path, "dir_a");
-    let dir_b = create_test_directory(&working_path, "dir_b");
+    let dir_a = create_test_directory(&ctx.working_path, "dir_a");
+    let dir_b = create_test_directory(&ctx.working_path, "dir_b");
 
     note_path(
-        &db_path,
-        Some(&config_path),
+        &ctx.db_path,
+        Some(&ctx.config_path),
         dir_a.to_str().unwrap(),
         2,
         &[],
@@ -62,30 +58,29 @@ fn test_config_override_float_with_config_file() {
     );
     sleep(Duration::from_secs(1));
     note_path(
-        &db_path,
-        Some(&config_path),
+        &ctx.db_path,
+        Some(&ctx.config_path),
         dir_b.to_str().unwrap(),
         1,
         &[],
         &[],
     );
 
-    let lines = list_paths(&db_path, None, &["--config", "recency_bias=1"], &[]);
+    let lines = list_paths(&ctx.db_path, None, &["--config", "recency_bias=1"], &[]);
 
     assert_path_before(&lines, "dir_a", "dir_b");
 }
 
 #[test]
 fn test_config_boolean() {
-    let (_db_temp, db_path) = temp_dir();
-    let (_working_temp, working_path) = temp_dir();
+    let ctx = TestContext::new();
 
-    let dummy_file_path = create_test_file(&working_path, "dummy_file_A", "dummy content");
-    let symlink_path = working_path.join("symlink_B");
+    let dummy_file_path = create_test_file(&ctx.working_path, "dummy_file_A", "dummy content");
+    let symlink_path = ctx.working_path.join("symlink_B");
     std::os::unix::fs::symlink(&dummy_file_path, &symlink_path).expect("failed to create symlink");
 
     note_path(
-        &db_path,
+        &ctx.db_path,
         None,
         symlink_path.to_str().unwrap(),
         1,
@@ -93,22 +88,21 @@ fn test_config_boolean() {
         &[],
     );
 
-    let lines = list_paths(&db_path, None, &[], &[]);
+    let lines = list_paths(&ctx.db_path, None, &[], &[]);
     assert_eq!(lines.len(), 1);
     assert_eq!(lines[0], symlink_path.to_str().unwrap());
 }
 
 #[test]
 fn test_denylist_excludes_file_override_quoted_filenames() {
-    let (_db_temp, db_path) = temp_dir();
-    let (_working_temp, working_path) = temp_dir();
+    let ctx = TestContext::new();
 
-    let deny_file = create_test_file(&working_path, "denyme.txt", "deny me");
+    let deny_file = create_test_file(&ctx.working_path, "denyme.txt", "deny me");
 
     let deny_pattern = deny_file.to_str().unwrap();
 
     let output = note_path(
-        &db_path,
+        &ctx.db_path,
         None,
         deny_file.to_str().unwrap(),
         1,
@@ -120,21 +114,20 @@ fn test_denylist_excludes_file_override_quoted_filenames() {
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(stderr.contains("denied"));
 
-    let lines: Vec<String> = list_paths(&db_path, None, &[], &[]);
+    let lines: Vec<String> = list_paths(&ctx.db_path, None, &[], &[]);
     assert_eq!(lines.len(), 0);
 }
 
 #[test]
 fn test_denylist_excludes_file_override_quoted_value() {
-    let (_db_temp, db_path) = temp_dir();
-    let (_working_temp, working_path) = temp_dir();
+    let ctx = TestContext::new();
 
-    let deny_file = create_test_file(&working_path, "denyme.txt", "deny me");
+    let deny_file = create_test_file(&ctx.working_path, "denyme.txt", "deny me");
 
     let deny_pattern = deny_file.to_str().unwrap();
 
     let output = note_path(
-        &db_path,
+        &ctx.db_path,
         None,
         deny_file.to_str().unwrap(),
         1,
@@ -149,7 +142,7 @@ fn test_denylist_excludes_file_override_quoted_value() {
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(stderr.contains("denied"));
 
-    let lines: Vec<String> = list_paths(&db_path, None, &[], &[]);
+    let lines: Vec<String> = list_paths(&ctx.db_path, None, &[], &[]);
     assert_eq!(lines.len(), 0);
 }
 

@@ -10,24 +10,23 @@ use std::env::home_dir;
 
 #[test]
 fn test_list_empty_db() {
-    let (_db_temp, db_path) = temp_dir();
+    let ctx = TestContext::new();
 
-    let lines = list_paths(&db_path, None, &[], &[]);
+    let lines = list_paths(&ctx.db_path, None, &[], &[]);
 
     assert_eq!(lines.len(), 0);
 }
 
 #[test]
 fn test_note_and_list_paths() {
-    let (_db_temp, db_path) = temp_dir();
-    let (_working_temp, working_path) = temp_dir();
+    let ctx = TestContext::new();
 
-    let dir_a = create_test_directory(&working_path, "dir_a");
-    let dir_b = create_test_directory(&working_path, "dir_b");
+    let dir_a = create_test_directory(&ctx.working_path, "dir_a");
+    let dir_b = create_test_directory(&ctx.working_path, "dir_b");
 
-    note_paths_with_delay(&db_path, None, &[&dir_a, &dir_b]);
+    note_paths_with_delay(&ctx.db_path, None, &[&dir_a, &dir_b]);
 
-    let lines = list_paths(&db_path, None, &[], &[]);
+    let lines = list_paths(&ctx.db_path, None, &[], &[]);
 
     assert_eq!(lines.len(), 2);
     assert_eq!(lines[0], dir_a.to_str().unwrap());
@@ -36,11 +35,11 @@ fn test_note_and_list_paths() {
 
 #[test]
 fn test_note_homedir() {
-    let (_db_temp, db_path) = temp_dir();
+    let ctx = TestContext::new();
 
-    note_path(&db_path, None, "~", 1, &[], &[]);
+    note_path(&ctx.db_path, None, "~", 1, &[], &[]);
 
-    let lines = list_paths(&db_path, None, &[], &[]);
+    let lines = list_paths(&ctx.db_path, None, &[], &[]);
 
     assert_eq!(lines.len(), 1);
     assert_eq!(lines[0], "~");
@@ -48,11 +47,16 @@ fn test_note_homedir() {
 
 #[test]
 fn test_note_homedir_dont_use_tilde_on_list() {
-    let (_db_temp, db_path) = temp_dir();
+    let ctx = TestContext::new();
 
-    note_path(&db_path, None, "~", 1, &[], &[]);
+    note_path(&ctx.db_path, None, "~", 1, &[], &[]);
 
-    let lines = list_paths(&db_path, None, &["--config=use_tilde_on_list=false"], &[]);
+    let lines = list_paths(
+        &ctx.db_path,
+        None,
+        &["--config=use_tilde_on_list=false"],
+        &[],
+    );
 
     assert_eq!(lines.len(), 1);
     assert_eq!(lines[0], home_dir().unwrap().to_string_lossy());
@@ -60,21 +64,20 @@ fn test_note_homedir_dont_use_tilde_on_list() {
 
 #[test]
 fn test_note_and_list_paths_multiarg() {
-    let (_db_temp, db_path) = temp_dir();
-    let (_working_temp, working_path) = temp_dir();
+    let ctx = TestContext::new();
 
-    let dir_a = create_test_directory(&working_path, "dir_a");
-    let dir_b = create_test_directory(&working_path, "dir_b");
+    let dir_a = create_test_directory(&ctx.working_path, "dir_a");
+    let dir_b = create_test_directory(&ctx.working_path, "dir_b");
 
     // Note both paths in a single memy_cmd call
     let output = memy_cmd_test_defaults(
-        &db_path,
+        &ctx.db_path,
         None,
         &["note", dir_a.to_str().unwrap(), dir_b.to_str().unwrap()],
     );
 
     assert!(output.status.success());
-    let lines = list_paths(&db_path, None, &[], &[]);
+    let lines = list_paths(&ctx.db_path, None, &[], &[]);
     assert_eq!(lines.len(), 2);
     let paths = [dir_a.to_str().unwrap(), dir_b.to_str().unwrap()];
     for path in paths {
@@ -84,40 +87,38 @@ fn test_note_and_list_paths_multiarg() {
 
 #[test]
 fn test_note_relative_path() {
-    let (_db_temp, db_path) = temp_dir();
-    let (_working_temp, working_path) = temp_dir();
+    let ctx = TestContext::new();
 
     let test_file_name = "rel_test_file";
-    let test_file_path = create_test_file(&working_path, test_file_name, "test content");
+    let test_file_path = create_test_file(&ctx.working_path, test_file_name, "test content");
 
     let orig_dir = std::env::current_dir().expect("failed to get current dir");
-    std::env::set_current_dir(&working_path).expect("failed to change dir");
+    std::env::set_current_dir(&ctx.working_path).expect("failed to change dir");
 
-    note_path(&db_path, None, test_file_name, 1, &[], &[]);
+    note_path(&ctx.db_path, None, test_file_name, 1, &[], &[]);
 
     std::env::set_current_dir(orig_dir).expect("failed to restore dir");
 
-    let lines = list_paths(&db_path, None, &[], &[]);
+    let lines = list_paths(&ctx.db_path, None, &[], &[]);
     assert_eq!(lines.len(), 1);
     assert_eq!(lines[0], test_file_path.to_str().unwrap());
 }
 
 #[test]
 fn test_frecency_ordering() {
-    let (_db_temp, db_path) = temp_dir();
-    let (_working_temp, working_path) = temp_dir();
+    let ctx = TestContext::new();
 
-    let dir_a = create_test_directory(&working_path, "dir_a");
-    let dir_b = create_test_directory(&working_path, "dir_b");
-    let dir_c = create_test_directory(&working_path, "dir_c");
+    let dir_a = create_test_directory(&ctx.working_path, "dir_a");
+    let dir_b = create_test_directory(&ctx.working_path, "dir_b");
+    let dir_c = create_test_directory(&ctx.working_path, "dir_c");
 
-    note_path(&db_path, None, dir_a.to_str().unwrap(), 10, &[], &[]);
+    note_path(&ctx.db_path, None, dir_a.to_str().unwrap(), 10, &[], &[]);
     sleep(500);
-    note_path(&db_path, None, dir_b.to_str().unwrap(), 1, &[], &[]);
+    note_path(&ctx.db_path, None, dir_b.to_str().unwrap(), 1, &[], &[]);
     sleep(500);
-    note_path(&db_path, None, dir_c.to_str().unwrap(), 10, &[], &[]);
+    note_path(&ctx.db_path, None, dir_c.to_str().unwrap(), 10, &[], &[]);
 
-    let lines = list_paths(&db_path, None, &[], &[]);
+    let lines = list_paths(&ctx.db_path, None, &[], &[]);
 
     assert_eq!(lines.len(), 3);
     assert_eq!(lines[0], dir_b.to_str().unwrap());
@@ -127,16 +128,15 @@ fn test_frecency_ordering() {
 
 #[test]
 fn test_list_json_format() {
-    let (_db_temp, db_path) = temp_dir();
-    let (_working_temp, working_path) = temp_dir();
+    let ctx = TestContext::new();
 
-    let dir_a = create_test_directory(&working_path, "dir_a");
-    let dir_b = create_test_directory(&working_path, "dir_b");
+    let dir_a = create_test_directory(&ctx.working_path, "dir_a");
+    let dir_b = create_test_directory(&ctx.working_path, "dir_b");
 
-    note_path(&db_path, None, dir_a.to_str().unwrap(), 1, &[], &[]);
-    note_path(&db_path, None, dir_b.to_str().unwrap(), 1, &[], &[]);
+    note_path(&ctx.db_path, None, dir_a.to_str().unwrap(), 1, &[], &[]);
+    note_path(&ctx.db_path, None, dir_b.to_str().unwrap(), 1, &[], &[]);
 
-    let output = memy_cmd_test_defaults(&db_path, None, &["list", "--format=json"]);
+    let output = memy_cmd_test_defaults(&ctx.db_path, None, &["list", "--format=json"]);
 
     assert!(output.status.success());
 
@@ -164,16 +164,15 @@ fn test_list_json_format() {
 
 #[test]
 fn test_list_csv_format() {
-    let (_db_temp, db_path) = temp_dir();
-    let (_working_temp, working_path) = temp_dir();
+    let ctx = TestContext::new();
 
-    let dir_a = create_test_directory(&working_path, "dir_a");
-    let dir_b = create_test_directory(&working_path, "dir_b");
+    let dir_a = create_test_directory(&ctx.working_path, "dir_a");
+    let dir_b = create_test_directory(&ctx.working_path, "dir_b");
 
-    note_path(&db_path, None, dir_a.to_str().unwrap(), 1, &[], &[]);
-    note_path(&db_path, None, dir_b.to_str().unwrap(), 1, &[], &[]);
+    note_path(&ctx.db_path, None, dir_a.to_str().unwrap(), 1, &[], &[]);
+    note_path(&ctx.db_path, None, dir_b.to_str().unwrap(), 1, &[], &[]);
 
-    let output = memy_cmd_test_defaults(&db_path, None, &["list", "--format=csv"]);
+    let output = memy_cmd_test_defaults(&ctx.db_path, None, &["list", "--format=csv"]);
     assert!(output.status.success());
 
     let stdout = String::from_utf8(output.stdout).expect("Invalid UTF-8 in output");
@@ -189,9 +188,9 @@ fn test_list_csv_format() {
 
 #[test]
 fn test_help_flag() {
-    let (_db_temp, db_path) = temp_dir();
+    let ctx = TestContext::new();
 
-    let output = memy_cmd_test_defaults(&db_path, None, &["--help"]);
+    let output = memy_cmd_test_defaults(&ctx.db_path, None, &["--help"]);
 
     assert!(output.status.success());
     assert!(!output.stdout.is_empty());
@@ -199,23 +198,22 @@ fn test_help_flag() {
 
 #[test]
 fn test_files_only_flag() {
-    let (_db_temp, db_path) = temp_dir();
-    let (_working_temp, working_path) = temp_dir();
+    let ctx = TestContext::new();
 
-    let test_file_path = create_test_file(&working_path, "test_file", "test content");
-    let test_dir = create_test_directory(&working_path, "test_dir");
+    let test_file_path = create_test_file(&ctx.working_path, "test_file", "test content");
+    let test_dir = create_test_directory(&ctx.working_path, "test_dir");
 
     note_path(
-        &db_path,
+        &ctx.db_path,
         None,
         test_file_path.to_str().unwrap(),
         1,
         &[],
         &[],
     );
-    note_path(&db_path, None, test_dir.to_str().unwrap(), 1, &[], &[]);
+    note_path(&ctx.db_path, None, test_dir.to_str().unwrap(), 1, &[], &[]);
 
-    let lines = list_paths(&db_path, None, &[], &["--files-only"]);
+    let lines = list_paths(&ctx.db_path, None, &[], &["--files-only"]);
 
     assert_eq!(lines.len(), 1);
     assert_eq!(lines[0], test_file_path.to_str().unwrap());
@@ -223,32 +221,31 @@ fn test_files_only_flag() {
 
 #[test]
 fn test_directories_only_flag() {
-    let (_db_temp, db_path) = temp_dir();
-    let (_working_temp, working_path) = temp_dir();
+    let ctx = TestContext::new();
 
-    let test_file_path = create_test_file(&working_path, "test_file", "test content");
-    let test_dir = create_test_directory(&working_path, "test_dir");
+    let test_file_path = create_test_file(&ctx.working_path, "test_file", "test content");
+    let test_dir = create_test_directory(&ctx.working_path, "test_dir");
 
     note_path(
-        &db_path,
+        &ctx.db_path,
         None,
         test_file_path.to_str().unwrap(),
         1,
         &[],
         &[],
     );
-    note_path(&db_path, None, test_dir.to_str().unwrap(), 1, &[], &[]);
+    note_path(&ctx.db_path, None, test_dir.to_str().unwrap(), 1, &[], &[]);
 
-    let lines = list_paths(&db_path, None, &[], &["--directories-only"]);
+    let lines = list_paths(&ctx.db_path, None, &[], &["--directories-only"]);
 
     assert_eq!(lines[0], test_dir.to_str().unwrap());
 }
 
 #[test]
 fn test_graceful_when_db_missing() {
-    let (_db_temp, db_path) = temp_dir();
+    let ctx = TestContext::new();
 
-    let output = memy_cmd_test_defaults(&db_path, None, &["list"]);
+    let output = memy_cmd_test_defaults(&ctx.db_path, None, &["list"]);
 
     assert!(output.status.success());
 }
@@ -261,14 +258,13 @@ fn test_graceful_when_dbdir_missing() {
 
 #[test]
 fn test_ls_alias_for_list() {
-    let (_db_temp, db_path) = temp_dir();
-    let (_working_temp, working_path) = temp_dir();
+    let ctx = TestContext::new();
 
-    let dir_a = create_test_directory(&working_path, "dir_a");
+    let dir_a = create_test_directory(&ctx.working_path, "dir_a");
 
-    note_path(&db_path, None, dir_a.to_str().unwrap(), 1, &[], &[]);
+    note_path(&ctx.db_path, None, dir_a.to_str().unwrap(), 1, &[], &[]);
 
-    let output = memy_cmd_test_defaults(&db_path, None, &["ls"]);
+    let output = memy_cmd_test_defaults(&ctx.db_path, None, &["ls"]);
 
     assert!(output.status.success());
     let stdout = String::from_utf8(output.stdout).expect("Invalid UTF-8 in output");
@@ -280,10 +276,10 @@ fn test_graceful_when_configdir_missing() {
     // If the config path doesn't exist we just silently ignore it, it's the user's responsibility
     // to make sure the config file is there.
 
-    let (_db_temp, db_path) = temp_dir();
+    let ctx = TestContext::new();
 
     let output = memy_cmd_test_defaults(
-        &db_path,
+        &ctx.db_path,
         Some(Path::new("/tmp/definitelydoesntexist")),
         &["list"],
     );

@@ -81,23 +81,22 @@ fn run_shell_with_hook(
 
 #[test]
 fn test_bash_hook_notes_file() {
-    let (_db_dir, db_path) = temp_dir();
-    let (_config_dir, config_path) = temp_dir();
+    let ctx = TestContext::new();
     let (_data_dir, data_path) = temp_dir();
 
-    create_config_file(&config_path, "import_on_first_use = false");
+    create_config_file(&ctx.config_path, "import_on_first_use = false");
 
     let test_file = create_test_file(&data_path, "target.txt", "hello");
 
     let output = run_shell_with_hook(
         &Shell::Bash,
-        &db_path,
-        &config_path,
+        &ctx.db_path,
+        &ctx.config_path,
         &format!("ls {}", test_file.display()),
     );
     assert!(output.status.success());
 
-    let paths = list_paths(&db_path, Some(&config_path), &[], &[]);
+    let paths = list_paths(&ctx.db_path, Some(&ctx.config_path), &[], &[]);
     assert_eq!(
         paths,
         [test_file.to_string_lossy().as_ref()],
@@ -107,20 +106,19 @@ fn test_bash_hook_notes_file() {
 
 #[test]
 fn test_bash_hook_does_not_note_nonexistent_args() {
-    let (_db_dir, db_path) = temp_dir();
-    let (_config_dir, config_path) = temp_dir();
+    let ctx = TestContext::new();
 
-    create_config_file(&config_path, "import_on_first_use = false");
+    create_config_file(&ctx.config_path, "import_on_first_use = false");
 
     let output = run_shell_with_hook(
         &Shell::Bash,
-        &db_path,
-        &config_path,
+        &ctx.db_path,
+        &ctx.config_path,
         "echo hello nonexistent_path_xyz_abc",
     );
     assert!(output.status.success());
 
-    let paths = list_paths(&db_path, Some(&config_path), &[], &[]);
+    let paths = list_paths(&ctx.db_path, Some(&ctx.config_path), &[], &[]);
     assert!(
         paths.is_empty(),
         "expected no paths to be noted, got: {paths:?}"
@@ -129,23 +127,22 @@ fn test_bash_hook_does_not_note_nonexistent_args() {
 
 #[test]
 fn test_bash_hook_notes_cd_target() {
-    let (_db_dir, db_path) = temp_dir();
-    let (_config_dir, config_path) = temp_dir();
+    let ctx = TestContext::new();
     let (_data_dir, data_path) = temp_dir();
 
-    create_config_file(&config_path, "import_on_first_use = false");
+    create_config_file(&ctx.config_path, "import_on_first_use = false");
 
     let test_dir = create_test_directory(&data_path, "subdir");
 
     let output = run_shell_with_hook(
         &Shell::Bash,
-        &db_path,
-        &config_path,
+        &ctx.db_path,
+        &ctx.config_path,
         &format!("cd {}", test_dir.display()),
     );
     assert!(output.status.success());
 
-    let paths = list_paths(&db_path, Some(&config_path), &[], &[]);
+    let paths = list_paths(&ctx.db_path, Some(&ctx.config_path), &[], &[]);
     assert_eq!(
         paths,
         [test_dir.to_string_lossy().as_ref()],
@@ -155,23 +152,22 @@ fn test_bash_hook_notes_cd_target() {
 
 #[test]
 fn test_zsh_hook_notes_file() {
-    let (_db_dir, db_path) = temp_dir();
-    let (_config_dir, config_path) = temp_dir();
+    let ctx = TestContext::new();
     let (_data_dir, data_path) = temp_dir();
 
-    create_config_file(&config_path, "import_on_first_use = false");
+    create_config_file(&ctx.config_path, "import_on_first_use = false");
 
     let test_file = create_test_file(&data_path, "target.txt", "hello");
 
     let output = run_shell_with_hook(
         &Shell::Zsh,
-        &db_path,
-        &config_path,
+        &ctx.db_path,
+        &ctx.config_path,
         &format!("ls {}", test_file.display()),
     );
     assert!(output.status.success());
 
-    let paths = list_paths(&db_path, Some(&config_path), &[], &[]);
+    let paths = list_paths(&ctx.db_path, Some(&ctx.config_path), &[], &[]);
     assert_eq!(
         paths,
         [test_file.to_string_lossy().as_ref()],
@@ -209,22 +205,20 @@ fn run_nvim_with_hook(
 
 #[test]
 fn test_neovim_hook_notes_opened_file() {
-    let (_db_dir, db_path) = temp_dir();
-    let (_config_dir, config_path) = temp_dir();
-    let (_data_dir, data_path) = temp_dir();
+    let ctx = TestContext::new();
 
-    create_config_file(&config_path, "import_on_first_use = false");
+    create_config_file(&ctx.config_path, "import_on_first_use = false");
 
-    let test_file = create_test_file(&data_path, "target.txt", "hello");
+    let test_file = create_test_file(&ctx.data_path, "target.txt", "hello");
 
-    let output = run_nvim_with_hook(&db_path, &config_path, &test_file);
+    let output = run_nvim_with_hook(&ctx.db_path, &ctx.config_path, &test_file);
     assert!(
         output.status.success(),
         "nvim failed: {}",
         String::from_utf8_lossy(&output.stderr)
     );
 
-    let paths = list_paths(&db_path, Some(&config_path), &[], &[]);
+    let paths = list_paths(&ctx.db_path, Some(&ctx.config_path), &[], &[]);
     assert_eq!(
         paths,
         [test_file.to_string_lossy().as_ref()],
