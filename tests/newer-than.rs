@@ -136,12 +136,13 @@ fn test_newer_than_invalid_format() {
     note_path(&db_path, None, file1.to_str().unwrap(), 1, &[], &[]);
 
     // Try to list with invalid format
-    let mut args = Vec::new();
-    args.push("--config");
-    args.push("import_on_first_use=false");
-    args.push("list");
-    args.push("--newer-than");
-    args.push("invalid-format");
+    let args = vec![
+        "--config",
+        "import_on_first_use=false",
+        "list",
+        "--newer-than",
+        "invalid-format",
+    ];
 
     let output = memy_cmd(Some(&db_path), None, &args, vec![]);
     assert!(!output.status.success(), "Should fail with invalid format");
