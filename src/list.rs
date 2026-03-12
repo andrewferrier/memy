@@ -4,7 +4,8 @@ use config::DeniedFilesOnList;
 use core::error::Error;
 use core::fmt::Write as _;
 use log::{info, warn};
-use rusqlite::{Connection, params};
+use rayon::prelude::*;
+use rusqlite::{Connection, params_from_iter};
 use std::env;
 use std::fs::{FileType, metadata};
 use std::io::{Write as _, stdout};
@@ -32,28 +33,17 @@ struct PathFrecency {
     file_type: FileType,
 }
 
-fn handle_denied_file(conn: &Connection, path: &String) {
-    let list_denied_action = config::get_denied_files_on_list();
-
-    match list_denied_action {
-        DeniedFilesOnList::Warn => {
-            warn!("Path {} is denied, remaining in database.", &path);
-        }
-        DeniedFilesOnList::Delete => {
-            conn.execute("DELETE FROM paths WHERE path = ?", params![&path])
-                .expect("Delete failed");
-            info!("Path {} is denied, deleted from database.", &path);
-        }
-        DeniedFilesOnList::SkipSilently => {}
-    }
+enum EntryOutcome {
+    Result(PathFrecency),
+    DeleteFromDb(String),
+    Skip,
 }
 
-fn handle_missing_file(
-    conn: &Connection,
-    path: &String,
+fn handle_missing_path(
+    path: String,
     now: UnixTimestamp,
     last_noted_timestamp: UnixTimestamp,
-) {
+) -> EntryOutcome {
     static MISSING_FILES_DELETE_AFTER_SECS: LazyLock<i64> =
         LazyLock::new(|| i64::from(config::get_missing_files_delete_from_db_after()) * 86400);
 
@@ -61,20 +51,35 @@ fn handle_missing_file(
         info!(
             "{path} no longer exists but get_missing_files_delete_from_db_after < 0, so it will not be deleted."
         );
-    } else {
-        let last_noted_age_secs = now - last_noted_timestamp;
+        return EntryOutcome::Skip;
+    }
 
-        if last_noted_age_secs > *MISSING_FILES_DELETE_AFTER_SECS {
-            conn.execute("DELETE FROM paths WHERE path = ?", params![path])
-                .expect("Delete failed");
-            info!(
-                "{path} no longer exists; last noted {last_noted_age_secs} seconds ago; older than get_missing_files_delete_from_db_after, removed from database."
-            );
-        } else {
-            info!(
-                "{path} no longer exists; last noted {last_noted_age_secs} seconds ago; within get_missing_files_delete_from_db_after, retained but skipped."
-            );
+    let last_noted_age_secs = now - last_noted_timestamp;
+
+    if last_noted_age_secs > *MISSING_FILES_DELETE_AFTER_SECS {
+        info!(
+            "{path} no longer exists; last noted {last_noted_age_secs} seconds ago; older than get_missing_files_delete_from_db_after, removed from database."
+        );
+        return EntryOutcome::DeleteFromDb(path);
+    }
+
+    info!(
+        "{path} no longer exists; last noted {last_noted_age_secs} seconds ago; within get_missing_files_delete_from_db_after, retained but skipped."
+    );
+    EntryOutcome::Skip
+}
+
+fn handle_denied_path(path: String) -> EntryOutcome {
+    match config::get_denied_files_on_list() {
+        DeniedFilesOnList::Warn => {
+            warn!("Path {path} is denied, remaining in database.");
+            EntryOutcome::Skip
         }
+        DeniedFilesOnList::Delete => {
+            info!("Path {path} is denied, deleted from database.");
+            EntryOutcome::DeleteFromDb(path)
+        }
+        DeniedFilesOnList::SkipSilently => EntryOutcome::Skip,
     }
 }
 
@@ -91,65 +96,85 @@ fn calculate(conn: &Connection, args: &ListArgs) -> Result<Vec<PathFrecency>, Bo
         None
     };
 
-    let mut results: Vec<PathFrecency> = vec![];
     let stats = stats::get(conn)?;
 
     let Some(oldest_note) = stats.oldest_note else {
-        return Ok(results);
+        return Ok(vec![]);
     };
+
     let oldest_last_noted_timestamp_hours = utils::timestamp_age_hours(now, oldest_note.timestamp);
 
     let Some(highest_count) = stats.highest_count else {
-        return Ok(results);
+        return Ok(vec![]);
     };
 
-    for row in rows {
-        let Ok(metadata) = metadata(&row.path) else {
-            handle_missing_file(conn, &row.path, now, row.last_noted_timestamp);
-            continue;
-        };
+    let outcomes: Vec<EntryOutcome> = rows
+        .into_par_iter()
+        .map(|row| {
+            let Ok(metadata) = metadata(&row.path) else {
+                return handle_missing_path(row.path, now, row.last_noted_timestamp);
+            };
 
-        if let ignore::Match::Ignore(_matched_pat) =
-            denylist_matcher.matched_path_or_any_parents(&row.path, metadata.is_dir())
-        {
-            handle_denied_file(conn, &row.path);
-            continue;
+            if let ignore::Match::Ignore(_matched_pat) =
+                denylist_matcher.matched_path_or_any_parents(&row.path, metadata.is_dir())
+            {
+                return handle_denied_path(row.path);
+            }
+
+            if (args.files_only && !metadata.is_file())
+                || (args.directories_only && !metadata.is_dir())
+            {
+                return EntryOutcome::Skip;
+            }
+
+            if let Some(cutoff_timestamp) = newer_than_timestamp
+                && row.last_noted_timestamp < cutoff_timestamp
+            {
+                return EntryOutcome::Skip;
+            }
+
+            let frecency = frecency::calculate(
+                row.noted_count,
+                utils::timestamp_age_hours(now, row.last_noted_timestamp),
+                highest_count.count,
+                oldest_last_noted_timestamp_hours,
+            );
+
+            EntryOutcome::Result(PathFrecency {
+                path: row.path,
+                frecency,
+                count: row.noted_count,
+                last_noted: utils::timestamp_to_iso8601(row.last_noted_timestamp),
+                file_type: metadata.file_type(),
+            })
+        })
+        .collect();
+
+    let mut to_output: Vec<PathFrecency> = vec![];
+    let mut to_delete: Vec<String> = vec![];
+
+    for outcome in outcomes {
+        match outcome {
+            EntryOutcome::Result(pf) => to_output.push(pf),
+            EntryOutcome::DeleteFromDb(path) => to_delete.push(path),
+            EntryOutcome::Skip => {}
         }
-
-        if (args.files_only && !metadata.is_file()) || (args.directories_only && !metadata.is_dir())
-        {
-            continue;
-        }
-
-        if let Some(cutoff_timestamp) = newer_than_timestamp
-            && row.last_noted_timestamp < cutoff_timestamp
-        {
-            continue;
-        }
-
-        let frecency = frecency::calculate(
-            row.noted_count,
-            utils::timestamp_age_hours(now, row.last_noted_timestamp),
-            highest_count.count,
-            oldest_last_noted_timestamp_hours,
-        );
-
-        results.push(PathFrecency {
-            path: row.path,
-            frecency,
-            count: row.noted_count,
-            last_noted: utils::timestamp_to_iso8601(row.last_noted_timestamp),
-            file_type: metadata.file_type(),
-        });
     }
 
-    results.sort_unstable_by(|a, b| {
+    if !to_delete.is_empty() {
+        let placeholders = to_delete.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
+        let sql = format!("DELETE FROM paths WHERE path IN ({placeholders})");
+        conn.execute(&sql, params_from_iter(&to_delete))
+            .expect("Deleting paths from DB failed");
+    }
+
+    to_output.par_sort_unstable_by(|a, b| {
         a.frecency
             .partial_cmp(&b.frecency)
             .expect("Sort results failed")
     });
 
-    Ok(results)
+    Ok(to_output)
 }
 
 fn get_output_filter_command(args: &ListArgs) -> Option<String> {

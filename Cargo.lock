@@ -804,6 +804,7 @@ dependencies = [
  "log",
  "normalize-path",
  "proptest",
+ "rayon",
  "rusqlite",
  "serde",
  "serde_json",
