@@ -1,0 +1,63 @@
+# Maintainer: Andrew Ferrier <andrew.ferrier@example.com>
+pkgname=memy
+pkgver=0.18.0
+pkgrel=1
+pkgdesc='Track and recall frequently and recently used files or directories'
+arch=('x86_64' 'aarch64')
+url='https://github.com/andrewferrier/memy'
+license=('MIT')
+makedepends=('cargo')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/andrewferrier/memy/archive/v$pkgver.tar.gz")
+sha256sums=('c3e1ae62b7ad52f7649b408063238269b272adb47b8c71c958c0e162c90d8404')
+
+prepare() {
+    cd "$srcdir/$pkgname-$pkgver"
+    export RUSTUP_TOOLCHAIN=stable
+    cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
+build() {
+    cd "$srcdir/$pkgname-$pkgver"
+    export RUSTUP_TOOLCHAIN=stable
+    export CARGO_TARGET_DIR=target
+    cargo build --frozen --release
+}
+
+check() {
+    cd "$srcdir/$pkgname-$pkgver"
+    export RUSTUP_TOOLCHAIN=stable
+    export CARGO_TARGET_DIR=target
+    cargo test --frozen
+}
+
+package() {
+    cd "$srcdir/$pkgname-$pkgver"
+
+    # Binary
+    install -Dm755 target/release/memy -t "$pkgdir/usr/bin/"
+
+    # Man pages
+    install -Dm644 target/man/*.1 -t "$pkgdir/usr/share/man/man1/"
+    install -Dm644 target/man/memy.toml.5 -t "$pkgdir/usr/share/man/man5/"
+
+    # Shell completions
+    install -Dm644 target/completions/memy.bash \
+        "$pkgdir/usr/share/bash-completion/completions/memy"
+    install -Dm644 target/completions/_memy \
+        "$pkgdir/usr/share/zsh/site-functions/_memy"
+    install -Dm644 target/completions/memy.fish \
+        "$pkgdir/usr/share/fish/vendor_completions.d/memy.fish"
+
+    # Hooks (also embedded in the binary; installed here for direct access)
+    install -Dm644 -t "$pkgdir/usr/share/memy/hooks/" hooks/*
+
+    # Config template
+    install -Dm644 config/template-memy.toml \
+        "$pkgdir/usr/share/memy/template-memy.toml"
+
+    # License
+    install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+
+    # Documentation
+    install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+}

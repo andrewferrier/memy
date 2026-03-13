@@ -1,0 +1,18 @@
+pkgbase = memy-bin
+	pkgdesc = Track and recall frequently and recently used files or directories (pre-built binary)
+	pkgver = 0.18.0
+	pkgrel = 1
+	url = https://github.com/andrewferrier/memy
+	arch = x86_64
+	arch = aarch64
+	license = MIT
+	provides = memy
+	conflicts = memy
+	source = LICENSE::https://raw.githubusercontent.com/andrewferrier/memy/v0.18.0/LICENSE
+	source_x86_64 = memy-bin-0.18.0-x86_64.tar.gz::https://github.com/andrewferrier/memy/releases/download/v0.18.0/memy-linux-x86_64.tar.gz
+	source_aarch64 = memy-bin-0.18.0-aarch64.tar.gz::https://github.com/andrewferrier/memy/releases/download/v0.18.0/memy-linux-aarch64.tar.gz
+	sha256sums = 5bfe106c6a46ccea9584d71a3df6e8ca0c0384d848f1f26781e1dd743b4e534a
+	sha256sums_x86_64 = 1f503d4e40911f27bba5907e6aec524497be5a1ea73047022c31634cdc455c39
+	sha256sums_aarch64 = 6f2ea8baa41d96db631b03f9f9c810a69938e7899b7db852e975f42cf4447adb
+
+pkgname = memy-bin
