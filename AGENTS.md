@@ -1,17 +1,8 @@
-# Copilot Instructions for memy
+# Agent Instructions for memy
 
 ## Project Overview
 
-**memy** is a modern, fast CLI tool written in Rust that tracks and recalls frequently/recently used files and directories. Unlike similar tools like zoxide or autojump, memy uniquely **tracks both files and directories**, uses "frecency" scoring (a combination of frequency + recency), and provides a flexible backend that integrates with other tools (fzf, editors, file managers).
-
-### Key Features
-
-- Tracks both files and directories (unique among similar tools except fasd)
-- Uses frecency algorithm to rank paths by frequency + recency
-- SQLite backend for speed and scalability
-- Integration hooks for shells (bash, zsh, fish) and editors (vim, neovim, ranger, lf)
-- Can import from fasd, autojump, and zoxide
-- Configurable via TOML config file
+**memy** is a modern, fast CLI tool written in Rust that tracks and recalls frequently/recently used files and directories. Unlike similar tools like zoxide or autojump, memy uniquely **tracks both files and directories**, uses "frecency" scoring (a combination of frequency + recency), and provides a flexible backend that integrates with other tools (fzf, editors, file managers). See the README for more information on features.
 
 ## Technology Stack
 
