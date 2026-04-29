@@ -23,3 +23,20 @@ function memy-cd
         cd "$selected"
     end
 end
+
+if not functions -q z; and not command -q z
+    function z
+        if test (count $argv) -eq 1 -a "$argv[1]" = "-"
+            cd $OLDPWD
+            return
+        end
+        set result (memy z -- $argv)
+        and cd $result
+    end
+end
+
+if not functions -q zi; and not command -q zi
+    function zi
+        memy-cd
+    end
+end

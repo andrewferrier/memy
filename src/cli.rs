@@ -68,6 +68,15 @@ pub enum Commands {
         #[arg(value_enum)]
         shell: Option<clap_complete::Shell>,
     },
+    /// Jump to the most frecent directory matching keywords (zoxide-compatible)
+    Z(ZArgs),
+}
+
+#[derive(Args, Debug)]
+pub struct ZArgs {
+    /// Keywords to match against noted directories
+    #[arg(value_name = "KEYWORDS", num_args = 0..)]
+    pub keywords: Vec<String>,
 }
 
 #[derive(Args, Debug)]

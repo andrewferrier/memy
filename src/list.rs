@@ -4,11 +4,10 @@ use config::DeniedFilesOnList;
 use core::error::Error;
 use core::fmt::Write as _;
 use log::{info, warn};
-use rayon::prelude::*;
 use rusqlite::{Connection, params_from_iter};
 use std::borrow::Cow;
 use std::env;
-use std::fs::{FileType, metadata};
+use std::fs::FileType;
 use std::io::{Write as _, stdout};
 use std::process::{Command, Stdio};
 use std::sync::LazyLock;
@@ -17,8 +16,7 @@ use tracing::instrument;
 use crate::cli;
 use crate::config;
 use crate::db;
-use crate::frecency;
-use crate::stats;
+use crate::query;
 use crate::types::Frecency;
 use crate::types::NotedCount;
 use crate::types::UnixTimestamp;
@@ -34,17 +32,13 @@ struct PathFrecency {
     file_type: FileType,
 }
 
-enum EntryOutcome {
-    Result(PathFrecency),
-    DeleteFromDb(String),
-    Skip,
-}
-
+/// Returns `Some(path)` if the missing entry should be deleted from the database,
+/// or `None` if it should be retained (but skipped from output).
 fn handle_missing_path(
     path: String,
     now: UnixTimestamp,
     last_noted_timestamp: UnixTimestamp,
-) -> EntryOutcome {
+) -> Option<String> {
     static MISSING_FILES_DELETE_AFTER_SECS: LazyLock<i64> =
         LazyLock::new(|| i64::from(config::get_missing_files_delete_from_db_after()) * 86400);
 
@@ -52,7 +46,7 @@ fn handle_missing_path(
         info!(
             "{path} no longer exists but get_missing_files_delete_from_db_after < 0, so it will not be deleted."
         );
-        return EntryOutcome::Skip;
+        return None;
     }
 
     let last_noted_age_secs = now - last_noted_timestamp;
@@ -61,104 +55,66 @@ fn handle_missing_path(
         info!(
             "{path} no longer exists; last noted {last_noted_age_secs} seconds ago; older than get_missing_files_delete_from_db_after, removed from database."
         );
-        return EntryOutcome::DeleteFromDb(path);
+        return Some(path);
     }
 
     info!(
         "{path} no longer exists; last noted {last_noted_age_secs} seconds ago; within get_missing_files_delete_from_db_after, retained but skipped."
     );
-    EntryOutcome::Skip
-}
-
-fn handle_denied_path(path: String) -> EntryOutcome {
-    match config::get_denied_files_on_list() {
-        DeniedFilesOnList::Warn => {
-            warn!("Path {path} is denied, remaining in database.");
-            EntryOutcome::Skip
-        }
-        DeniedFilesOnList::Delete => {
-            info!("Path {path} is denied, deleted from database.");
-            EntryOutcome::DeleteFromDb(path)
-        }
-        DeniedFilesOnList::SkipSilently => EntryOutcome::Skip,
-    }
+    None
 }
 
 #[instrument(level = "trace")]
 fn calculate(conn: &Connection, args: &ListArgs) -> Result<Vec<PathFrecency>, Box<dyn Error>> {
-    let rows = db::get_rows(conn)?;
-    let now = utils::get_unix_timestamp();
     let denylist_matcher = config::get_denylist_matcher();
 
-    // Parse the newer_than filter if provided
     let newer_than_timestamp = if let Some(ref newer_than_str) = args.newer_than {
         Some(utils::parse_newer_than(newer_than_str)?)
     } else {
         None
     };
 
-    let stats = stats::get(conn)?;
-
-    let Some(oldest_note) = stats.oldest_note else {
-        return Ok(vec![]);
-    };
-
-    let oldest_last_noted_timestamp_hours = utils::timestamp_age_hours(now, oldest_note.timestamp);
-
-    let Some(highest_count) = stats.highest_count else {
-        return Ok(vec![]);
-    };
-
-    let outcomes: Vec<EntryOutcome> = rows
-        .into_par_iter()
-        .map(|row| {
-            let Ok(metadata) = metadata(&row.path) else {
-                return handle_missing_path(row.path, now, row.last_noted_timestamp);
-            };
-
-            if let ignore::Match::Ignore(_matched_pat) =
-                denylist_matcher.matched_path_or_any_parents(&row.path, metadata.is_dir())
-            {
-                return handle_denied_path(row.path);
+    // Paths to delete due to denylist policy; returned as FilterResult::Delete.
+    let query::SortedMatches {
+        now,
+        matches,
+        missing,
+        filter_deletes,
+    } = query::build_sorted_matches(conn, |row, meta| {
+        if let ignore::Match::Ignore(_matched_pat) =
+            denylist_matcher.matched_path_or_any_parents(&row.path, meta.is_dir())
+        {
+            match config::get_denied_files_on_list() {
+                DeniedFilesOnList::Warn => {
+                    warn!("Path {} is denied, remaining in database.", row.path);
+                }
+                DeniedFilesOnList::Delete => {
+                    info!("Path {} is denied, deleted from database.", row.path);
+                    return query::FilterResult::Delete;
+                }
+                DeniedFilesOnList::SkipSilently => {}
             }
+            return query::FilterResult::Exclude;
+        }
 
-            if (args.files_only && !metadata.is_file())
-                || (args.directories_only && !metadata.is_dir())
-            {
-                return EntryOutcome::Skip;
-            }
+        if (args.files_only && !meta.is_file()) || (args.directories_only && !meta.is_dir()) {
+            return query::FilterResult::Exclude;
+        }
 
-            if let Some(cutoff_timestamp) = newer_than_timestamp
-                && row.last_noted_timestamp < cutoff_timestamp
-            {
-                return EntryOutcome::Skip;
-            }
+        if let Some(cutoff_timestamp) = newer_than_timestamp
+            && row.last_noted_timestamp < cutoff_timestamp
+        {
+            return query::FilterResult::Exclude;
+        }
 
-            let frecency = frecency::calculate(
-                row.noted_count,
-                utils::timestamp_age_hours(now, row.last_noted_timestamp),
-                highest_count.count,
-                oldest_last_noted_timestamp_hours,
-            );
+        query::FilterResult::Include
+    })?;
 
-            EntryOutcome::Result(PathFrecency {
-                path: row.path,
-                frecency,
-                count: row.noted_count,
-                last_noted: utils::timestamp_to_iso8601(row.last_noted_timestamp),
-                file_type: metadata.file_type(),
-            })
-        })
-        .collect();
+    let mut to_delete: Vec<String> = filter_deletes;
 
-    let mut to_output: Vec<PathFrecency> = vec![];
-    let mut to_delete: Vec<String> = vec![];
-
-    for outcome in outcomes {
-        match outcome {
-            EntryOutcome::Result(pf) => to_output.push(pf),
-            EntryOutcome::DeleteFromDb(path) => to_delete.push(path),
-            EntryOutcome::Skip => {}
+    for row in missing {
+        if let Some(path) = handle_missing_path(row.path, now, row.last_noted_timestamp) {
+            to_delete.push(path);
         }
     }
 
@@ -169,7 +125,16 @@ fn calculate(conn: &Connection, args: &ListArgs) -> Result<Vec<PathFrecency>, Bo
             .expect("Deleting paths from DB failed");
     }
 
-    to_output.par_sort_unstable_by_key(|x| x.frecency.to_bits());
+    let to_output = matches
+        .into_iter()
+        .map(|m| PathFrecency {
+            path: m.path,
+            frecency: m.frecency,
+            count: m.noted_count,
+            last_noted: utils::timestamp_to_iso8601(m.last_noted_timestamp),
+            file_type: m.metadata.file_type(),
+        })
+        .collect();
 
     Ok(to_output)
 }

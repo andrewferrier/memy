@@ -18,3 +18,18 @@ autoload -Uz add-zsh-hook
 add-zsh-hook preexec memy_preexec
 
 alias memy-cd='cd $(memy list -d -s)'
+
+if ! (( $+functions[z] )) && ! (( $+commands[z] )); then
+  function z() {
+    if [[ $# -eq 1 && $1 == '-' ]]; then
+      cd "${OLDPWD}"
+      return
+    fi
+    local result
+    result="$(memy z -- "$@")" && cd "${result/#\~/$HOME}"
+  }
+fi
+
+if ! (( $+functions[zi] )) && ! (( $+commands[zi] )); then
+  alias zi='cd $(memy list -d -s)'
+fi

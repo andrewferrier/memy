@@ -65,6 +65,26 @@ Many of these more advanced tricks would work well configured as [shell aliases]
 
 `memy` will import your database from [fasd](https://github.com/whjvenyl/fasd), [autojump](https://github.com/wting/autojump) and/or [zoxide](https://github.com/ajeetdsouza/zoxide), if there is one, on first run (this behaviour can be disabled in the configuration file).
 
+## Zoxide-Compatible `z` Command
+
+If you have the memy shell hook installed (see below), memy also provides a `z` command that works as a drop-in replacement for [zoxide](https://github.com/ajeetdsouza/zoxide)'s `z`. It lets you jump to your most frecently-used directories with just a few keystrokes, using the same keyword-matching algorithm as zoxide:
+
+```sh
+z bar        # jump to the most frecent directory whose last component contains 'bar'
+z foo bar    # jump to the most frecent directory matching 'foo' and then 'bar' (in order)
+```
+
+`z` also handles common path shortcuts directly without consulting the database:
+
+```sh
+z ~/projects   # jump straight to ~/projects (or any tilde/absolute path that exists)
+z ..           # go up one directory
+```
+
+If you already have zoxide installed, memy's `z` will not override it — the function is only defined if `z` does not already exist in your shell.
+
+`zi` is also provided as an alias for `memy-cd` (interactive directory selection via `fzf` or similar).
+
 ## Noting files automatically using hooks
 
 Hooks in memy are scripts or other configuration files provided with memy that can be embedded into other tools' configurations. These hooks allow you to automatically note files as they are used, opened, or interacted with, integrating memy seamlessly into your workflow.

@@ -9,9 +9,11 @@ mod import;
 mod list;
 mod logging;
 mod note;
+mod query;
 mod stats;
 mod types;
 mod utils;
+mod z;
 
 use clap::CommandFactory as _;
 use cli::{Cli, Commands};
@@ -41,6 +43,7 @@ fn handle_cli_command(
         Commands::Completions { shell } => Ok(completions(shell)?),
         Commands::Hook { hook_name } => Ok(hooks::command(hook_name)?),
         Commands::Stats(stats_args) => Ok(stats::command(&stats_args)?),
+        Commands::Z(z_args) => Ok(z::command(&z_args)?),
     }
 }
 

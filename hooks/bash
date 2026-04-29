@@ -41,3 +41,19 @@ _memy_cd() {
 }
 
 alias memy-cd='_memy_cd'
+
+if ! declare -f z &>/dev/null && ! command -v z &>/dev/null; then
+  function z() {
+    if [[ $# -eq 1 && $1 == '-' ]]; then
+      # shellcheck disable=SC2164
+      cd "${OLDPWD}"
+      return
+    fi
+    local result
+    result="$(memy z -- "$@")" && cd "${result/#\~/$HOME}"
+  }
+fi
+
+if ! declare -f zi &>/dev/null && ! command -v zi &>/dev/null; then
+  alias zi='_memy_cd'
+fi
