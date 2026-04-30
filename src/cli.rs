@@ -68,7 +68,7 @@ pub enum Commands {
         #[arg(value_enum)]
         shell: Option<clap_complete::Shell>,
     },
-    /// Jump to the most frecent directory matching keywords (zoxide-compatible)
+    /// Output the most frecent directory matching keywords (zoxide-compatible with shell hooks)
     Z(ZArgs),
 }
 
