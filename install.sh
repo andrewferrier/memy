@@ -24,6 +24,15 @@ fi
 OS=$(uname | tr '[:upper:]' '[:lower:]')
 ARCH=$(uname -m)
 
+case "$OS" in
+linux) OS="linux" ;;
+darwin) OS="macos" ;;
+*)
+  echo "Error: Unsupported OS: $OS. Exiting." >&2
+  exit 1
+  ;;
+esac
+
 case "$ARCH" in
 x86_64) ARCH="x86_64" ;;
 aarch64 | arm64) ARCH="aarch64" ;;
