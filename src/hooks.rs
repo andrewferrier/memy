@@ -1,11 +1,11 @@
-use crate::generated::hooks_generated;
 use core::error::Error;
+use rust_embed::Embed;
 use std::io::{self, Write as _};
 use tracing::instrument;
 
-fn get_hook_content(name: &str) -> Option<&'static str> {
-    hooks_generated::HOOKS.get(name).copied()
-}
+#[derive(Embed)]
+#[folder = "hooks/"]
+struct Hooks;
 
 #[instrument(level = "trace")]
 pub fn command(
@@ -15,8 +15,8 @@ pub fn command(
 
     let result = (|| -> io::Result<()> {
         if let Some(actual_hook_name) = hook_name {
-            if let Some(content) = get_hook_content(&actual_hook_name) {
-                write!(stdout_handle, "{content}")?;
+            if let Some(content) = Hooks::get(&actual_hook_name) {
+                stdout_handle.write_all(&content.data)?;
             } else {
                 return Err(io::Error::new(
                     io::ErrorKind::NotFound,
@@ -25,8 +25,8 @@ pub fn command(
             }
         } else {
             writeln!(stdout_handle, "Available hooks:")?;
-            for (k, _) in hooks_generated::HOOKS.iter() {
-                writeln!(stdout_handle, "{k}")?;
+            for name in Hooks::iter() {
+                writeln!(stdout_handle, "{name}")?;
             }
         }
         Ok(())

@@ -1,4 +1,3 @@
-mod generated;
 mod hooks;
 mod import;
 mod list;

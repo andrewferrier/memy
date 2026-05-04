@@ -1,5 +1,3 @@
-#![allow(clippy::unwrap_used, reason = "unwrap() OK inside build")]
-
 use clap_complete::{
     generate_to,
     shells::{Bash, Fish, Zsh},
@@ -14,41 +12,6 @@ use tera::{Context, Tera};
 
 include!("src/utils/cli.rs");
 include!("src/utils/denylist_default.rs");
-
-fn embed_hooks() {
-    let mut entries = Vec::new();
-
-    let read_dir = fs::read_dir(Path::new("hooks"))
-        .unwrap()
-        .filter_map(Result::ok)
-        .map(|entry| entry.path());
-
-    for path in read_dir {
-        if path.is_file() {
-            let filename = path.file_name().unwrap().to_string_lossy();
-            let content = fs::read_to_string(&path).expect("Failed to read hook file");
-            let escaped = content.escape_default().to_string(); // escape for safe inclusion in code
-            entries.push(format!("map.insert(\"{filename}\", \"{escaped}\");"));
-        }
-    }
-
-    let generated_code = format!(
-        r"use std::collections::BTreeMap;
-
-pub static HOOKS: std::sync::LazyLock<BTreeMap<&'static str, &'static str>> = std::sync::LazyLock::new(|| {{
-    let mut map = BTreeMap::new();
-{}
-    map
-}});",
-        entries.join("\n")
-    );
-
-    let dest_path = Path::new("src/generated/hooks_generated.rs");
-    fs::create_dir_all(dest_path.parent().unwrap()).expect("Failed to create generated dir");
-    fs::write(dest_path, generated_code).expect("Failed to write generated code");
-
-    println!("cargo:rerun-if-changed=hooks/");
-}
 
 fn get_git_version() {
     let output = Command::new("git")
@@ -172,7 +135,6 @@ fn main() {
 
     get_git_version();
     render_config_template().expect("Failed to render config template");
-    embed_hooks();
     build_man_pages(&build_root_dir).expect("Failed to build man page");
     generate_completions(&build_root_dir).expect("Failed to generate shell completions");
 }

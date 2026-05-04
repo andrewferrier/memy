@@ -28,6 +28,7 @@ humantime = "2.1"
 ignore = "0.4"
 rayon = "1"
 log = "0.4.27"
+rust-embed = "8"
 rusqlite = { version = "0.37", default-features = false, features = [
     "bundled",
 ] }
