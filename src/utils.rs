@@ -1,5 +1,6 @@
 use chrono::{DateTime, Local, TimeZone as _};
 use colored::Colorize as _;
+use log::debug;
 use std::borrow::Cow;
 use std::env;
 use std::env::home_dir;
@@ -204,28 +205,34 @@ pub fn format_path_colored(path: &str, is_dir: bool) -> String {
 /// 4. Auto-detected fuzzy finders (`fzf`, `sk`, `fzy`)
 pub fn get_output_filter_command(override_cmd: Option<&str>) -> Option<String> {
     if let Some(cmd) = override_cmd {
+        debug!("Output filter detected from command line: {cmd}");
         return Some(cmd.to_owned());
     }
 
     if let Ok(cmd) = env::var("MEMY_OUTPUT_FILTER")
         && !cmd.is_empty()
     {
+        debug!("Output filter detected from environment: {cmd}");
         return Some(cmd);
     }
 
     if let Some(cmd) = config::get_memy_output_filter() {
+        debug!("Output filter detected from config: {cmd}");
         return Some(cmd);
     }
 
     if is_command_available("fzf") {
+        debug!("Output filter automatically set for fzf");
         return Some("fzf --ansi --tac".to_owned());
     }
 
     if is_command_available("sk") {
+        debug!("Output filter automatically set for sk");
         return Some("sk --ansi --tac".to_owned());
     }
 
     if is_command_available("fzy") {
+        debug!("Output filter automatically set for fzy");
         return Some("tac | fzy".to_owned());
     }
 
@@ -238,6 +245,8 @@ pub fn run_output_filter(
     output: &str,
     filter_cmd: &str,
 ) -> Result<String, Box<dyn core::error::Error>> {
+    debug!("Running through external filter command {filter_cmd}");
+
     let shell = env::var("SHELL")
         .ok()
         .filter(|s| !s.is_empty())
