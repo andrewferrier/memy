@@ -1,4 +1,5 @@
 use core::error::Error;
+use log::debug;
 use std::io::{Write as _, stdout};
 use std::path::PathBuf;
 use tracing::instrument;
@@ -105,28 +106,30 @@ fn db_search(args: &ZArgs) -> Result<(), Box<dyn Error>> {
 
 #[instrument(level = "trace")]
 pub fn command(args: &ZArgs) -> Result<(), Box<dyn Error>> {
-    if args.interactive {
-        return db_search(args);
-    }
+    if !args.interactive {
+        if args.keywords.is_empty() {
+            let home = std::env::home_dir().ok_or("Cannot determine home directory")?;
+            let normalized_home = normalize_path(&home);
+            let mut stdout_handle = stdout().lock();
+            writeln!(stdout_handle, "{}", normalized_home.to_string_lossy())?;
+            return Ok(());
+        }
 
-    if args.keywords.is_empty() {
-        let home = std::env::home_dir().ok_or("Cannot determine home directory")?;
-        let normalized_home = normalize_path(&home);
-        let mut stdout_handle = stdout().lock();
-        writeln!(stdout_handle, "{}", normalized_home.to_string_lossy())?;
-        return Ok(());
-    }
+        if args.keywords.len() == 1 && args.keywords[0] == "-" {
+            return Err("z -: cannot determine previous directory from within memy; use 'cd -' directly in your shell".into());
+        }
 
-    if args.keywords.len() == 1 && args.keywords[0] == "-" {
-        return Err("z -: cannot determine previous directory from within memy; use 'cd -' directly in your shell".into());
-    }
-
-    if args.keywords.len() == 1
-        && let Some(resolved) = resolve_existing_dir(&args.keywords[0])
-    {
-        let mut stdout_handle = stdout().lock();
-        writeln!(stdout_handle, "{}", resolved.to_string_lossy())?;
-        return Ok(());
+        if args.keywords.len() == 1
+            && let Some(resolved) = resolve_existing_dir(&args.keywords[0])
+        {
+            debug!(
+                "Returning directory as specified on command line: {}",
+                resolved.to_string_lossy()
+            );
+            let mut stdout_handle = stdout().lock();
+            writeln!(stdout_handle, "{}", resolved.to_string_lossy())?;
+            return Ok(());
+        }
     }
 
     db_search(args)
