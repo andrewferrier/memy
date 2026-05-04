@@ -7,9 +7,9 @@ use std::path::PathBuf;
 use tracing::instrument;
 use xdg::BaseDirectories;
 
-use crate::config;
+use super::config;
+use super::types::{NotedCount, UnixTimestamp};
 use crate::import;
-use crate::types::{NotedCount, UnixTimestamp};
 
 const DB_VERSION: i32 = 1;
 

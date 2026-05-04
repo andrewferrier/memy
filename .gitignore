@@ -1,4 +1,4 @@
-src/hooks_generated.rs
+src/generated/hooks_generated.rs
 config/template-memy.toml
 
 proptest-regressions/

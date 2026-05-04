@@ -1,4 +1,4 @@
-use crate::hooks_generated;
+use crate::generated::hooks_generated;
 use core::error::Error;
 use std::io::{self, Write as _};
 use tracing::instrument;

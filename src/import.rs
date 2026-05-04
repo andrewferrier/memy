@@ -3,9 +3,9 @@ use log::{debug, info};
 use rusqlite::Connection;
 use std::fs;
 
-use crate::types::NotedCount;
-use crate::types::UnixTimestamp;
 use crate::utils;
+use crate::utils::types::NotedCount;
+use crate::utils::types::UnixTimestamp;
 
 pub type FasdScore = f64;
 

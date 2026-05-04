@@ -1,5 +1,5 @@
-use crate::config;
-use crate::types::{Frecency, NotedCount, UnixTimestampHours};
+use super::config;
+use super::types::{Frecency, NotedCount, UnixTimestampHours};
 
 pub fn calculate(
     count: NotedCount,

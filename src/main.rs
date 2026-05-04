@@ -1,26 +1,18 @@
-mod cli;
-mod config;
-mod db;
-mod denylist_default;
-mod frecency;
+mod generated;
 mod hooks;
-mod hooks_generated;
 mod import;
 mod list;
-mod logging;
 mod note;
-mod query;
 mod stats;
-mod types;
 mod utils;
 mod z;
 
 use clap::CommandFactory as _;
-use cli::{Cli, Commands};
 use core::error::Error;
 use log::debug;
 use std::io::stdout;
 use tracing::instrument;
+use utils::cli::{Cli, Commands};
 
 #[instrument(level = "trace")]
 fn completions(shell: Option<clap_complete::Shell>) -> Result<(), Box<dyn Error>> {
@@ -39,7 +31,7 @@ fn handle_cli_command(
     match command {
         Commands::Note(note_args) => Ok(note::command(note_args)?),
         Commands::List(list_args) => Ok(list::command(&list_args)?),
-        Commands::GenerateConfig {} => Ok(config::output_template_config()?),
+        Commands::GenerateConfig {} => Ok(utils::config::output_template_config()?),
         Commands::Completions { shell } => Ok(completions(shell)?),
         Commands::Hook { hook_name } => Ok(hooks::command(hook_name)?),
         Commands::Stats(stats_args) => Ok(stats::command(&stats_args)?),
@@ -63,12 +55,12 @@ fn configure_color(color: &str) -> Result<Option<bool>, Box<dyn Error>> {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let cli = cli::parse();
+    let cli = utils::cli::parse();
 
     let color_option = configure_color(&cli.color)?;
 
-    logging::configure_logging_and_tracing(cli.verbose, color_option);
-    config::load_config(cli.config.clone());
+    utils::logging::configure_logging_and_tracing(cli.verbose, color_option);
+    utils::config::load_config(cli.config.clone());
 
     debug!("Memy version {}", env!("GIT_VERSION"));
     debug!("CLI params parsed: {cli:?}");

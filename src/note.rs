@@ -7,10 +7,10 @@ use std::fs;
 use std::path::Path;
 use tracing::instrument;
 
-use crate::cli;
-use crate::config;
-use crate::db;
 use crate::utils;
+use crate::utils::cli;
+use crate::utils::config;
+use crate::utils::db;
 
 fn normalize_path_if_needed(path: Cow<'_, Path>) -> std::io::Result<Cow<'_, Path>> {
     let normalize = config::get_normalize_symlinks_on_note();

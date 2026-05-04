@@ -5,11 +5,11 @@ use rusqlite::Connection;
 use std::fs::{Metadata, metadata};
 use tracing::instrument;
 
-use crate::db;
-use crate::frecency;
+use super::db;
+use super::frecency;
+use super::types::{NotedCount, UnixTimestamp};
+use super::{get_unix_timestamp, timestamp_age_hours};
 use crate::stats;
-use crate::types::{NotedCount, UnixTimestamp};
-use crate::utils;
 
 pub struct MatchEntry {
     pub path: String,
@@ -58,7 +58,7 @@ where
     F: Fn(&db::PathEntry, &Metadata) -> FilterResult + Send + Sync,
 {
     let rows = db::get_rows(conn)?;
-    let now = utils::get_unix_timestamp();
+    let now = get_unix_timestamp();
     let stats = stats::get(conn)?;
 
     let (Some(oldest_note), Some(highest_count_entry)) = (stats.oldest_note, stats.highest_count)
@@ -71,7 +71,7 @@ where
         });
     };
 
-    let oldest_last_noted_timestamp_hours = utils::timestamp_age_hours(now, oldest_note.timestamp);
+    let oldest_last_noted_timestamp_hours = timestamp_age_hours(now, oldest_note.timestamp);
     let highest_count = highest_count_entry.count;
 
     let outcomes: Vec<Outcome> = rows
@@ -90,7 +90,7 @@ where
 
             let frecency = frecency::calculate(
                 row.noted_count,
-                utils::timestamp_age_hours(now, row.last_noted_timestamp),
+                timestamp_age_hours(now, row.last_noted_timestamp),
                 highest_count,
                 oldest_last_noted_timestamp_hours,
             );

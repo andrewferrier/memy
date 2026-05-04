@@ -12,8 +12,8 @@ use std::process::Command;
 use std::{fs, path::Path};
 use tera::{Context, Tera};
 
-include!("src/cli.rs");
-include!("src/denylist_default.rs");
+include!("src/utils/cli.rs");
+include!("src/utils/denylist_default.rs");
 
 fn embed_hooks() {
     let mut entries = Vec::new();
@@ -43,7 +43,8 @@ pub static HOOKS: std::sync::LazyLock<BTreeMap<&'static str, &'static str>> = st
         entries.join("\n")
     );
 
-    let dest_path = Path::new("src/hooks_generated.rs");
+    let dest_path = Path::new("src/generated/hooks_generated.rs");
+    fs::create_dir_all(dest_path.parent().unwrap()).expect("Failed to create generated dir");
     fs::write(dest_path, generated_code).expect("Failed to write generated code");
 
     println!("cargo:rerun-if-changed=hooks/");
@@ -72,7 +73,7 @@ fn generate_completions(build_root_dir: &Path) -> std::io::Result<()> {
     generate_to(Zsh, &mut cmd, "memy", &completions_dir)?;
     generate_to(Fish, &mut cmd, "memy", &completions_dir)?;
 
-    println!("cargo:rerun-if-changed=src/cli.rs");
+    println!("cargo:rerun-if-changed=src/utils/cli.rs");
 
     Ok(())
 }
@@ -135,7 +136,7 @@ fn build_man_pages(build_root_dir: &Path) -> std::io::Result<()> {
 
     write_config_man_page(&man_dir);
 
-    println!("cargo:rerun-if-changed=src/cli.rs");
+    println!("cargo:rerun-if-changed=src/utils/cli.rs");
 
     Ok(())
 }

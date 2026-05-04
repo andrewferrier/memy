@@ -12,8 +12,8 @@ use toml::Value as TomlValue;
 use tracing::instrument;
 use xdg::BaseDirectories;
 
-use crate::denylist_default;
-use crate::utils;
+use super::denylist_default;
+use super::expand_tilde_in_path;
 
 pub type RecencyBias = f64;
 
@@ -56,7 +56,7 @@ where
 
 static CONFIG: OnceLock<MemyConfig> = OnceLock::new();
 
-const TEMPLATE_CONFIG: &str = include_str!("../config/template-memy.toml");
+const TEMPLATE_CONFIG: &str = include_str!("../../config/template-memy.toml");
 
 #[instrument(level = "trace")]
 fn get_config_file_path() -> PathBuf {
@@ -192,11 +192,7 @@ pub fn get_denylist_matcher() -> Gitignore {
             .clone()
             .unwrap_or_default()
             .into_iter()
-            .map(|pattern| {
-                utils::expand_tilde_in_path(&pattern)
-                    .to_string_lossy()
-                    .to_string()
-            })
+            .map(|pattern| expand_tilde_in_path(&pattern).to_string_lossy().to_string())
             .collect(),
     );
 

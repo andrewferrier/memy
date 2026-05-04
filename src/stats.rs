@@ -5,9 +5,10 @@ use std::io::{Write as _, stdout};
 use std::path::PathBuf;
 use tracing::instrument;
 
-use crate::db;
-use crate::types::{NotedCount, UnixTimestamp};
-use crate::{cli, utils};
+use crate::utils;
+use crate::utils::cli;
+use crate::utils::db;
+use crate::utils::types::{NotedCount, UnixTimestamp};
 
 #[derive(serde::Serialize)]
 pub struct PathTimestamp {

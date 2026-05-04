@@ -1,5 +1,5 @@
-use cli::ListArgs;
-use config::DeniedFilesOnList;
+use crate::utils::cli::ListArgs;
+use crate::utils::config::DeniedFilesOnList;
 use core::error::Error;
 use core::fmt::Write as _;
 use log::{info, warn};
@@ -9,14 +9,13 @@ use std::io::{Write as _, stdout};
 use std::sync::LazyLock;
 use tracing::instrument;
 
-use crate::cli;
-use crate::config;
-use crate::db;
-use crate::query;
-use crate::types::Frecency;
-use crate::types::NotedCount;
-use crate::types::UnixTimestamp;
 use crate::utils;
+use crate::utils::config;
+use crate::utils::db;
+use crate::utils::query;
+use crate::utils::types::Frecency;
+use crate::utils::types::NotedCount;
+use crate::utils::types::UnixTimestamp;
 
 #[derive(serde::Serialize)]
 struct PathFrecency {
@@ -174,10 +173,10 @@ pub fn command(args: &ListArgs) -> Result<(), Box<dyn Error>> {
     let output = format_results(&results, args)?;
 
     if args.output_filter {
-        let output_filter_cmd = utils::get_output_filter_command(args.output_filter_command.as_deref())
+        let output_filter_cmd = utils::output_filter::get_output_filter_command(args.output_filter_command.as_deref())
             .ok_or("No output filter command found. Set MEMY_OUTPUT_FILTER environment variable, memy_output_filter in config, or use --output-filter-command option.")?;
 
-        let filtered = utils::run_output_filter(&output, &output_filter_cmd)?;
+        let filtered = utils::output_filter::run_output_filter(&output, &output_filter_cmd)?;
         let mut stdout_handle = stdout().lock();
         stdout_handle.write_all(filtered.as_bytes())?;
     } else {
