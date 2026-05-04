@@ -68,5 +68,9 @@ curl --fail -L "$URL" -o "${DOWNLOAD_TMP}/${BIN_NAME}" || {
 mv "$DOWNLOAD_TMP/$BIN_NAME" "$TARGET_BIN_PATH"
 chmod +x "$TARGET_BIN_PATH"
 
+if ! "$TARGET_BIN_PATH" --version >/dev/null 2>&1; then
+  echo "Warning: Installed binary failed to run. It may not be compatible with your system." >&2
+fi
+
 echo "Installed $BIN_NAME to $TARGET_BIN_PATH"
 echo "Make sure $DEST is in your PATH"
