@@ -153,15 +153,15 @@ fn get_output_filter_command(args: &ListArgs) -> Option<String> {
     }
 
     if utils::is_command_available("fzf") {
-        return Some("fzf --ansi".to_owned());
+        return Some("fzf --ansi --tac".to_owned());
     }
 
     if utils::is_command_available("sk") {
-        return Some("sk --ansi".to_owned());
+        return Some("sk --ansi --tac".to_owned());
     }
 
     if utils::is_command_available("fzy") {
-        return Some("fzy".to_owned());
+        return Some("tac | fzy".to_owned());
     }
 
     None
