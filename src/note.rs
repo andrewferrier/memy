@@ -1,11 +1,11 @@
 use core::error::Error;
-use log::{info, warn};
 use rusqlite::Transaction;
 use rusqlite::params;
 use std::borrow::Cow;
 use std::fs;
 use std::path::Path;
 use tracing::instrument;
+use tracing::{info, warn};
 
 use crate::utils;
 use crate::utils::cli;

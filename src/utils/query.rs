@@ -1,8 +1,8 @@
 use core::error::Error;
-use log::info;
 use rayon::prelude::*;
 use rusqlite::Connection;
 use std::fs::{Metadata, metadata};
+use tracing::info;
 use tracing::instrument;
 
 use super::db;

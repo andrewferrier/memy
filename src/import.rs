@@ -1,7 +1,7 @@
 use core::error::Error;
-use log::{debug, info};
 use rusqlite::Connection;
 use std::fs;
+use tracing::{debug, info};
 
 use crate::utils;
 use crate::utils::types::NotedCount;

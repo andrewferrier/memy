@@ -1,7 +1,6 @@
 use config::{Config, File, FileFormat, Value};
 use core::error::Error;
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
-use log::{debug, error};
 use serde::de::{self, Deserialize as _};
 use std::env;
 use std::fs;
@@ -10,6 +9,7 @@ use std::path::PathBuf;
 use std::sync::OnceLock;
 use toml::Value as TomlValue;
 use tracing::instrument;
+use tracing::{debug, error};
 use xdg::BaseDirectories;
 
 use super::denylist_default;

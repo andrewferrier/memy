@@ -1,7 +1,7 @@
 use core::error::Error;
-use log::debug;
 use std::io::{Write as _, stdout};
 use std::path::PathBuf;
+use tracing::debug;
 use tracing::instrument;
 
 use crate::utils;

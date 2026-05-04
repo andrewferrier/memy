@@ -1,7 +1,7 @@
-use log::debug;
 use std::env;
 use std::io::Write as _;
 use std::process::{Command, Stdio};
+use tracing::debug;
 
 use super::config;
 

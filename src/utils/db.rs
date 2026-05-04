@@ -1,9 +1,9 @@
 use core::error::Error;
-use log::debug;
 use rusqlite::{Connection, OptionalExtension as _};
 use std::env;
 use std::fs;
 use std::path::PathBuf;
+use tracing::debug;
 use tracing::instrument;
 use xdg::BaseDirectories;
 

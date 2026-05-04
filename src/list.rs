@@ -2,12 +2,12 @@ use crate::utils::cli::ListArgs;
 use crate::utils::config::DeniedFilesOnList;
 use core::error::Error;
 use core::fmt::Write as _;
-use log::{info, warn};
 use rusqlite::{Connection, params_from_iter};
 use std::fs::FileType;
 use std::io::{Write as _, stdout};
 use std::sync::LazyLock;
 use tracing::instrument;
+use tracing::{info, warn};
 
 use crate::utils;
 use crate::utils::config;

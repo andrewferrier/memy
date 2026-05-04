@@ -1,9 +1,6 @@
-use tracing_log::LogTracer;
 use tracing_subscriber::{EnvFilter, fmt};
 
 pub fn configure_logging_and_tracing(verbose: u8, color: Option<bool>) {
-    LogTracer::init().expect("Failed to init LogTracer");
-
     let default_level = match verbose {
         0 => "warn",
         1 => "info",

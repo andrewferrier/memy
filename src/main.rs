@@ -8,8 +8,8 @@ mod z;
 
 use clap::CommandFactory as _;
 use core::error::Error;
-use log::debug;
 use std::io::stdout;
+use tracing::debug;
 use tracing::instrument;
 use utils::cli::{Cli, Commands};
 
