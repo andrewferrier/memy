@@ -83,21 +83,6 @@ pub fn parse_newer_than(input: &str) -> Result<UnixTimestamp, Box<dyn core::erro
     Err(format!("Unable to parse '{input}' as a duration or date/time").into())
 }
 
-pub fn detect_shell() -> Option<clap_complete::Shell> {
-    let name = std::env::var("SHELL")
-        .ok()
-        .and_then(|path| path.rsplit('/').next().map(str::to_lowercase))?;
-
-    match name.as_str() {
-        "bash" => Some(clap_complete::Shell::Bash),
-        "zsh" => Some(clap_complete::Shell::Zsh),
-        "fish" => Some(clap_complete::Shell::Fish),
-        "powershell" => Some(clap_complete::Shell::PowerShell),
-        "elvish" => Some(clap_complete::Shell::Elvish),
-        _ => None,
-    }
-}
-
 pub fn is_command_available(cmd: &str) -> bool {
     Command::new(cmd)
         .arg("--version")

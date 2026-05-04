@@ -16,7 +16,7 @@ use utils::cli::{Cli, Commands};
 #[instrument(level = "trace")]
 fn completions(shell: Option<clap_complete::Shell>) -> Result<(), Box<dyn Error>> {
     let actual_shell = shell
-        .or_else(utils::detect_shell)
+        .or_else(clap_complete::Shell::from_env)
         .ok_or("Could not determine shell. Specify one explicitly.")?;
     let mut cmd = Cli::command();
     let bin_name = cmd.get_name().to_owned();
