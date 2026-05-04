@@ -13,7 +13,7 @@ use super::is_command_available;
 /// 2. The `MEMY_OUTPUT_FILTER` environment variable
 /// 3. The `memy_output_filter` configuration option
 /// 4. Auto-detected fuzzy finders (`fzf`, `sk`, `fzy`)
-pub fn get_output_filter_command(override_cmd: Option<&str>) -> Option<String> {
+fn get_output_filter_command(override_cmd: Option<&str>) -> Option<String> {
     if let Some(cmd) = override_cmd {
         debug!("Output filter detected from command line: {cmd}");
         return Some(cmd.to_owned());
@@ -49,12 +49,20 @@ pub fn get_output_filter_command(override_cmd: Option<&str>) -> Option<String> {
     None
 }
 
-/// Pipes `output` through the given shell `filter_cmd` and returns the
-/// filter's stdout. Expands tildes in the returned string.
+/// Pipes `output` through an output filter command and returns the filter's
+/// stdout. Resolves the command via [`get_output_filter_command`] (passing
+/// `override_cmd` as the optional override), returning an error if no command
+/// can be found. Expands tildes in the returned string.
 pub fn run_output_filter(
     output: &str,
-    filter_cmd: &str,
+    override_cmd: Option<&str>,
 ) -> Result<String, Box<dyn core::error::Error>> {
+    let filter_cmd_string = get_output_filter_command(override_cmd).ok_or(
+        "No output filter command found. Set MEMY_OUTPUT_FILTER environment variable, \
+         memy_output_filter in config, or install fzf/sk/fzy.",
+    )?;
+    let filter_cmd = filter_cmd_string.as_str();
+
     debug!("Running through external filter command {filter_cmd}");
 
     let shell = env::var("SHELL")

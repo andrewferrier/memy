@@ -173,10 +173,10 @@ pub fn command(args: &ListArgs) -> Result<(), Box<dyn Error>> {
     let output = format_results(&results, args)?;
 
     if args.output_filter {
-        let output_filter_cmd = utils::output_filter::get_output_filter_command(args.output_filter_command.as_deref())
-            .ok_or("No output filter command found. Set MEMY_OUTPUT_FILTER environment variable, memy_output_filter in config, or use --output-filter-command option.")?;
-
-        let filtered = utils::output_filter::run_output_filter(&output, &output_filter_cmd)?;
+        let filtered = utils::output_filter::run_output_filter(
+            &output,
+            args.output_filter_command.as_deref(),
+        )?;
         let mut stdout_handle = stdout().lock();
         stdout_handle.write_all(filtered.as_bytes())?;
     } else {

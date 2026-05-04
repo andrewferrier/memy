@@ -87,12 +87,7 @@ fn db_search(args: &ZArgs) -> Result<(), Box<dyn Error>> {
             acc
         });
 
-        let filter_cmd = utils::output_filter::get_output_filter_command(None).ok_or(
-            "No output filter command found. Set MEMY_OUTPUT_FILTER environment variable, \
-             memy_output_filter in config, or install fzf.",
-        )?;
-
-        let selected = utils::output_filter::run_output_filter(&output, &filter_cmd)?;
+        let selected = utils::output_filter::run_output_filter(&output, None)?;
         let mut stdout_handle = stdout().lock();
         stdout_handle.write_all(selected.as_bytes())?;
     } else {
