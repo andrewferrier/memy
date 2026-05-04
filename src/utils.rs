@@ -176,8 +176,6 @@ where
     })
 }
 
-/// Returns a colored display string for a path. The last path component is
-/// colored blue for directories and green for files.
 pub fn format_path_colored(path: &str, is_dir: bool) -> String {
     let display: Cow<str> = if config::get_use_tilde_on_list() {
         Cow::Owned(collapse_to_tilde(path))
