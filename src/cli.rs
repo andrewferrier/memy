@@ -68,12 +68,16 @@ pub enum Commands {
         #[arg(value_enum)]
         shell: Option<clap_complete::Shell>,
     },
-    /// Output the most frecent directory matching keywords (zoxide-compatible with shell hooks)
+    /// Find most frecent directory/ies matching keywords (zoxide-compatible when used with shell hook aliases)
     Z(ZArgs),
 }
 
 #[derive(Args, Debug)]
 pub struct ZArgs {
+    /// Show all matching directories interactively via an output filter (e.g. fzf)
+    #[arg(short = 'i', long)]
+    pub interactive: bool,
+
     /// Keywords to match against noted directories
     #[arg(value_name = "KEYWORDS", num_args = 0..)]
     pub keywords: Vec<String>,

@@ -279,3 +279,117 @@ fn test_z_empty_db_exits_nonzero() {
         "Should report 'no match found', got: {stderr}"
     );
 }
+
+#[test]
+fn test_z_interactive_no_filter_available_fails() {
+    let ctx = TestContext::new();
+
+    let dir_bar = create_test_directory(&ctx.working_path, "bar");
+    note_path(&ctx.db_path, None, dir_bar.to_str().unwrap(), 1, &[], &[]);
+
+    // Unset MEMY_OUTPUT_FILTER and prevent auto-detection of fzf/sk/fzy by
+    // clearing PATH so no external binaries can be found.
+    let output = memy_cmd(
+        Some(&ctx.db_path),
+        None,
+        &[
+            "--config",
+            "import_on_first_use=false",
+            "z",
+            "-i",
+            "--",
+            "bar",
+        ],
+        vec![("MEMY_OUTPUT_FILTER", ""), ("PATH", "")],
+    );
+
+    assert!(
+        !output.status.success(),
+        "z -i should fail when no output filter is available"
+    );
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("No output filter command found"),
+        "Should report missing filter, got: {stderr}"
+    );
+}
+
+#[test]
+fn test_z_interactive_with_keyword_filter() {
+    let ctx = TestContext::new();
+
+    let dir_foo = create_test_directory(&ctx.working_path, "foo");
+    let dir_bar = create_test_directory(&ctx.working_path, "bar");
+    note_path(&ctx.db_path, None, dir_foo.to_str().unwrap(), 1, &[], &[]);
+    note_path(&ctx.db_path, None, dir_bar.to_str().unwrap(), 1, &[], &[]);
+
+    // Use `head -1` as the output filter so we get a deterministic result.
+    // With keyword "bar", only dir_bar should be passed to the filter.
+    let output = memy_cmd(
+        Some(&ctx.db_path),
+        None,
+        &[
+            "--config",
+            "import_on_first_use=false",
+            "z",
+            "-i",
+            "--",
+            "bar",
+        ],
+        vec![("MEMY_OUTPUT_FILTER", "head -1")],
+    );
+
+    assert!(output.status.success(), "z -i bar should succeed");
+    let result = String::from_utf8_lossy(&output.stdout).trim().to_owned();
+    assert_eq!(result, dir_bar.to_str().unwrap(), "Should return dir_bar");
+}
+
+#[test]
+fn test_z_interactive_no_keywords_returns_all_dirs() {
+    let ctx = TestContext::new();
+
+    let dir_a = create_test_directory(&ctx.working_path, "aaa");
+    let dir_b = create_test_directory(&ctx.working_path, "bbb");
+    note_path(&ctx.db_path, None, dir_a.to_str().unwrap(), 1, &[], &[]);
+    note_path(&ctx.db_path, None, dir_b.to_str().unwrap(), 1, &[], &[]);
+
+    // With no keywords all dirs pass; `cat` passes everything through unchanged.
+    // We count lines to verify both dirs were presented.
+    let output = memy_cmd(
+        Some(&ctx.db_path),
+        None,
+        &["--config", "import_on_first_use=false", "z", "-i"],
+        vec![("MEMY_OUTPUT_FILTER", "cat")],
+    );
+
+    assert!(
+        output.status.success(),
+        "z -i with no keywords should succeed"
+    );
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let lines: Vec<&str> = stdout.lines().collect();
+    assert_eq!(
+        lines.len(),
+        2,
+        "Should output both directories, got: {lines:?}"
+    );
+}
+
+#[test]
+fn test_z_interactive_empty_db_fails() {
+    let ctx = TestContext::new();
+
+    let output = memy_cmd(
+        Some(&ctx.db_path),
+        None,
+        &["--config", "import_on_first_use=false", "z", "-i"],
+        vec![("MEMY_OUTPUT_FILTER", "cat")],
+    );
+
+    assert!(!output.status.success(), "z -i on empty DB should fail");
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("no match found"),
+        "Should report 'no match found', got: {stderr}"
+    );
+}

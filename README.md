@@ -83,7 +83,13 @@ z ..           # go up one directory
 
 If you already have zoxide installed, memy's `z` will not override it — the function is only defined if `z` does not already exist in your shell.
 
-`zi` is also provided as an alias for `memy-cd` (interactive directory selection via `fzf` or similar).
+`zi` is also provided as a zoxide-compatible interactive variant of `z`. It filters directories using the same keyword-matching algorithm as `z`, then lets you pick interactively via `fzf` or a similar output filter:
+
+```sh
+zi          # interactively pick from all noted directories
+zi bar      # filter to directories matching 'bar', then pick interactively
+zi foo bar  # filter to directories matching 'foo' then 'bar', then pick interactively
+```
 
 ## Noting files automatically using hooks
 

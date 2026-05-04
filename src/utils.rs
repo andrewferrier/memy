@@ -1,11 +1,14 @@
 use chrono::{DateTime, Local, TimeZone as _};
+use colored::Colorize as _;
 use std::borrow::Cow;
 use std::env;
 use std::env::home_dir;
+use std::io::Write as _;
 use std::path::{Component, Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Stdio};
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use crate::config;
 use crate::types::UnixTimestamp;
 use crate::types::UnixTimestampHours;
 
@@ -170,6 +173,106 @@ where
         (_, _, true) => "symlink",
         _ => "other",
     })
+}
+
+/// Returns a colored display string for a path. The last path component is
+/// colored blue for directories and green for files.
+pub fn format_path_colored(path: &str, is_dir: bool) -> String {
+    let display: Cow<str> = if config::get_use_tilde_on_list() {
+        Cow::Owned(collapse_to_tilde(path))
+    } else {
+        Cow::Borrowed(path)
+    };
+
+    if let Some((parent, base)) = display.rsplit_once('/') {
+        if is_dir {
+            format!("{}/{}", parent, base.blue())
+        } else {
+            format!("{}/{}", parent, base.green())
+        }
+    } else if is_dir {
+        display.blue().to_string()
+    } else {
+        display.green().to_string()
+    }
+}
+
+/// Returns the output filter command to use, checking (in order):
+/// 1. An explicit override supplied by the caller
+/// 2. The `MEMY_OUTPUT_FILTER` environment variable
+/// 3. The `memy_output_filter` configuration option
+/// 4. Auto-detected fuzzy finders (`fzf`, `sk`, `fzy`)
+pub fn get_output_filter_command(override_cmd: Option<&str>) -> Option<String> {
+    if let Some(cmd) = override_cmd {
+        return Some(cmd.to_owned());
+    }
+
+    if let Ok(cmd) = env::var("MEMY_OUTPUT_FILTER")
+        && !cmd.is_empty()
+    {
+        return Some(cmd);
+    }
+
+    if let Some(cmd) = config::get_memy_output_filter() {
+        return Some(cmd);
+    }
+
+    if is_command_available("fzf") {
+        return Some("fzf --ansi --tac".to_owned());
+    }
+
+    if is_command_available("sk") {
+        return Some("sk --ansi --tac".to_owned());
+    }
+
+    if is_command_available("fzy") {
+        return Some("tac | fzy".to_owned());
+    }
+
+    None
+}
+
+/// Pipes `output` through the given shell `filter_cmd` and returns the
+/// filter's stdout. Expands tildes in the returned string.
+pub fn run_output_filter(
+    output: &str,
+    filter_cmd: &str,
+) -> Result<String, Box<dyn core::error::Error>> {
+    let shell = env::var("SHELL")
+        .ok()
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(|| "sh".to_owned());
+
+    let mut cmd = Command::new(&shell)
+        .arg("-c")
+        .arg(filter_cmd)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|err| {
+            format!(
+                "Failed to execute output filter command via shell {shell:?} (command: {filter_cmd:?}): {err}"
+            )
+        })?;
+
+    let stdin = cmd.stdin.as_mut().ok_or("Failed to open stdin")?;
+    stdin.write_all(output.as_bytes())?;
+
+    let output_data = cmd.wait_with_output()?;
+    if !output_data.status.success() {
+        let stderr = String::from_utf8_lossy(&output_data.stderr);
+        return Err(format!(
+            "Output filter command failed via shell {shell:?} with status {}: {}",
+            output_data.status,
+            stderr.trim()
+        )
+        .into());
+    }
+
+    let result = String::from_utf8(output_data.stdout)
+        .map_err(|_| "Output filter output is not valid UTF-8")?;
+    Ok(expand_tildes_in_multiline_string(&result))
 }
 
 #[cfg(test)]

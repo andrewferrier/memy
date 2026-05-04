@@ -37,6 +37,7 @@ end
 
 if not functions -q zi; and not command -q zi
     function zi
-        memy-cd
+        set result (memy z -i -- $argv)
+        and cd $result
     end
 end

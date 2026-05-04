@@ -31,5 +31,8 @@ if ! (( $+functions[z] )) && ! (( $+commands[z] )); then
 fi
 
 if ! (( $+functions[zi] )) && ! (( $+commands[zi] )); then
-  alias zi='cd $(memy list -d -s)'
+  function zi() {
+    local result
+    result="$(memy z -i -- "$@")" && cd "$result"
+  }
 fi

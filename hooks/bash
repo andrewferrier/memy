@@ -55,5 +55,8 @@ if ! declare -f z &>/dev/null && ! command -v z &>/dev/null; then
 fi
 
 if ! declare -f zi &>/dev/null && ! command -v zi &>/dev/null; then
-  alias zi='_memy_cd'
+  function zi() {
+    local result
+    result="$(memy z -i -- "$@")" && cd "$result"
+  }
 fi

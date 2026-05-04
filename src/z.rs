@@ -75,18 +75,40 @@ fn db_search(args: &ZArgs) -> Result<(), Box<dyn Error>> {
         })?;
     db::close(db_connection)?;
 
-    let Some(best) = matches.into_iter().next_back() else {
+    if matches.is_empty() {
         return Err("no match found".into());
-    };
+    }
 
-    let mut stdout_handle = stdout().lock();
-    writeln!(stdout_handle, "{}", best.path)?;
+    if args.interactive {
+        let output: String = matches.iter().fold(String::new(), |mut acc, m| {
+            use core::fmt::Write as _;
+            let _ = writeln!(acc, "{}", utils::format_path_colored(&m.path, true));
+            acc
+        });
+
+        let filter_cmd = utils::get_output_filter_command(None).ok_or(
+            "No output filter command found. Set MEMY_OUTPUT_FILTER environment variable, \
+             memy_output_filter in config, or install fzf.",
+        )?;
+
+        let selected = utils::run_output_filter(&output, &filter_cmd)?;
+        let mut stdout_handle = stdout().lock();
+        stdout_handle.write_all(selected.as_bytes())?;
+    } else {
+        let best = matches.into_iter().next_back().expect("matches non-empty");
+        let mut stdout_handle = stdout().lock();
+        writeln!(stdout_handle, "{}", best.path)?;
+    }
 
     Ok(())
 }
 
 #[instrument(level = "trace")]
 pub fn command(args: &ZArgs) -> Result<(), Box<dyn Error>> {
+    if args.interactive {
+        return db_search(args);
+    }
+
     if args.keywords.is_empty() {
         let home = std::env::home_dir().ok_or("Cannot determine home directory")?;
         let normalized_home = normalize_path(&home);
