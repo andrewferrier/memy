@@ -266,6 +266,64 @@ mod tests {
     use proptest::strategy::Strategy;
     use proptest::string::string_regex;
 
+    #[test]
+    fn test_parse_newer_than_humantime_hour() {
+        let now = get_unix_timestamp();
+        let cutoff = parse_newer_than("1h").expect("'1h' should parse");
+        let diff = now - cutoff;
+        assert!(
+            (3598..=3602).contains(&diff),
+            "expected diff ~3600, got {diff}"
+        );
+    }
+
+    #[test]
+    fn test_parse_newer_than_humantime_days() {
+        let now = get_unix_timestamp();
+        let cutoff = parse_newer_than("2days").expect("'2days' should parse");
+        let expected = 2 * 86400_i64;
+        let diff = now - cutoff;
+        assert!(
+            diff >= expected - 2 && diff <= expected + 2,
+            "expected diff ~{expected}, got {diff}"
+        );
+    }
+
+    #[test]
+    fn test_parse_newer_than_iso8601_datetime() {
+        let cutoff =
+            parse_newer_than("2025-01-01T00:00:00Z").expect("ISO 8601 datetime should parse");
+        assert_eq!(
+            cutoff, 1_735_689_600,
+            "unexpected epoch for 2025-01-01T00:00:00Z"
+        );
+    }
+
+    #[test]
+    fn test_parse_newer_than_date_only() {
+        let result = parse_newer_than("2025-06-15");
+        assert!(
+            result.is_ok(),
+            "date-only '2025-06-15' should parse, got {result:?}"
+        );
+    }
+
+    #[test]
+    fn test_parse_newer_than_datetime_no_timezone() {
+        let result = parse_newer_than("2025-06-15T10:30:00");
+        assert!(
+            result.is_ok(),
+            "datetime without timezone should parse, got {result:?}"
+        );
+    }
+
+    #[test]
+    fn test_parse_newer_than_invalid_returns_error() {
+        assert!(parse_newer_than("not-a-date").is_err());
+        assert!(parse_newer_than("yesterday").is_err());
+        assert!(parse_newer_than("").is_err());
+    }
+
     proptest! {
         #[test]
         fn round_trip_timestamp_serialization(timestamp in 0..=DateTime::parse_from_rfc3339("9999-12-31T23:59:59+00:00").expect("Cannot parse").timestamp()) {

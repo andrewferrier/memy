@@ -174,6 +174,7 @@ pub fn process_zoxide_query(conn: &mut Connection) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use proptest::prelude::*;
 
     #[test]
     #[allow(clippy::float_cmp, reason = "Exact comparisons are desirable here")]
@@ -273,5 +274,32 @@ mod tests {
         let result = parse_zoxide_state(input);
 
         assert!(result.is_err());
+    }
+
+    proptest! {
+        #[test]
+        fn prop_parse_fasd_str_valid_entry(
+            filename in "[^|\\n\\r]{1,50}",
+            score in 0u64..=10_000u64,
+            timestamp in 0i64..=i64::MAX,
+        ) {
+            let input = format!("{filename}|{score}.0|{timestamp}");
+            let result = from_fasd_str(&input).expect("valid fasd entry should parse");
+            prop_assert_eq!(&result.filename, &filename);
+            prop_assert_eq!(result.count, score, "count should equal rounded score");
+            prop_assert_eq!(result.timestamp, timestamp);
+        }
+
+        #[test]
+        fn prop_parse_whitespace_str_valid_entry(
+            count in 0u64..=10_000u64,
+            path in "/[a-z/]{1,50}",
+        ) {
+            let input = format!("{count}.0 {path}");
+            let result = from_whitespace_split_str(&input).expect("valid whitespace entry should parse");
+            prop_assert_eq!(&result.filename, &path);
+            prop_assert_eq!(result.count, count, "count should equal rounded score");
+            prop_assert!(result.timestamp > 0, "timestamp should be positive");
+        }
     }
 }

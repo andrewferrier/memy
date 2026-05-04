@@ -139,6 +139,7 @@ pub fn command(args: &ZArgs) -> Result<(), Box<dyn Error>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use proptest::prelude::*;
 
     #[test]
     fn test_matches_zoxide_empty_keywords() {
@@ -193,5 +194,31 @@ mod tests {
             "/foobar",
             &["fo".to_owned(), "/".to_owned(), "ba".to_owned()]
         ));
+    }
+
+    proptest! {
+        #[test]
+        fn prop_keyword_in_last_component_matches(
+            prefix in "[a-z]{1,8}",
+            keyword in "[a-z]{2,8}",
+            suffix in "[a-z]{0,5}",
+        ) {
+            // Construct a path where the keyword is embedded in the last component.
+            let path = format!("/{prefix}/{keyword}{suffix}");
+            prop_assert!(matches_zoxide(&path, core::slice::from_ref(&keyword)),
+                "path={path} should match keyword={keyword}");
+        }
+
+        #[test]
+        fn prop_keyword_only_in_non_last_component_doesnt_match(
+            keyword in "[a-z]{4,8}",
+            last_component in "[a-z]{4,8}",
+        ) {
+            // The last component must not contain the keyword.
+            prop_assume!(!last_component.contains(keyword.as_str()));
+            let path = format!("/{keyword}/{last_component}");
+            prop_assert!(!matches_zoxide(&path, core::slice::from_ref(&keyword)),
+                "keyword={keyword} should not match when absent from last component of path={path}");
+        }
     }
 }
