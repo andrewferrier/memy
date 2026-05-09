@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.19.1](https://github.com/andrewferrier/memy/compare/v0.19.0...v0.19.1) (2026-05-09)
+
+
+### Bug Fixes
+
+* Release packages for MacOS ([0421ab2](https://github.com/andrewferrier/memy/commit/0421ab2e83d6dd6f308fd88a9d595bbaf6e80229))
+
 ## [0.19.0](https://github.com/andrewferrier/memy/compare/v0.18.0...v0.19.0) (2026-05-06)
 
 
