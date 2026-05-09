@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.19.0](https://github.com/andrewferrier/memy/compare/v0.18.0...v0.19.0) (2026-05-06)
+
+
+### Features
+
+* Add --output-filter to pipe through fzf etc. - closes [#116](https://github.com/andrewferrier/memy/issues/116) ([0b5faf4](https://github.com/andrewferrier/memy/commit/0b5faf4da926eb78a68f894724870e49cf232884))
+* Improve description of 'z' command ([107f11a](https://github.com/andrewferrier/memy/commit/107f11af9cee8db905bf4bf445ee52c2ed46e72a))
+* Provide zoxide-compatible 'z' command - closes [#139](https://github.com/andrewferrier/memy/issues/139) ([4c33032](https://github.com/andrewferrier/memy/commit/4c33032bfb5ae404706e67c10b6ff7d81d616885))
+
+
+### Bug Fixes
+
+* --fail on curl in install.sh ([299623a](https://github.com/andrewferrier/memy/commit/299623af1b98c1cd57ad4a688984f092105b4faa))
+* Improve import error message ([828d994](https://github.com/andrewferrier/memy/commit/828d994d3dbc63b2ef000f6af57b950dd055cbeb))
+* Improve robustness of bash hook - closes [#137](https://github.com/andrewferrier/memy/issues/137) ([903bf7e](https://github.com/andrewferrier/memy/commit/903bf7e5936f7f6b6a38902f29b981ae87893643))
+* MacOS installation ([97c4bc5](https://github.com/andrewferrier/memy/commit/97c4bc5122fbe58a30394f52c2fa174ee7048b38))
+* Make 'zi' more z-oxide compatible - closes [#147](https://github.com/andrewferrier/memy/issues/147) ([706b647](https://github.com/andrewferrier/memy/commit/706b64733775d6368250482f8edb33f0bd904d7f))
+* Order for default selector commands - closes [#146](https://github.com/andrewferrier/memy/issues/146) ([10cc4ff](https://github.com/andrewferrier/memy/commit/10cc4ff18e4cbc5b9f39ce5b17beaf4c8ec63077))
+* Test installation of memy ([400ede3](https://github.com/andrewferrier/memy/commit/400ede38f250030f59f88a97408d6bc0e05e9552))
+
+
+### Performance Improvements
+
+* Misc improvements ([5f4861e](https://github.com/andrewferrier/memy/commit/5f4861ed8578c6a6662e5da893a857e2e80eeb1e))
+* Parallelize list loop ([1013c32](https://github.com/andrewferrier/memy/commit/1013c32a05c894c08be0ea73529b506f9a8d9882))
+
 ## [0.18.0](https://github.com/andrewferrier/memy/compare/v0.17.1...v0.18.0) (2026-03-02)
 
 
