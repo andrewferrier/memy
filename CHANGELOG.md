@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.19.2](https://github.com/andrewferrier/memy/compare/v0.19.1...v0.19.2) (2026-05-09)
+
+
+### Bug Fixes
+
+* Linux tar invocation ([54fda5d](https://github.com/andrewferrier/memy/commit/54fda5d9270876609b4a4d217d7791ec54517a32))
+
 ## [0.19.1](https://github.com/andrewferrier/memy/compare/v0.19.0...v0.19.1) (2026-05-09)
 
 
