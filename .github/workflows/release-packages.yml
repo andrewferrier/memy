@@ -80,7 +80,11 @@ jobs:
           cp target/man/*.1 dist_pkg/man/
           cp target/man/*.5 dist_pkg/man/
           cp README.md dist_pkg/
-          tar --owner=0 --group=0 czf "dist/${DEST_NAME}.tar.gz" -C dist_pkg .
+          if [[ "$RUNNER_OS" == "Linux" ]]; then
+            tar --owner=0 --group=0 czf "dist/${DEST_NAME}.tar.gz" -C dist_pkg .
+          else
+            COPYFILE_DISABLE=1 tar czf "dist/${DEST_NAME}.tar.gz" -C dist_pkg .
+          fi
 
       - name: Build .deb package (non-MUSL Linux only)
         if: runner.os == 'Linux' && !contains(matrix.target, 'musl')
