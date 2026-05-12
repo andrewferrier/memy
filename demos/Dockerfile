@@ -17,7 +17,7 @@ ENV HOME=/home/demo
 RUN NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" && \
     echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/demo/.bashrc
 
-ARG CACHE_BUST
+ADD https://api.github.com/repos/andrewferrier/memy/commits/HEAD /dev/null
 RUN git clone https://github.com/andrewferrier/memy.git
 WORKDIR /home/demo/memy
 RUN cargo build
