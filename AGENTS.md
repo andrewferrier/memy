@@ -167,3 +167,24 @@ Refer to `ARCHITECTURE.md` for architectural principles and design decisions.
 - Conventional commits drive version bumping and CHANGELOG generation
 - Packages (.deb, .rpm) built automatically on release
 - No manual intervention needed for releases
+
+## Known AI Agent Oversights
+
+This section documents cases where AI agents have made incorrect assumptions about
+this codebase or the Rust ecosystem. Use it to avoid repeating the same mistakes.
+
+### `std::env::home_dir` is not deprecated
+
+AI agents frequently flag `std::env::home_dir` as deprecated and propose replacing
+it with `env::var("HOME")` or a third-party crate. This is **incorrect** for this
+codebase.
+
+`std::env::home_dir` was deprecated between Rust 1.29 and Rust 1.85 due to incorrect
+Windows behaviour (it used the `HOME` environment variable, which Cygwin/Mingw set to
+non-native paths). The deprecation was **lifted in Rust 1.85.0** after the Windows
+implementation was fixed. Replacing it with `env::var("HOME")` would reintroduce the
+very bug that caused the original deprecation.
+
+**Do not replace `std::env::home_dir` with `env::var("HOME")` or a crate equivalent.**
+
+Reference: <https://doc.rust-lang.org/std/env/fn.home_dir.html>
