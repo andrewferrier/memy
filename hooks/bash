@@ -8,12 +8,13 @@ _memy_note_hook() {
   IFS=' ' read -r -a words <<<"$BASH_COMMAND"
 
   for word in "${words[@]}"; do
+    local expanded="${word/#\~/$HOME}"
     # shellcheck disable=SC2154
-    if [[ -e "$word" ]]; then
+    if [[ -e "$expanded" ]]; then
       memy \
         --config denied_files_warn_on_note=false \
         --config missing_files_warn_on_note=false \
-        note "$word"
+        note "$expanded"
     fi
   done
 }
