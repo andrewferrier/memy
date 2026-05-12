@@ -66,14 +66,13 @@ fn resolve_existing_dir(arg: &str) -> Option<PathBuf> {
 #[instrument(level = "trace")]
 fn db_search(args: &ZArgs) -> Result<(), Box<dyn Error>> {
     let db_connection = db::open()?;
-    let query::SortedMatches { matches, .. } =
-        query::build_sorted_matches(&db_connection, |row, meta| {
-            if meta.is_dir() && matches_zoxide(&row.path, &args.keywords) {
-                query::FilterResult::Include
-            } else {
-                query::FilterResult::Exclude
-            }
-        })?;
+    let matches = query::build_sorted_matches(&db_connection, |row, meta| {
+        if meta.is_dir() && matches_zoxide(&row.path, &args.keywords) {
+            query::FilterResult::Include
+        } else {
+            query::FilterResult::Exclude
+        }
+    })?;
     db::close(db_connection)?;
 
     if matches.is_empty() {

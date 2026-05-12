@@ -4,6 +4,7 @@ mod support;
 use support::*;
 
 use std::env::home_dir;
+use std::fs;
 
 fn z_command(
     db_path: &std::path::Path,
@@ -372,6 +373,97 @@ fn test_z_interactive_no_keywords_returns_all_dirs() {
         lines.len(),
         2,
         "Should output both directories, got: {lines:?}"
+    );
+}
+
+#[test]
+fn test_z_denylist_excludes_dir() {
+    let ctx = TestContext::new();
+
+    let denied_dir = create_test_directory(&ctx.working_path, "secret");
+    note_path(
+        &ctx.db_path,
+        None,
+        denied_dir.to_str().unwrap(),
+        1,
+        &[],
+        &[],
+    );
+
+    let deny_pattern = denied_dir.to_str().unwrap();
+    let config_contents = format!("denylist = [\"{deny_pattern}\"]\n");
+    create_config_file(&ctx.config_path, &config_contents);
+
+    let output = z_command(&ctx.db_path, Some(&ctx.config_path), &["secret"]);
+
+    assert!(
+        !output.status.success(),
+        "z should not return a denied directory"
+    );
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("no match found"),
+        "Should report 'no match found' for denied dir, got: {stderr}"
+    );
+}
+
+#[test]
+fn test_z_missing_dir_not_yet_expired() {
+    let ctx = TestContext::new();
+
+    let dir = create_test_directory(&ctx.working_path, "mydir");
+    note_path(&ctx.db_path, None, dir.to_str().unwrap(), 1, &[], &[]);
+
+    let output = z_command(&ctx.db_path, None, &["mydir"]);
+    assert!(output.status.success(), "Should find dir before deletion");
+
+    fs::remove_dir(&dir).expect("failed to remove test dir");
+
+    let output2 = z_command(&ctx.db_path, None, &["mydir"]);
+    assert!(
+        !output2.status.success(),
+        "Should not return a missing directory"
+    );
+
+    fs::create_dir(&dir).expect("failed to recreate test dir");
+
+    let output3 = z_command(&ctx.db_path, None, &["mydir"]);
+    assert!(
+        output3.status.success(),
+        "Should find dir again after recreation when entry was not expired"
+    );
+    let result = String::from_utf8_lossy(&output3.stdout).trim().to_owned();
+    assert_eq!(result, dir.to_str().unwrap());
+}
+
+#[test]
+fn test_z_missing_dir_expired_deleted_from_db() {
+    let ctx = TestContext::new();
+
+    let dir = create_test_directory(&ctx.working_path, "mydir");
+    note_path(&ctx.db_path, None, dir.to_str().unwrap(), 1, &[], &[]);
+
+    age_all_paths(&ctx.db_path, 45);
+
+    fs::remove_dir(&dir).expect("failed to remove test dir");
+
+    let output = z_command(&ctx.db_path, None, &["mydir"]);
+    assert!(
+        !output.status.success(),
+        "Should not return a missing/expired directory"
+    );
+
+    fs::create_dir(&dir).expect("failed to recreate test dir");
+
+    let output2 = z_command(&ctx.db_path, None, &["mydir"]);
+    assert!(
+        !output2.status.success(),
+        "Should not find dir after recreation when expired entry was deleted from DB"
+    );
+    let stderr = String::from_utf8_lossy(&output2.stderr);
+    assert!(
+        stderr.contains("no match found"),
+        "Should report 'no match found', got: {stderr}"
     );
 }
 

@@ -1,10 +1,12 @@
 use core::error::Error;
 use rayon::prelude::*;
-use rusqlite::Connection;
+use rusqlite::{Connection, params_from_iter};
 use std::fs::{Metadata, metadata};
-use tracing::info;
 use tracing::instrument;
+use tracing::{info, warn};
 
+use super::config;
+use super::config::DeniedFilesOnList;
 use super::db;
 use super::frecency;
 use super::types::{NotedCount, UnixTimestamp};
@@ -19,30 +21,15 @@ pub struct MatchEntry {
     pub frecency: f64,
 }
 
-pub struct SortedMatches {
-    /// Unix timestamp captured at the start of the query (shared for consistency).
-    pub now: UnixTimestamp,
-    /// Entries that exist on disk and passed the filter, sorted ascending by frecency
-    /// (highest frecency is last).
-    pub matches: Vec<MatchEntry>,
-    /// Entries whose paths no longer exist on disk.
-    pub missing: Vec<db::PathEntry>,
-    /// Paths flagged for immediate DB deletion by the filter returning [`FilterResult::Delete`].
-    pub filter_deletes: Vec<String>,
-}
-
 pub enum FilterResult {
     /// Include this entry in the output.
     Include,
     /// Exclude this entry silently.
     Exclude,
-    /// Exclude this entry and flag its path for deletion from the database.
-    Delete,
 }
 
 enum Outcome {
     Match(MatchEntry),
-    Missing(db::PathEntry),
     Delete(String),
     Skip,
 }
@@ -53,7 +40,7 @@ enum Outcome {
 pub fn build_sorted_matches<F>(
     conn: &Connection,
     filter: F,
-) -> Result<SortedMatches, Box<dyn Error>>
+) -> Result<Vec<MatchEntry>, Box<dyn Error>>
 where
     F: Fn(&db::PathEntry, &Metadata) -> FilterResult + Send + Sync,
 {
@@ -63,28 +50,60 @@ where
 
     let (Some(oldest_note), Some(highest_count_entry)) = (stats.oldest_note, stats.highest_count)
     else {
-        return Ok(SortedMatches {
-            now,
-            matches: vec![],
-            missing: vec![],
-            filter_deletes: vec![],
-        });
+        return Ok(vec![]);
     };
 
     let oldest_last_noted_timestamp_hours = timestamp_age_hours(now, oldest_note.timestamp);
     let highest_count = highest_count_entry.count;
 
+    let denylist_matcher = config::get_denylist_matcher();
+    let missing_files_delete_after_secs: i64 =
+        i64::from(config::get_missing_files_delete_from_db_after()) * 86400;
+
     let outcomes: Vec<Outcome> = rows
         .into_par_iter()
         .map(|row| {
             let Ok(meta) = metadata(&row.path) else {
-                info!("{} no longer exists, skipping", row.path);
-                return Outcome::Missing(row);
+                let last_noted_age_secs = now - row.last_noted_timestamp;
+                if missing_files_delete_after_secs >= 0
+                    && last_noted_age_secs > missing_files_delete_after_secs
+                {
+                    info!(
+                        "{} no longer exists; last noted {last_noted_age_secs} seconds ago; older than get_missing_files_delete_from_db_after, removed from database.",
+                        row.path
+                    );
+                    return Outcome::Delete(row.path);
+                }
+                info!(
+                    "{} no longer exists; last noted {last_noted_age_secs} seconds ago; {}.",
+                    row.path,
+                    if missing_files_delete_after_secs < 0 {
+                        "get_missing_files_delete_from_db_after < 0, so it will not be deleted"
+                    } else {
+                        "within get_missing_files_delete_from_db_after, retained but skipped"
+                    }
+                );
+                return Outcome::Skip;
             };
+
+            if let ignore::Match::Ignore(_) =
+                denylist_matcher.matched_path_or_any_parents(&row.path, meta.is_dir())
+            {
+                match config::get_denied_files_on_list() {
+                    DeniedFilesOnList::Delete => {
+                        info!("Path {} is denied, deleted from database.", row.path);
+                        return Outcome::Delete(row.path);
+                    }
+                    DeniedFilesOnList::Warn => {
+                        warn!("Path {} is denied, remaining in database.", row.path);
+                    }
+                    DeniedFilesOnList::SkipSilently => {}
+                }
+                return Outcome::Skip;
+            }
 
             match filter(&row, &meta) {
                 FilterResult::Exclude => return Outcome::Skip,
-                FilterResult::Delete => return Outcome::Delete(row.path),
                 FilterResult::Include => {}
             }
 
@@ -106,24 +125,24 @@ where
         .collect();
 
     let mut matches = vec![];
-    let mut missing = vec![];
-    let mut filter_deletes = vec![];
+    let mut to_delete = vec![];
 
     for outcome in outcomes {
         match outcome {
             Outcome::Match(entry) => matches.push(entry),
-            Outcome::Missing(row) => missing.push(row),
-            Outcome::Delete(path) => filter_deletes.push(path),
+            Outcome::Delete(path) => to_delete.push(path),
             Outcome::Skip => {}
         }
     }
 
+    if !to_delete.is_empty() {
+        let placeholders = to_delete.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
+        let sql = format!("DELETE FROM paths WHERE path IN ({placeholders})");
+        conn.execute(&sql, params_from_iter(&to_delete))
+            .expect("Deleting paths from DB failed");
+    }
+
     matches.par_sort_unstable_by_key(|e| e.frecency.to_bits());
 
-    Ok(SortedMatches {
-        now,
-        matches,
-        missing,
-        filter_deletes,
-    })
+    Ok(matches)
 }
