@@ -13,7 +13,7 @@ use tracing::{debug, error};
 use xdg::BaseDirectories;
 
 use super::denylist_default;
-use super::expand_tilde_in_path;
+use super::path::expand_tilde_in_path;
 
 pub type RecencyBias = f64;
 

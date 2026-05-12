@@ -5,8 +5,8 @@ use tracing::debug;
 
 use super::config;
 
-use super::expand_tildes_in_multiline_string;
 use super::is_command_available;
+use super::path::expand_tildes_in_multiline_string;
 
 /// Returns the output filter command to use, checking (in order):
 /// 1. An explicit override supplied by the caller

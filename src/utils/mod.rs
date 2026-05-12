@@ -5,15 +5,13 @@ pub mod denylist_default;
 pub mod frecency;
 pub mod logging;
 pub mod output_filter;
+pub mod path;
 pub mod query;
 pub mod types;
 
 use chrono::{DateTime, Local, TimeZone as _};
 use colored::Colorize as _;
 use std::borrow::Cow;
-use std::env;
-use std::env::home_dir;
-use std::path::{Component, Path, PathBuf};
 use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -91,67 +89,6 @@ pub fn is_command_available(cmd: &str) -> bool {
         .is_some_and(|output| output.status.success())
 }
 
-pub fn expand_tilde_in_path<P: AsRef<Path> + ?Sized>(path: &'_ P) -> Cow<'_, Path> {
-    let p = path.as_ref();
-
-    if let Some(Component::Normal(first)) = p.components().next()
-        && first == "~"
-        && let Some(home) = home_dir()
-    {
-        let mut comps = p.components();
-        comps.next(); // skip "~"
-        let expanded = home.join(comps.as_path());
-        Cow::Owned(expanded)
-    } else {
-        Cow::Borrowed(p)
-    }
-}
-
-fn expand_tilde_in_string(line: &str) -> Cow<'_, str> {
-    if (line == "~" || line.starts_with("~/"))
-        && let Ok(home) = env::var("HOME")
-    {
-        return Cow::Owned(format!("{home}{}", &line[1..]));
-    }
-
-    Cow::Borrowed(line)
-}
-
-pub fn expand_tildes_in_multiline_string(text: &str) -> String {
-    let had_trailing_newline = text.ends_with('\n');
-
-    let mut expanded = text
-        .lines()
-        .map(expand_tilde_in_string)
-        .collect::<Vec<_>>()
-        .join("\n");
-
-    if had_trailing_newline {
-        expanded.push('\n');
-    }
-
-    expanded
-}
-
-pub fn collapse_to_tilde<P: AsRef<Path>>(path: P) -> String {
-    let p = path.as_ref();
-
-    if let Some(home) = home_dir()
-        && let Ok(stripped) = p.strip_prefix(&home)
-    {
-        if stripped.as_os_str().is_empty() {
-            return "~".to_owned();
-        }
-
-        return PathBuf::from("~")
-            .join(stripped)
-            .to_string_lossy()
-            .into_owned();
-    }
-
-    p.to_string_lossy().into_owned()
-}
-
 #[allow(
     clippy::trivially_copy_pass_by_ref,
     reason = "Reference required for Serialize"
@@ -170,7 +107,7 @@ where
 
 pub fn format_path_colored(path: &str, is_dir: bool) -> String {
     let display: Cow<str> = if config::get_use_tilde_on_list() {
-        Cow::Owned(collapse_to_tilde(path))
+        Cow::Owned(path::collapse_to_tilde(path))
     } else {
         Cow::Borrowed(path)
     };
@@ -191,80 +128,8 @@ pub fn format_path_colored(path: &str, is_dir: bool) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn test_expand_tilde() {
-        let home = home_dir().expect("Could not get home dir");
-        assert_eq!(expand_tilde_in_path("~"), home);
-        assert_eq!(expand_tilde_in_path("~/"), home);
-        assert_eq!(expand_tilde_in_path("~/memy"), home.join("memy"));
-        assert_eq!(expand_tilde_in_path("~/memy/"), home.join("memy"));
-        assert_eq!(
-            expand_tilde_in_path("/etc/hosts"),
-            PathBuf::from("/etc/hosts")
-        );
-        assert_eq!(
-            expand_tilde_in_path("etc/hosts"),
-            PathBuf::from("etc/hosts")
-        );
-        assert_eq!(expand_tilde_in_path("hosts"), PathBuf::from("hosts"));
-    }
-
-    #[test]
-    fn test_reduce_to_tilde() {
-        let home = home_dir().expect("Could not get home dir");
-
-        assert_eq!(collapse_to_tilde(&home), "~");
-        assert_eq!(collapse_to_tilde(home.join("memy")), "~/memy");
-        assert_eq!(collapse_to_tilde(home.join("memy/other")), "~/memy/other");
-        assert_eq!(collapse_to_tilde("/etc/hosts"), "/etc/hosts");
-        assert_eq!(collapse_to_tilde("etc/hosts"), "etc/hosts");
-        assert_eq!(collapse_to_tilde("hosts"), "hosts");
-    }
-
-    #[test]
-    fn test_expand_tildes_in_multiline_string() {
-        let home = env::var("HOME").expect("HOME environment variable not set for test");
-
-        assert_eq!(expand_tildes_in_multiline_string(""), "");
-        assert_eq!(expand_tildes_in_multiline_string("~"), home);
-        assert_eq!(expand_tildes_in_multiline_string("\n"), "\n");
-        assert_eq!(
-            expand_tildes_in_multiline_string("/etc/hosts"),
-            "/etc/hosts"
-        );
-        assert_eq!(
-            expand_tildes_in_multiline_string("~/config"),
-            format!("{home}/config")
-        );
-        assert_eq!(
-            expand_tildes_in_multiline_string("~/file1\n~/dir/file2"),
-            format!("{home}/file1\n{home}/dir/file2")
-        );
-        assert_eq!(
-            expand_tildes_in_multiline_string("/absolute/path\nrelative/path"),
-            "/absolute/path\nrelative/path"
-        );
-        assert_eq!(
-            expand_tildes_in_multiline_string(
-                "~/file1\n/absolute/path\n~/dir/file2\nrelative/path"
-            ),
-            format!("{home}/file1\n/absolute/path\n{home}/dir/file2\nrelative/path",)
-        );
-        assert_eq!(
-            expand_tildes_in_multiline_string("~/file~name"),
-            format!("{home}/file~name")
-        );
-        assert_eq!(
-            expand_tildes_in_multiline_string("~/file1\n/absolute/path\n"),
-            format!("{home}/file1\n/absolute/path\n")
-        );
-    }
-
-    use normalize_path::NormalizePath as _;
+    use chrono::DateTime;
     use proptest::prelude::*;
-    use proptest::strategy::Strategy;
-    use proptest::string::string_regex;
 
     #[test]
     fn test_parse_newer_than_humantime_hour() {
@@ -333,28 +198,5 @@ mod tests {
 
             prop_assert_eq!(timestamp, round_trip_timestamp);
         }
-    }
-
-    proptest! {
-        #[test]
-        fn test_tilde_expand_collapse(path in generate_unix_path()) {
-            // Path normalization is needed for test paths like `~/.`
-            let normalized_path = Path::new(&path).normalize();
-            let expanded = expand_tilde_in_path(&normalized_path);
-            let collapsed = collapse_to_tilde(&expanded);
-
-            prop_assert_eq!(collapsed, normalized_path.to_string_lossy());
-        }
-    }
-
-    fn generate_unix_path() -> impl Strategy<Value = String> {
-        let component_char = r"[^/]+"; // one or more chars except '/'
-        let components = proptest::collection::vec(
-            string_regex(component_char).expect("string_regex failed"),
-            1..6,
-        );
-        let base_path = components.prop_map(|comps| comps.join("/"));
-        base_path
-            .prop_flat_map(|s| prop_oneof![Just(format!("~/{s}")), Just(format!("/{s}")), Just(s)])
     }
 }

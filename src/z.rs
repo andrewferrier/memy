@@ -1,18 +1,13 @@
 use core::error::Error;
 use std::io::{Write as _, stdout};
-use std::path::PathBuf;
 use tracing::debug;
 use tracing::instrument;
 
 use crate::utils;
 use crate::utils::cli::ZArgs;
 use crate::utils::db;
+use crate::utils::path;
 use crate::utils::query;
-
-/// Normalizes a `PathBuf` by stripping trailing slashes (by re-collecting components).
-fn normalize_path(path: &std::path::Path) -> PathBuf {
-    path.components().collect()
-}
 
 /// Returns true if `path` matches all `keywords` using the zoxide matching algorithm:
 /// * All terms must be present within the path, in order.
@@ -44,23 +39,6 @@ pub fn matches_zoxide(path: &str, keywords: &[String]) -> bool {
     let path_last_component = path_lower.split('/').next_back().unwrap_or(&path_lower);
 
     path_last_component.contains(kw_last_component)
-}
-
-/// Returns `Some(absolute_path)` if the resolved path is an existing directory, `None` otherwise.
-fn resolve_existing_dir(arg: &str) -> Option<PathBuf> {
-    let expanded = utils::expand_tilde_in_path(arg);
-    let resolved = if expanded.is_absolute() {
-        expanded.into_owned()
-    } else {
-        let cwd = std::env::current_dir().ok()?;
-        cwd.join(&expanded)
-    };
-
-    if resolved.is_dir() {
-        Some(normalize_path(&resolved))
-    } else {
-        None
-    }
 }
 
 #[instrument(level = "trace")]
@@ -103,7 +81,7 @@ pub fn command(args: &ZArgs) -> Result<(), Box<dyn Error>> {
     if !args.interactive {
         if args.keywords.is_empty() {
             let home = std::env::home_dir().ok_or("Cannot determine home directory")?;
-            let normalized_home = normalize_path(&home);
+            let normalized_home = path::normalize_path(&home);
             let mut stdout_handle = stdout().lock();
             writeln!(stdout_handle, "{}", normalized_home.to_string_lossy())?;
             return Ok(());
@@ -114,7 +92,7 @@ pub fn command(args: &ZArgs) -> Result<(), Box<dyn Error>> {
         }
 
         if args.keywords.len() == 1
-            && let Some(resolved) = resolve_existing_dir(&args.keywords[0])
+            && let Some(resolved) = path::resolve_existing_dir(&args.keywords[0])
         {
             debug!(
                 "Returning directory as specified on command line: {}",
