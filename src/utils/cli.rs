@@ -69,6 +69,7 @@ pub enum Commands {
         shell: Option<clap_complete::Shell>,
     },
     /// Find most frecent directory/ies matching keywords (zoxide-compatible when used with shell hook aliases)
+    #[command(hide = true)]
     Z(ZArgs),
     /// Open a file with the platform default application (e.g. xdg-open on Linux, open on macOS)
     #[command(hide = true)]
