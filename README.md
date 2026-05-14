@@ -55,10 +55,19 @@ Currently, memy has been tested on Linux and MacOS (limited). It has not been te
   cd $(memy list -d -s --output-filter-command 'grep -i download | head -1')
   ```
 
-- (On Linux) Open a recently used path in your GUI file manager:
+- Open a recently used file with the platform default application, selecting it using `fzf` or other selector:
 
   ```sh
-  memy list -f -s | xargs xdg-open
+  memy list -f -s | xargs xdg-open   # Linux
+  memy list -f -s | xargs open       # macOS
+  # or use the `memy-open` convenience command if the memy hook is installed for your shell (see below)
+  ```
+
+- Select from all remembered paths and `cd` to it if it's a directory, or open it with the default application if it's a file:
+
+  ```sh
+  # use the `memy-go` convenience command if the memy hook is installed for your shell (see below)
+  memy-go
   ```
 
 Many of these more advanced tricks would work well configured as [shell aliases](https://linuxize.com/post/how-to-create-bash-aliases/).
@@ -112,6 +121,14 @@ To see the contents of a hook, type `memy hook <hookname>`. In future, we'll pro
 | ranger | Run `memy hook ranger.rc.conf >> ~/.config/ranger/rc.conf`  |
 | vim    | Run `memy hook vim.vim > ~/.vim/plugin/memy.vim`            |
 | zsh    | Run `echo 'eval $(memy hook zsh)' >> ~/.zshrc`              |
+
+### Shell Convenience Functions
+
+When the bash, zsh, or fish hook is installed, the following shell functions are available:
+
+- **`memy-cd`** — select a directory from your remembered paths using your configured selector (e.g. fzf), then `cd` to it.
+- **`memy-open`** — select a file from your remembered paths using your configured selector, then open it with the platform default application (`xdg-open` on Linux, `open` on macOS).
+- **`memy-go`** — select from all remembered paths (files and directories); `cd` if the selection is a directory, or open with the default application if it is a file.
 
 ## Installation
 
