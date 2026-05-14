@@ -34,14 +34,42 @@ _memy_install_debug_trap() {
 
 _memy_install_debug_trap
 
+_memy_select() {
+  local selected
+  selected=$(memy --color always list "$@" -s) || return
+  [[ -n "$selected" ]] || return 1
+  echo "${selected/#\~/$HOME}"
+}
+
 _memy_cd() {
   local selected
-  selected=$(memy list -d -s)
+  selected=$(_memy_select -d) || return
   # shellcheck disable=SC2164
-  [[ -n "$selected" ]] && cd "${selected/#\~/$HOME}"
+  cd "$selected"
 }
 
 alias memy-cd='_memy_cd'
+
+_memy_open() {
+  local selected
+  selected=$(_memy_select -f) || return
+  memy open "$selected"
+}
+
+alias memy-open='_memy_open'
+
+_memy_go() {
+  local selected
+  selected=$(_memy_select) || return
+  if [[ -d "$selected" ]]; then
+    # shellcheck disable=SC2164
+    cd "$selected"
+  else
+    memy open "$selected"
+  fi
+}
+
+alias memy-go='_memy_go'
 
 if ! declare -f z &>/dev/null && ! command -v z &>/dev/null; then
   function z() {

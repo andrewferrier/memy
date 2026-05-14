@@ -40,18 +40,18 @@ jobs:
       - uses: actions-rust-lang/audit@v1
         if: runner.os == 'Linux'
 
-      - name: Install neovim and zsh (Linux)
+      - name: Install neovim and zsh and fish (Linux)
         if: runner.os == 'Linux'
         run: |
           curl -Lo /tmp/nvim-linux-x86_64.tar.gz https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz
           tar -C /tmp -xzf /tmp/nvim-linux-x86_64.tar.gz
           sudo mv /tmp/nvim-linux-x86_64 /opt/nvim
           sudo ln -s /opt/nvim/bin/nvim /usr/local/bin/nvim
-          sudo apt-get install -y zsh
+          sudo apt-get install -y zsh fish
 
-      - name: Install neovim (macOS)
+      - name: Install neovim and fish (macOS)
         if: runner.os == 'macOS'
-        run: brew install neovim
+        run: brew install neovim fish
 
       - name: Build
         run: cargo build --verbose

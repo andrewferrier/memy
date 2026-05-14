@@ -17,10 +17,30 @@ function fish_preexec --on-event fish_preexec
     end
 end
 
+function _memy_select
+    set selected (memy --color always list $argv -s)
+    if test -z "$selected"
+        return 1
+    end
+    echo (string replace -r '^~' $HOME -- $selected)
+end
+
 function memy-cd
-    set selected (memy list -d -s)
-    if test -n "$selected"
-        cd "$selected"
+    set selected (_memy_select -d); or return
+    cd $selected
+end
+
+function memy-open
+    set selected (_memy_select -f); or return
+    memy open $selected
+end
+
+function memy-go
+    set selected (_memy_select); or return
+    if test -d "$selected"
+        cd $selected
+    else
+        memy open $selected
     end
 end
 

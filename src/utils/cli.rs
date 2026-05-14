@@ -70,6 +70,9 @@ pub enum Commands {
     },
     /// Find most frecent directory/ies matching keywords (zoxide-compatible when used with shell hook aliases)
     Z(ZArgs),
+    /// Open a file with the platform default application (e.g. xdg-open on Linux, open on macOS)
+    #[command(hide = true)]
+    Open(OpenArgs),
 }
 
 #[derive(Args, Debug)]
@@ -121,6 +124,13 @@ pub struct ListArgs {
         requires = "output_filter"
     )]
     pub output_filter_command: Option<String>,
+}
+
+#[derive(Args, Debug)]
+pub struct OpenArgs {
+    /// Path to the file to open
+    #[arg(value_name = "PATH")]
+    pub path: String,
 }
 
 #[derive(Args, Debug)]

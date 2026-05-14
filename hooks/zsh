@@ -17,7 +17,40 @@ autoload -Uz add-zsh-hook
 
 add-zsh-hook preexec memy_preexec
 
-alias memy-cd='cd $(memy list -d -s)'
+_memy_select() {
+  local selected
+  selected=$(memy --color always list "$@" -s) || return
+  [[ -n "$selected" ]] || return 1
+  echo "${selected/#\~/$HOME}"
+}
+
+_memy_cd() {
+  local selected
+  selected=$(_memy_select -d) || return
+  cd "$selected"
+}
+
+alias memy-cd='_memy_cd'
+
+_memy_open() {
+  local selected
+  selected=$(_memy_select -f) || return
+  memy open "$selected"
+}
+
+alias memy-open='_memy_open'
+
+_memy_go() {
+  local selected
+  selected=$(_memy_select) || return
+  if [[ -d "$selected" ]]; then
+    cd "$selected"
+  else
+    memy open "$selected"
+  fi
+}
+
+alias memy-go='_memy_go'
 
 if ! (( $+functions[z] )) && ! (( $+commands[z] )); then
   function z() {

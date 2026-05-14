@@ -2,6 +2,7 @@ mod hooks;
 mod import;
 mod list;
 mod note;
+mod open;
 mod stats;
 mod utils;
 mod z;
@@ -35,6 +36,7 @@ fn handle_cli_command(
         Commands::Hook { hook_name } => Ok(hooks::command(hook_name)?),
         Commands::Stats(stats_args) => Ok(stats::command(&stats_args)?),
         Commands::Z(z_args) => Ok(z::command(&z_args)?),
+        Commands::Open(open_args) => Ok(open::command(&open_args)?),
     }
 }
 
