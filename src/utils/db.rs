@@ -13,10 +13,25 @@ use crate::import;
 
 const DB_VERSION: i32 = 1;
 
-pub struct PathEntry {
+#[derive(serde::Serialize)]
+pub struct TablePathsEntry {
     pub path: String,
     pub noted_count: NotedCount,
     pub last_noted_timestamp: UnixTimestamp,
+}
+
+pub trait FromRow: Sized {
+    fn from_row(row: &rusqlite::Row) -> rusqlite::Result<Self>;
+}
+
+impl FromRow for TablePathsEntry {
+    fn from_row(row: &rusqlite::Row) -> rusqlite::Result<Self> {
+        Ok(Self {
+            path: row.get("path")?,
+            noted_count: row.get("noted_count")?,
+            last_noted_timestamp: row.get("last_noted_timestamp")?,
+        })
+    }
 }
 
 #[instrument(level = "trace")]
@@ -122,20 +137,14 @@ pub fn close(conn: Connection) -> Result<(), Box<dyn Error>> {
     conn.close().map_err(|(_, err)| err.into())
 }
 
-pub fn get_rows(conn: &Connection) -> Result<Vec<PathEntry>, rusqlite::Error> {
+pub fn get_rows(conn: &Connection) -> Result<Vec<TablePathsEntry>, rusqlite::Error> {
     let mut stmt = conn
         .prepare("SELECT path, noted_count, last_noted_timestamp FROM paths")
         .expect("Select failed");
 
-    stmt.query_map([], |row| {
-        Ok(PathEntry {
-            path: row.get(0)?,
-            noted_count: row.get(1)?,
-            last_noted_timestamp: row.get(2)?,
-        })
-    })
-    .expect("Query mapping failed")
-    .collect()
+    stmt.query_map([], TablePathsEntry::from_row)
+        .expect("Query mapping failed")
+        .collect()
 }
 
 #[cfg(test)]

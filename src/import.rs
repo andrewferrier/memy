@@ -4,19 +4,13 @@ use std::fs;
 use tracing::{debug, info};
 
 use crate::utils;
+use crate::utils::db::TablePathsEntry;
 use crate::utils::types::NotedCount;
 use crate::utils::types::UnixTimestamp;
 
 pub type FasdScore = f64;
 
-#[derive(Debug)]
-pub struct MemyEntry {
-    pub filename: String,
-    pub count: NotedCount,
-    pub timestamp: UnixTimestamp,
-}
-
-fn from_fasd_str(s: &str) -> Result<MemyEntry, Box<dyn Error>> {
+fn from_fasd_str(s: &str) -> Result<TablePathsEntry, Box<dyn Error>> {
     let parts: Vec<&str> = s.split('|').collect();
     if parts.len() != 3 {
         return Err(format!("Invalid entry: {s}").into());
@@ -37,14 +31,14 @@ fn from_fasd_str(s: &str) -> Result<MemyEntry, Box<dyn Error>> {
 
     #[allow(clippy::cast_possible_truncation, reason = "Round is intentional")]
     #[allow(clippy::cast_sign_loss, reason = "Round is intentional")]
-    Ok(MemyEntry {
-        filename,
-        count: score.round() as NotedCount,
-        timestamp,
+    Ok(TablePathsEntry {
+        path: filename,
+        noted_count: score.round() as NotedCount,
+        last_noted_timestamp: timestamp,
     })
 }
 
-fn from_whitespace_split_str(s: &str) -> Result<MemyEntry, Box<dyn Error>> {
+fn from_whitespace_split_str(s: &str) -> Result<TablePathsEntry, Box<dyn Error>> {
     let parts: Vec<&str> = s.split_whitespace().collect();
     if parts.len() != 2 {
         return Err(format!("Invalid entry: {s}").into());
@@ -60,35 +54,41 @@ fn from_whitespace_split_str(s: &str) -> Result<MemyEntry, Box<dyn Error>> {
         return Err(format!("Count cannot be negative: {count}").into());
     }
 
-    Ok(MemyEntry {
-        filename: path,
+    Ok(TablePathsEntry {
+        path,
         #[allow(clippy::cast_possible_truncation, reason = "Round is intentional")]
         #[allow(clippy::cast_sign_loss, reason = "Round is intentional")]
-        count: count.round() as u64,
-        timestamp,
+        noted_count: count.round() as u64,
+        last_noted_timestamp: timestamp,
     })
 }
 
-fn parse_state_generic<F>(contents: &str, line_parser: F) -> Result<Vec<MemyEntry>, Box<dyn Error>>
+fn parse_state_generic<F>(
+    contents: &str,
+    line_parser: F,
+) -> Result<Vec<TablePathsEntry>, Box<dyn Error>>
 where
-    F: Fn(&str) -> Result<MemyEntry, Box<dyn Error>>,
+    F: Fn(&str) -> Result<TablePathsEntry, Box<dyn Error>>,
 {
     contents.lines().map(line_parser).collect()
 }
 
-fn parse_fasd_state(contents: &str) -> Result<Vec<MemyEntry>, Box<dyn Error>> {
+fn parse_fasd_state(contents: &str) -> Result<Vec<TablePathsEntry>, Box<dyn Error>> {
     parse_state_generic(contents, from_fasd_str)
 }
 
-fn parse_zoxide_state(contents: &str) -> Result<Vec<MemyEntry>, Box<dyn Error>> {
+fn parse_zoxide_state(contents: &str) -> Result<Vec<TablePathsEntry>, Box<dyn Error>> {
     parse_state_generic(contents, from_whitespace_split_str)
 }
 
-fn parse_autojump_state(contents: &str) -> Result<Vec<MemyEntry>, Box<dyn Error>> {
+fn parse_autojump_state(contents: &str) -> Result<Vec<TablePathsEntry>, Box<dyn Error>> {
     parse_state_generic(contents, from_whitespace_split_str)
 }
 
-fn insert_into_db(conn: &mut Connection, entries: Vec<MemyEntry>) -> Result<(), Box<dyn Error>> {
+fn insert_into_db(
+    conn: &mut Connection,
+    entries: Vec<TablePathsEntry>,
+) -> Result<(), Box<dyn Error>> {
     let tx = conn.transaction().expect("Cannot start DB transaction");
 
     for entry in entries {
@@ -105,10 +105,10 @@ fn insert_into_db(conn: &mut Connection, entries: Vec<MemyEntry>) -> Result<(), 
              ON CONFLICT(path) DO UPDATE SET
              noted_count = noted_count + excluded.noted_count,
              last_noted_timestamp = excluded.last_noted_timestamp",
-            rusqlite::params![entry.filename, entry.count, entry.timestamp],
+            rusqlite::params![entry.path, entry.noted_count, entry.last_noted_timestamp],
         )
         .map_err(|e| format!("Failed to insert or update entry into database: {e}"))?;
-        debug!("Imported entry for file {}", entry.filename);
+        debug!("Imported entry for file {}", entry.path);
     }
 
     tx.commit().expect("Cannot commit import transaction");
@@ -122,7 +122,7 @@ pub fn process_file<F>(
     parser: F,
 ) -> Result<(), Box<dyn Error>>
 where
-    F: Fn(&str) -> Result<Vec<MemyEntry>, Box<dyn Error>>,
+    F: Fn(&str) -> Result<Vec<TablePathsEntry>, Box<dyn Error>>,
 {
     info!("Importing from database {file_path}...");
 
@@ -183,12 +183,12 @@ mod tests {
         let result = parse_fasd_state(input).expect("Couldn't parse fasd state");
 
         assert_eq!(result.len(), 2);
-        assert_eq!(result[0].filename, "file1.txt");
-        assert_eq!(result[0].count, 11);
-        assert_eq!(result[0].timestamp, 1_633_036_800);
-        assert_eq!(result[1].filename, "file2.txt");
-        assert_eq!(result[1].count, 20);
-        assert_eq!(result[1].timestamp, 1_633_123_200);
+        assert_eq!(result[0].path, "file1.txt");
+        assert_eq!(result[0].noted_count, 11);
+        assert_eq!(result[0].last_noted_timestamp, 1_633_036_800);
+        assert_eq!(result[1].path, "file2.txt");
+        assert_eq!(result[1].noted_count, 20);
+        assert_eq!(result[1].last_noted_timestamp, 1_633_123_200);
     }
 
     #[test]
@@ -229,9 +229,9 @@ mod tests {
         let result = parse_fasd_state(input).expect("Couldn't parse fasd state");
 
         assert_eq!(result.len(), 1);
-        assert_eq!(result[0].filename, "file1.txt");
-        assert_eq!(result[0].count, 11);
-        assert_eq!(result[0].timestamp, -5);
+        assert_eq!(result[0].path, "file1.txt");
+        assert_eq!(result[0].noted_count, 11);
+        assert_eq!(result[0].last_noted_timestamp, -5);
     }
 
     #[test]
@@ -241,15 +241,15 @@ mod tests {
         let result = parse_zoxide_state(input).expect("Couldn't parse zoxide state");
 
         assert_eq!(result.len(), 3);
-        assert_eq!(result[0].filename, "/home/user/docs");
-        assert_eq!(result[0].count, 12);
-        assert!(result[0].timestamp > 0);
-        assert_eq!(result[1].filename, "/tmp");
-        assert_eq!(result[1].count, 2);
-        assert!(result[1].timestamp > 0);
-        assert_eq!(result[2].filename, "/home/user/.local/share");
-        assert_eq!(result[2].count, 1);
-        assert!(result[2].timestamp > 0);
+        assert_eq!(result[0].path, "/home/user/docs");
+        assert_eq!(result[0].noted_count, 12);
+        assert!(result[0].last_noted_timestamp > 0);
+        assert_eq!(result[1].path, "/tmp");
+        assert_eq!(result[1].noted_count, 2);
+        assert!(result[1].last_noted_timestamp > 0);
+        assert_eq!(result[2].path, "/home/user/.local/share");
+        assert_eq!(result[2].noted_count, 1);
+        assert!(result[2].last_noted_timestamp > 0);
     }
 
     #[test]
@@ -285,9 +285,9 @@ mod tests {
         ) {
             let input = format!("{filename}|{score}.0|{timestamp}");
             let result = from_fasd_str(&input).expect("valid fasd entry should parse");
-            prop_assert_eq!(&result.filename, &filename);
-            prop_assert_eq!(result.count, score, "count should equal rounded score");
-            prop_assert_eq!(result.timestamp, timestamp);
+            prop_assert_eq!(&result.path, &filename);
+            prop_assert_eq!(result.noted_count, score, "count should equal rounded score");
+            prop_assert_eq!(result.last_noted_timestamp, timestamp);
         }
 
         #[test]
@@ -297,9 +297,9 @@ mod tests {
         ) {
             let input = format!("{count}.0 {path}");
             let result = from_whitespace_split_str(&input).expect("valid whitespace entry should parse");
-            prop_assert_eq!(&result.filename, &path);
-            prop_assert_eq!(result.count, count, "count should equal rounded score");
-            prop_assert!(result.timestamp > 0, "timestamp should be positive");
+            prop_assert_eq!(&result.path, &path);
+            prop_assert_eq!(result.noted_count, count, "count should equal rounded score");
+            prop_assert!(result.last_noted_timestamp > 0, "timestamp should be positive");
         }
     }
 }

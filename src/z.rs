@@ -58,15 +58,18 @@ fn db_search(args: &ZArgs) -> Result<(), Box<dyn Error>> {
     }
 
     if args.interactive {
-        let output =
-            utils::output::format_paths_colored(matches.iter().map(|m| (m.path.as_str(), true)));
+        let output = utils::output::format_paths_colored(
+            matches
+                .iter()
+                .map(|m| (m.table_paths_entry.path.as_str(), true)),
+        );
         let selected = utils::output::pipe_through_filter(&output, None)?;
         let mut stdout_handle = stdout().lock();
         stdout_handle.write_all(selected.as_bytes())?;
     } else {
         let best = matches.into_iter().next_back().expect("matches non-empty");
         let mut stdout_handle = stdout().lock();
-        writeln!(stdout_handle, "{}", best.path)?;
+        writeln!(stdout_handle, "{}", best.table_paths_entry.path)?;
     }
 
     Ok(())

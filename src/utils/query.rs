@@ -10,14 +10,12 @@ use super::config::DeniedFilesOnList;
 use super::db;
 use super::frecency;
 use super::time::{get_unix_timestamp, timestamp_age_hours};
-use super::types::{NotedCount, UnixTimestamp};
 use crate::stats;
+use crate::utils::db::TablePathsEntry;
 
 pub struct MatchEntry {
-    pub path: String,
+    pub table_paths_entry: TablePathsEntry,
     pub metadata: Metadata,
-    pub noted_count: NotedCount,
-    pub last_noted_timestamp: UnixTimestamp,
     pub frecency: f64,
 }
 
@@ -42,7 +40,7 @@ pub fn build_sorted_matches<F>(
     filter: F,
 ) -> Result<Vec<MatchEntry>, Box<dyn Error>>
 where
-    F: Fn(&db::PathEntry, &Metadata) -> FilterResult + Send + Sync,
+    F: Fn(&db::TablePathsEntry, &Metadata) -> FilterResult + Send + Sync,
 {
     let rows = db::get_rows(conn)?;
     let now = get_unix_timestamp();
@@ -53,8 +51,9 @@ where
         return Ok(vec![]);
     };
 
-    let oldest_last_noted_timestamp_hours = timestamp_age_hours(now, oldest_note.timestamp);
-    let highest_count = highest_count_entry.count;
+    let oldest_last_noted_timestamp_hours =
+        timestamp_age_hours(now, oldest_note.last_noted_timestamp);
+    let highest_count = highest_count_entry.noted_count;
 
     let denylist_matcher = config::get_denylist_matcher();
     let missing_files_delete_after_secs: i64 =
@@ -115,10 +114,8 @@ where
             );
 
             Outcome::Match(MatchEntry {
-                path: row.path,
+                table_paths_entry: row,
                 metadata: meta,
-                noted_count: row.noted_count,
-                last_noted_timestamp: row.last_noted_timestamp,
                 frecency,
             })
         })

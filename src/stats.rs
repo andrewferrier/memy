@@ -1,51 +1,34 @@
+use crate::utils::db::FromRow as _;
 use core::error::Error;
 use rusqlite::Connection;
 use rusqlite::{OptionalExtension as _, params};
 use std::io::{Write as _, stdout};
-use std::path::PathBuf;
 use tracing::instrument;
 
 use crate::utils;
 use crate::utils::cli;
 use crate::utils::db;
-use crate::utils::types::{NotedCount, UnixTimestamp};
-
-#[derive(serde::Serialize)]
-pub struct PathTimestamp {
-    pub path: PathBuf,
-    pub timestamp: UnixTimestamp,
-}
-
-#[derive(serde::Serialize)]
-pub struct PathCount {
-    pub path: PathBuf,
-    pub count: NotedCount,
-}
+use crate::utils::db::TablePathsEntry;
 
 #[derive(serde::Serialize)]
 pub struct StatsOutput {
     pub total_paths: usize,
-    pub oldest_note: Option<PathTimestamp>,
-    pub newest_note: Option<PathTimestamp>,
-    pub highest_count: Option<PathCount>,
+    pub oldest_note: Option<TablePathsEntry>,
+    pub newest_note: Option<TablePathsEntry>,
+    pub highest_count: Option<TablePathsEntry>,
 }
 
 fn query_path_limit_timestamp(
     conn: &Connection,
     order: &str,
-) -> Result<Option<PathTimestamp>, Box<dyn Error>> {
+) -> Result<Option<TablePathsEntry>, Box<dyn Error>> {
     let result = conn
         .query_row(
             &format!(
-                "SELECT path, last_noted_timestamp FROM paths ORDER BY last_noted_timestamp {order} LIMIT 1"
+                "SELECT path, noted_count, last_noted_timestamp FROM paths ORDER BY last_noted_timestamp {order} LIMIT 1"
             ),
             params![],
-            |row| {
-                Ok(PathTimestamp {
-                    path: PathBuf::from(row.get::<_, String>(0)?),
-                    timestamp: row.get::<_, UnixTimestamp>(1)?,
-                })
-            },
+            TablePathsEntry::from_row,
         )
         .optional()?;
     Ok(result)
@@ -60,14 +43,9 @@ pub fn get(conn: &Connection) -> Result<StatsOutput, Box<dyn Error>> {
 
     let highest_count = conn
         .query_row(
-            "SELECT path, noted_count FROM paths ORDER BY noted_count DESC LIMIT 1",
+            "SELECT path, noted_count, last_noted_timestamp FROM paths ORDER BY noted_count DESC LIMIT 1",
             params![],
-            |row| {
-                Ok(PathCount {
-                    path: PathBuf::from(row.get::<_, String>(0)?),
-                    count: row.get::<_, NotedCount>(1)?,
-                })
-            },
+            TablePathsEntry::from_row,
         )
         .optional()?;
 
@@ -98,8 +76,8 @@ pub fn command(args: &cli::StatsArgs) -> Result<(), Box<dyn Error>> {
             writeln!(
                 stdout_handle,
                 "Oldest Note: {}, path={}",
-                utils::time::timestamp_to_iso8601(oldest_note.timestamp),
-                oldest_note.path.to_string_lossy()
+                utils::time::timestamp_to_iso8601(oldest_note.last_noted_timestamp),
+                oldest_note.path
             )?;
         }
 
@@ -107,8 +85,8 @@ pub fn command(args: &cli::StatsArgs) -> Result<(), Box<dyn Error>> {
             writeln!(
                 stdout_handle,
                 "Newest Note: {}, path={}",
-                utils::time::timestamp_to_iso8601(newest_note.timestamp),
-                newest_note.path.to_string_lossy()
+                utils::time::timestamp_to_iso8601(newest_note.last_noted_timestamp),
+                newest_note.path
             )?;
         }
 
@@ -116,8 +94,7 @@ pub fn command(args: &cli::StatsArgs) -> Result<(), Box<dyn Error>> {
             writeln!(
                 stdout_handle,
                 "Highest Count: {}, path={}",
-                highest_count.count,
-                highest_count.path.to_string_lossy()
+                highest_count.noted_count, highest_count.path,
             )?;
         }
     }
