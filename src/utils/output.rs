@@ -40,59 +40,50 @@ pub fn format_paths_colored<'a>(items: impl Iterator<Item = (&'a str, bool)>) ->
     output
 }
 
-/// Returns the output filter command to use, checking (in order):
-/// 1. An explicit override supplied by the caller
-/// 2. The `MEMY_OUTPUT_FILTER` environment variable
-/// 3. The `memy_output_filter` configuration option
-/// 4. Auto-detected fuzzy finders (`fzf`, `sk`, `fzy`)
-fn get_output_filter_command(override_cmd: Option<&str>) -> Option<String> {
+fn get_output_filter_command(override_cmd: Option<&str>) -> Result<String, &str> {
     if let Some(cmd) = override_cmd {
         debug!("Output filter detected from command line: {cmd}");
-        return Some(cmd.to_owned());
+        return Ok(cmd.to_owned());
     }
 
     if let Ok(cmd) = env::var("MEMY_OUTPUT_FILTER")
         && !cmd.is_empty()
     {
         debug!("Output filter detected from environment: {cmd}");
-        return Some(cmd);
+        return Ok(cmd);
     }
 
     if let Some(cmd) = config::get_memy_output_filter() {
         debug!("Output filter detected from config: {cmd}");
-        return Some(cmd);
+        return Ok(cmd);
     }
 
     if is_command_available("fzf") {
         debug!("Output filter automatically set for fzf");
-        return Some("fzf --ansi --tac".to_owned());
+        return Ok("fzf --ansi --tac".to_owned());
     }
 
     if is_command_available("sk") {
         debug!("Output filter automatically set for sk");
-        return Some("sk --ansi --tac".to_owned());
+        return Ok("sk --ansi --tac".to_owned());
     }
 
     if is_command_available("fzy") {
         debug!("Output filter automatically set for fzy");
-        return Some("tac | fzy".to_owned());
+        return Ok("tac | fzy".to_owned());
     }
 
-    None
-}
-
-/// Pipes `output` through an output filter command and returns the filter's
-/// stdout. Resolves the command via [`get_output_filter_command`] (passing
-/// `override_cmd` as the optional override), returning an error if no command
-/// can be found. Expands tildes in the returned string.
-pub fn run_output_filter(
-    output: &str,
-    override_cmd: Option<&str>,
-) -> Result<String, Box<dyn core::error::Error>> {
-    let filter_cmd_string = get_output_filter_command(override_cmd).ok_or(
+    Err(
         "No output filter command found. Set MEMY_OUTPUT_FILTER environment variable, \
          memy_output_filter in config, or install fzf/sk/fzy.",
-    )?;
+    )
+}
+
+pub fn pipe_through_filter(
+    input: &str,
+    override_cmd: Option<&str>,
+) -> Result<String, Box<dyn core::error::Error>> {
+    let filter_cmd_string = get_output_filter_command(override_cmd)?;
     let filter_cmd = filter_cmd_string.as_str();
 
     debug!("Running through external filter command {filter_cmd}");
@@ -116,7 +107,7 @@ pub fn run_output_filter(
         })?;
 
     let stdin = cmd.stdin.as_mut().ok_or("Failed to open stdin")?;
-    stdin.write_all(output.as_bytes())?;
+    stdin.write_all(input.as_bytes())?;
 
     let output_data = cmd.wait_with_output()?;
     if !output_data.status.success() {

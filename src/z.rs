@@ -60,7 +60,7 @@ fn db_search(args: &ZArgs) -> Result<(), Box<dyn Error>> {
     if args.interactive {
         let output =
             utils::output::format_paths_colored(matches.iter().map(|m| (m.path.as_str(), true)));
-        let selected = utils::output::run_output_filter(&output, None)?;
+        let selected = utils::output::pipe_through_filter(&output, None)?;
         let mut stdout_handle = stdout().lock();
         stdout_handle.write_all(selected.as_bytes())?;
     } else {

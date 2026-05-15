@@ -92,7 +92,7 @@ pub fn command(args: &ListArgs) -> Result<(), Box<dyn Error>> {
 
     if args.output_filter {
         let filtered =
-            utils::output::run_output_filter(&output, args.output_filter_command.as_deref())?;
+            utils::output::pipe_through_filter(&output, args.output_filter_command.as_deref())?;
         let mut stdout_handle = stdout().lock();
         stdout_handle.write_all(filtered.as_bytes())?;
     } else {
