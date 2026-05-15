@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.20.0](https://github.com/andrewferrier/memy/compare/v0.19.2...v0.20.0) (2026-05-15)
+
+
+### Features
+
+* Implement memy-go and memy-open aliases for shells - closes [#148](https://github.com/andrewferrier/memy/issues/148) ([aee14c6](https://github.com/andrewferrier/memy/commit/aee14c6169af00b33d44ddaac7ef067720919a3f))
+
+
+### Bug Fixes
+
+* 'memy open' opens detached ([82d1a44](https://github.com/andrewferrier/memy/commit/82d1a4419b728a167d01f276d70884df9d69e640))
+* Expand tildes in bash hook ([ff41a0a](https://github.com/andrewferrier/memy/commit/ff41a0a243735e0e190dc703b55006d7767fc852))
+* Hide 'z' command since it only makes sense with the shell hooks ([a003ae2](https://github.com/andrewferrier/memy/commit/a003ae2973e836010f8231c0a0faba63814c54d8))
+* Improve cache busting ([13547f7](https://github.com/andrewferrier/memy/commit/13547f763ca5974d6e9b9fbc79413e4861f5e0c8))
+* Make 'z' honour the denylist / aging logic - closes [#150](https://github.com/andrewferrier/memy/issues/150) ([38f785b](https://github.com/andrewferrier/memy/commit/38f785b4e8add596b9302d07bab7b96f2aa5411b))
+
+
+### Performance Improvements
+
+* Significant speedup for multi-file noting ([07a2329](https://github.com/andrewferrier/memy/commit/07a23298033de4104d934a83924f7745c5b563c1))
+
 ## [0.19.2](https://github.com/andrewferrier/memy/compare/v0.19.1...v0.19.2) (2026-05-09)
 
 
