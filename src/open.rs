@@ -18,7 +18,7 @@ pub fn command(args: &OpenArgs) -> Result<(), Box<dyn Error>> {
         return Err(format!("'{}' is a directory, cannot open", path.display()).into());
     }
 
-    open::that(path).map_err(|err| {
+    open::that_detached(path).map_err(|err| {
         format!(
             "Failed to open '{}' with the system default application: {err}",
             path.display()
