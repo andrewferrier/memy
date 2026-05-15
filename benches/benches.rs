@@ -9,29 +9,69 @@ use tempfile::tempdir;
 #[path = "../tests/support.rs"]
 mod support;
 
-fn find_x_real_files(x: usize) -> Vec<String> {
-    let mut file_list = Vec::new();
-    let usr_dir = Path::new("/usr");
-    let mut count = 0;
+fn find_x_real_entries(
+    x: usize,
+    kind: &str,
+    predicate: impl Fn(&walkdir::DirEntry) -> bool,
+) -> Vec<String> {
+    let mut list = Vec::new();
 
-    if usr_dir.exists() {
-        for entry in walkdir::WalkDir::new(usr_dir)
+    if Path::new("/usr").exists() {
+        for entry in walkdir::WalkDir::new("/usr")
             .into_iter()
             .filter_map(core::result::Result::ok)
         {
-            if entry.file_type().is_file() {
-                file_list.push(entry.path().to_string_lossy().to_string());
-                count += 1;
-                if count >= x {
+            if predicate(&entry) {
+                list.push(entry.path().to_string_lossy().to_string());
+                if list.len() >= x {
                     break;
                 }
             }
         }
     }
 
-    assert_eq!(file_list.len(), x, "Cannot find {x} real files");
+    assert_eq!(list.len(), x, "Cannot find {x} real {kind}s");
+    list
+}
 
-    file_list
+fn find_x_real_files(x: usize) -> Vec<String> {
+    find_x_real_entries(x, "file", |e| e.file_type().is_file())
+}
+
+fn find_x_real_dirs(x: usize) -> Vec<String> {
+    find_x_real_entries(x, "dir", |e| e.file_type().is_dir())
+}
+
+/// Initialises a fresh memy SQLite DB and populates it with `paths` using
+/// deterministic `noted_count` and `last_noted_timestamp` values.
+fn setup_list_bench_db(db_dir: &Path, paths: &[String]) {
+    let mut conn = rusqlite::Connection::open(db_dir.join("memy.sqlite3"))
+        .expect("Failed to open SQLite database");
+
+    conn.execute(
+        "CREATE TABLE paths (
+            path TEXT PRIMARY KEY,
+            noted_count INTEGER NOT NULL,
+            last_noted_timestamp INTEGER NOT NULL
+        )",
+        [],
+    )
+    .expect("Failed to create paths table");
+    conn.execute("PRAGMA user_version = 1;", [])
+        .expect("Failed to set user_version");
+
+    let base_timestamp: i64 = 1_700_000_000;
+    let tx = conn.transaction().expect("Failed to start transaction");
+    for (i, path) in paths.iter().enumerate() {
+        let count = i64::try_from(i % 100).expect("index fits i64") + 1;
+        let timestamp = base_timestamp - i64::try_from(i).expect("index fits i64") * 3600;
+        tx.execute(
+            "INSERT INTO paths (path, noted_count, last_noted_timestamp) VALUES (?1, ?2, ?3)",
+            rusqlite::params![path, count, timestamp],
+        )
+        .expect("Failed to insert path");
+    }
+    tx.commit().expect("Failed to commit transaction");
 }
 
 fn get_entries_in_sqlite(db_dir: &Path) -> usize {
@@ -147,13 +187,52 @@ fn benchmark_import_fasd(c: &mut Criterion) {
     );
 }
 
+fn benchmark_list_command(c: &mut Criterion) {
+    let file_count = 48_000;
+    let dir_count = 2_000;
+    let total = file_count + dir_count;
+
+    let mut paths = find_x_real_files(file_count);
+    paths.extend(find_x_real_dirs(dir_count));
+
+    let temp_dir_db = tempdir().expect("Failed to create temp dir for DB");
+    let db_dir = temp_dir_db.path().to_path_buf();
+
+    setup_list_bench_db(&db_dir, &paths);
+
+    let entry_count = get_entries_in_sqlite(&db_dir);
+    assert_eq!(
+        entry_count, total,
+        "Expected {total} entries in DB, found {entry_count}"
+    );
+
+    c.bench_function(format!("memy list {total} entries").as_str(), |b| {
+        b.iter_custom(|iters| {
+            let mut total_time = Duration::ZERO;
+            for _ in 0..iters {
+                let start = Instant::now();
+                Command::cargo_bin("memy")
+                    .expect("Failed to find memy binary")
+                    .arg("list")
+                    .arg("--config")
+                    .arg("import_on_first_use=false")
+                    .env("MEMY_DB_DIR", &db_dir)
+                    .assert()
+                    .success();
+                total_time += start.elapsed();
+            }
+            total_time
+        });
+    });
+}
+
 criterion_group! {
     name = benches;
     config = Criterion::default()
         .warm_up_time(Duration::from_secs(10))
         .measurement_time(Duration::from_secs(60))
         .sample_size(10);
-    targets = benchmark_note_command, benchmark_import_fasd
+    targets = benchmark_note_command, benchmark_import_fasd, benchmark_list_command
 }
 
 criterion_main!(benches);
