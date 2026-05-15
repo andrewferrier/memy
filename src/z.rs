@@ -58,13 +58,9 @@ fn db_search(args: &ZArgs) -> Result<(), Box<dyn Error>> {
     }
 
     if args.interactive {
-        let output: String = matches.iter().fold(String::new(), |mut acc, m| {
-            use core::fmt::Write as _;
-            let _ = writeln!(acc, "{}", utils::format_path_colored(&m.path, true));
-            acc
-        });
-
-        let selected = utils::output_filter::run_output_filter(&output, None)?;
+        let output =
+            utils::output::format_paths_colored(matches.iter().map(|m| (m.path.as_str(), true)));
+        let selected = utils::output::run_output_filter(&output, None)?;
         let mut stdout_handle = stdout().lock();
         stdout_handle.write_all(selected.as_bytes())?;
     } else {

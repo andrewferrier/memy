@@ -4,14 +4,12 @@ pub mod db;
 pub mod denylist_default;
 pub mod frecency;
 pub mod logging;
-pub mod output_filter;
+pub mod output;
 pub mod path;
 pub mod query;
 pub mod types;
 
 use chrono::{DateTime, Local, TimeZone as _};
-use colored::Colorize as _;
-use std::borrow::Cow;
 use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -103,26 +101,6 @@ where
         (_, _, true) => "symlink",
         _ => "other",
     })
-}
-
-pub fn format_path_colored(path: &str, is_dir: bool) -> String {
-    let display: Cow<str> = if config::get_use_tilde_on_list() {
-        Cow::Owned(path::collapse_to_tilde(path))
-    } else {
-        Cow::Borrowed(path)
-    };
-
-    if let Some((parent, base)) = display.rsplit_once('/') {
-        if is_dir {
-            format!("{}/{}", parent, base.blue())
-        } else {
-            format!("{}/{}", parent, base.green())
-        }
-    } else if is_dir {
-        display.blue().to_string()
-    } else {
-        display.green().to_string()
-    }
 }
 
 #[cfg(test)]

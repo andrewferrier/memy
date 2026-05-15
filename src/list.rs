@@ -1,6 +1,5 @@
 use crate::utils::cli::ListArgs;
 use core::error::Error;
-use core::fmt::Write as _;
 use rusqlite::Connection;
 use std::fs::FileType;
 use std::io::{Write as _, stdout};
@@ -75,17 +74,11 @@ fn format_results(results: &[PathFrecency], args: &ListArgs) -> Result<String, B
             wtr.flush()?;
             Ok(String::from_utf8(wtr.into_inner()?)?)
         }
-        _ => {
-            let mut output = String::with_capacity(results.len() * 256);
-            for result in results {
-                let _ = writeln!(
-                    output,
-                    "{}",
-                    utils::format_path_colored(&result.path, result.file_type.is_dir())
-                );
-            }
-            Ok(output)
-        }
+        _ => Ok(utils::output::format_paths_colored(
+            results
+                .iter()
+                .map(|r| (r.path.as_str(), r.file_type.is_dir())),
+        )),
     }
 }
 
@@ -98,10 +91,8 @@ pub fn command(args: &ListArgs) -> Result<(), Box<dyn Error>> {
     let output = format_results(&results, args)?;
 
     if args.output_filter {
-        let filtered = utils::output_filter::run_output_filter(
-            &output,
-            args.output_filter_command.as_deref(),
-        )?;
+        let filtered =
+            utils::output::run_output_filter(&output, args.output_filter_command.as_deref())?;
         let mut stdout_handle = stdout().lock();
         stdout_handle.write_all(filtered.as_bytes())?;
     } else {

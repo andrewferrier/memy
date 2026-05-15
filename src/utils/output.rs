@@ -1,12 +1,44 @@
+use crate::utils::path;
+
+use colored::Colorize as _;
+use std::borrow::Cow;
 use std::env;
 use std::io::Write as _;
 use std::process::{Command, Stdio};
 use tracing::debug;
 
 use super::config;
-
 use super::is_command_available;
 use super::path::expand_tildes_in_multiline_string;
+
+fn format_path_colored(path: &str, is_dir: bool) -> String {
+    let display: Cow<str> = if config::get_use_tilde_on_list() {
+        Cow::Owned(path::collapse_to_tilde(path))
+    } else {
+        Cow::Borrowed(path)
+    };
+
+    if let Some((parent, base)) = display.rsplit_once('/') {
+        if is_dir {
+            format!("{}/{}", parent, base.blue())
+        } else {
+            format!("{}/{}", parent, base.green())
+        }
+    } else if is_dir {
+        display.blue().to_string()
+    } else {
+        display.green().to_string()
+    }
+}
+
+pub fn format_paths_colored<'a>(items: impl Iterator<Item = (&'a str, bool)>) -> String {
+    let mut output = String::new();
+    for (path, is_dir) in items {
+        output.push_str(&format_path_colored(path, is_dir));
+        output.push('\n');
+    }
+    output
+}
 
 /// Returns the output filter command to use, checking (in order):
 /// 1. An explicit override supplied by the caller
