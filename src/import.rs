@@ -54,7 +54,7 @@ fn from_whitespace_split_str(s: &str) -> Result<MemyEntry, Box<dyn Error>> {
         .parse::<f64>()
         .map_err(|e| format!("Invalid count: {e}"))?;
     let path = parts[1].to_owned();
-    let timestamp = utils::get_unix_timestamp();
+    let timestamp = utils::time::get_unix_timestamp();
 
     if count < 0.0 {
         return Err(format!("Count cannot be negative: {count}").into());

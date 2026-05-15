@@ -76,7 +76,7 @@ pub fn command(note_args: cli::NoteArgs) -> Result<(), Box<dyn Error>> {
         .map(|raw_path| preprocess_path(&raw_path, &matcher))
         .collect::<Result<_, _>>()?;
 
-    let now = utils::get_unix_timestamp();
+    let now = utils::time::get_unix_timestamp();
     let mut db_connection = db::open().expect("Could not open memy database");
     let tx = db_connection
         .transaction()

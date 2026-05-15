@@ -98,7 +98,7 @@ pub fn command(args: &cli::StatsArgs) -> Result<(), Box<dyn Error>> {
             writeln!(
                 stdout_handle,
                 "Oldest Note: {}, path={}",
-                utils::timestamp_to_iso8601(oldest_note.timestamp),
+                utils::time::timestamp_to_iso8601(oldest_note.timestamp),
                 oldest_note.path.to_string_lossy()
             )?;
         }
@@ -107,7 +107,7 @@ pub fn command(args: &cli::StatsArgs) -> Result<(), Box<dyn Error>> {
             writeln!(
                 stdout_handle,
                 "Newest Note: {}, path={}",
-                utils::timestamp_to_iso8601(newest_note.timestamp),
+                utils::time::timestamp_to_iso8601(newest_note.timestamp),
                 newest_note.path.to_string_lossy()
             )?;
         }

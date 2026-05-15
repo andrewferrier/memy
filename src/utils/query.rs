@@ -9,8 +9,8 @@ use super::config;
 use super::config::DeniedFilesOnList;
 use super::db;
 use super::frecency;
+use super::time::{get_unix_timestamp, timestamp_age_hours};
 use super::types::{NotedCount, UnixTimestamp};
-use super::{get_unix_timestamp, timestamp_age_hours};
 use crate::stats;
 
 pub struct MatchEntry {

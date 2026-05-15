@@ -24,7 +24,7 @@ struct PathFrecency {
 #[instrument(level = "trace")]
 fn calculate(conn: &Connection, args: &ListArgs) -> Result<Vec<PathFrecency>, Box<dyn Error>> {
     let newer_than_timestamp = if let Some(ref newer_than_str) = args.newer_than {
-        Some(utils::parse_newer_than(newer_than_str)?)
+        Some(utils::time::parse_newer_than(newer_than_str)?)
     } else {
         None
     };
@@ -50,7 +50,7 @@ fn calculate(conn: &Connection, args: &ListArgs) -> Result<Vec<PathFrecency>, Bo
             path: m.path,
             frecency: m.frecency,
             count: m.noted_count,
-            last_noted: utils::timestamp_to_iso8601(m.last_noted_timestamp),
+            last_noted: utils::time::timestamp_to_iso8601(m.last_noted_timestamp),
             file_type: m.metadata.file_type(),
         })
         .collect();
