@@ -141,6 +141,19 @@ jobs:
             echo "SHA256_LINUX_X86_64=$(sha256sum /tmp/memy-release/memy-linux-x86_64.tar.gz | cut -d' ' -f1)"
           } >> "$GITHUB_ENV"
 
+      - name: Download and checksum source archive (for AUR)
+        run: |
+          curl -sL \
+            "https://github.com/andrewferrier/memy/archive/${TAG}.tar.gz" \
+            -o /tmp/memy-release/memy-source.tar.gz
+          curl -sL \
+            "https://raw.githubusercontent.com/andrewferrier/memy/${TAG}/LICENSE" \
+            -o /tmp/memy-release/LICENSE
+          {
+            echo "SHA256_SOURCE=$(sha256sum /tmp/memy-release/memy-source.tar.gz | cut -d' ' -f1)";
+            echo "SHA256_LICENSE=$(sha256sum /tmp/memy-release/LICENSE | cut -d' ' -f1)"
+          } >> "$GITHUB_ENV"
+
       - name: Update Homebrew formula
         run: |
           python3 << 'EOF'
@@ -175,10 +188,101 @@ jobs:
               f.write(content)
           EOF
 
-      - name: Commit and push updated formula
+      - name: Update AUR packages
+        run: |
+          python3 << 'EOF'
+          import os
+          import re
+
+          version = os.environ['VERSION']
+          tag = os.environ['TAG']
+          sha256_source = os.environ['SHA256_SOURCE']
+          sha256_x86_64 = os.environ['SHA256_LINUX_X86_64']
+          sha256_aarch64 = os.environ['SHA256_LINUX_AARCH64']
+          sha256_license = os.environ['SHA256_LICENSE']
+
+          # Update aur/memy/PKGBUILD (source build)
+          with open('aur/memy/PKGBUILD') as f:
+              content = f.read()
+          content = re.sub(r'^pkgver=.*$', f'pkgver={version}', content, flags=re.MULTILINE)
+          content = re.sub(
+              r"^sha256sums=\('.*'\)$",
+              f"sha256sums=('{sha256_source}')",
+              content,
+              flags=re.MULTILINE,
+          )
+          with open('aur/memy/PKGBUILD', 'w') as f:
+              f.write(content)
+
+          # Update aur/memy/.SRCINFO (source build)
+          with open('aur/memy/.SRCINFO') as f:
+              content = f.read()
+          content = re.sub(r'(\tpkgver = ).*', r'\g<1>' + version, content)
+          content = re.sub(
+              r'(\tsource = )memy-[^:]+(::.*/archive/)[^/]+(\.tar\.gz)',
+              r'\g<1>memy-' + version + r'.tar.gz\g<2>' + tag + r'\3',
+              content,
+          )
+          content = re.sub(r'(\tsha256sums = ).*', r'\g<1>' + sha256_source, content)
+          with open('aur/memy/.SRCINFO', 'w') as f:
+              f.write(content)
+
+          # Update aur/memy-bin/PKGBUILD (pre-built binary)
+          with open('aur/memy-bin/PKGBUILD') as f:
+              content = f.read()
+          content = re.sub(r'^pkgver=.*$', f'pkgver={version}', content, flags=re.MULTILINE)
+          content = re.sub(
+              r"^sha256sums=\('.*'\)$",
+              f"sha256sums=('{sha256_license}')",
+              content,
+              flags=re.MULTILINE,
+          )
+          content = re.sub(
+              r"^sha256sums_x86_64=\('.*'\)$",
+              f"sha256sums_x86_64=('{sha256_x86_64}')",
+              content,
+              flags=re.MULTILINE,
+          )
+          content = re.sub(
+              r"^sha256sums_aarch64=\('.*'\)$",
+              f"sha256sums_aarch64=('{sha256_aarch64}')",
+              content,
+              flags=re.MULTILINE,
+          )
+          with open('aur/memy-bin/PKGBUILD', 'w') as f:
+              f.write(content)
+
+          # Update aur/memy-bin/.SRCINFO (pre-built binary)
+          with open('aur/memy-bin/.SRCINFO') as f:
+              content = f.read()
+          content = re.sub(r'(\tpkgver = ).*', r'\g<1>' + version, content)
+          content = re.sub(
+              r'(\tsource = LICENSE::.*/)[^/]+(/LICENSE)',
+              r'\g<1>' + tag + r'\2',
+              content,
+          )
+          content = re.sub(
+              r'(\tsource_x86_64 = )memy-bin-[^:]+(::.*/download/)[^/]+(/.+\.tar\.gz)',
+              r'\g<1>memy-bin-' + version + r'-x86_64.tar.gz\g<2>' + tag + r'\3',
+              content,
+          )
+          content = re.sub(
+              r'(\tsource_aarch64 = )memy-bin-[^:]+(::.*/download/)[^/]+(/.+\.tar\.gz)',
+              r'\g<1>memy-bin-' + version + r'-aarch64.tar.gz\g<2>' + tag + r'\3',
+              content,
+          )
+          content = re.sub(r'(\tsha256sums = ).*', r'\g<1>' + sha256_license, content)
+          content = re.sub(r'(\tsha256sums_x86_64 = ).*', r'\g<1>' + sha256_x86_64, content)
+          content = re.sub(r'(\tsha256sums_aarch64 = ).*', r'\g<1>' + sha256_aarch64, content)
+          with open('aur/memy-bin/.SRCINFO', 'w') as f:
+              f.write(content)
+          EOF
+
+      - name: Commit and push updated formula and AUR packages
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add Formula/memy.rb
-          git commit -m "chore: update homebrew formula for ${TAG}"
+          git add Formula/memy.rb aur/memy/PKGBUILD aur/memy/.SRCINFO \
+            aur/memy-bin/PKGBUILD aur/memy-bin/.SRCINFO
+          git commit -m "chore: update homebrew formula and AUR packages for ${TAG}"
           git push origin main
