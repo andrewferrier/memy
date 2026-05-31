@@ -3,6 +3,7 @@ pub mod config;
 pub mod db;
 pub mod denylist_default;
 pub mod frecency;
+pub mod graphs;
 pub mod logging;
 pub mod output;
 pub mod path;
