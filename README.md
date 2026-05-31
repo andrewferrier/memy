@@ -199,6 +199,29 @@ cargo install --git https://github.com/andrewferrier/memy
 
 Don't have Cargo? It's Rust's package manager and build tool. The easiest way to get Cargo (and Rust) is to use [rustup](https://rustup.rs/), which works on Linux, macOS, and Windows. See [the official instructions](https://doc.rust-lang.org/cargo/getting-started/installation.html).
 
+### Shell Completions
+
+memy can generate tab-completion scripts for your shell:
+
+**Bash:**
+
+```sh
+memy completions bash > "${HOME}/.local/share/bash-completion/completions/memy"
+```
+
+**Zsh** (add `~/.zfunc` to `$fpath` in `~/.zshrc` if not already present):
+
+```sh
+mkdir -p "${HOME}/.zfunc"
+memy completions zsh > "${HOME}/.zfunc/_memy"
+```
+
+**Fish:**
+
+```sh
+memy completions fish > "${HOME}/.config/fish/completions/memy.fish"
+```
+
 ## Configuration & Under the Hood
 
 By default, memy looks for its config file at `$XDG_CONFIG_HOME/memy/memy.toml` (typically `~/.config/memy/memy.toml`). You can override the config location by setting the `MEMY_CONFIG_DIR` environment variable to a directory of your choice.
