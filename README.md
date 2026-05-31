@@ -74,7 +74,7 @@ memy was originally inspired by [fasd](https://github.com/whjvenyl/fasd), but th
 
 Many of these more advanced tricks would work well configured as [shell aliases](https://linuxize.com/post/how-to-create-bash-aliases/).
 
-`memy` will import your database from [fasd](https://github.com/whjvenyl/fasd), [autojump](https://github.com/wting/autojump) and/or [zoxide](https://github.com/ajeetdsouza/zoxide), if there is one, on first run (this behaviour can be disabled in the configuration file).
+`memy` will import your database from [fasd](https://github.com/whjvenyl/fasd), [autojump](https://github.com/wting/autojump), [jumper](https://github.com/homerours/jumper) and/or [zoxide](https://github.com/ajeetdsouza/zoxide), if there is one, on first run (this behaviour can be disabled in the configuration file).
 
 ## Zoxide-Compatible `z` Command
 
