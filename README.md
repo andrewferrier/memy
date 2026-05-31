@@ -211,6 +211,41 @@ memy generate-config > ~/.config/memy/memy.toml
 
 By default, memy stores its database in `$XDG_STATE_HOME/memy/memy.sqlite3` (typically `~/.local/state/memy/memy.sqlite3`). You can override the database location by setting the `MEMY_DB_DIR` environment variable to a directory of your choice.
 
+## Frecency Scoring & Directory Matching
+
+### How Frecency Is Calculated
+
+Every path (file or directory) in memy's database has a **noted count** (how many times it has been noted) and a **last noted timestamp**. When paths are listed with `memy list`, they are sorted by increasing frecency score - a number between `0` and `1` that blends frequency and recency:
+
+```math
+\text{frecency} = (1 - \lambda) \cdot \frac{c}{c_{\max}} + \lambda \cdot \left(1 - \frac{t}{t_{\max}}\right)
+```
+
+| Symbol | Meaning |
+|---|---|
+| $\lambda$ | `recency_bias` config parameter (default `0.5`) |
+| $c$ | Noted count for this entry |
+| $c_{\max}$ | Highest noted count across all entries |
+| $t$ | Age of this entry's last note, in hours |
+| $t_{\max}$ | Age of the oldest entry's last note, in hours |
+
+The first term is the **frequency score** — how often this path has been noted,
+normalised against the most-noted path. The second term is the **recency
+score** — how recently it was last noted, normalised so that the most recently
+noted entry scores close to 1 and the oldest entry scores 0.
+
+The `recency_bias` parameter (λ) controls the weighting:
+
+- `recency_bias = 0.0` — pure frequency; recency is ignored entirely.
+- `recency_bias = 1.0` — pure recency; frequency is ignored entirely.
+- `recency_bias = 0.5` *(default)* — equal weight to both.
+
+### How `z` Keyword Matching Works
+
+The `z`/`zi` commands matches directories using the same algorithm as
+[zoxide](https://github.com/ajeetdsouza/zoxide). For full details see the
+[zoxide algorithm documentation](https://github.com/ajeetdsouza/zoxide/wiki/Algorithm). The `z` command always returns the most frecent directory that matches, and the `zi` command presents directories in list of frecency after applying the `z` algorithm. Note that memy's frecency algorithm is slightly different from zoxide's.
+
 ## More Information
 
 - For a full list of commands and flags, run `memy --help`. Depending on your memy installation method, you may also be able to bring up a manpage: `man memy`.
