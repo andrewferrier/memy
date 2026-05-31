@@ -10,13 +10,15 @@
 <br/>
 </p>
 
-**memy** is a modern, fast, and simple command-line tool to help you track and recall the files and directories you use most often. Many similar tools support only directories, **but memy supports files too**. Inspired by [fasd](https://github.com/whjvenyl/fasd) and [zoxide](https://github.com/ajeetdsouza/zoxide), memy (with the aid of hooks into your favourite tools) remembers the paths you interact with, lists them back to you by a combination of frequency and recency ("frecency"), and makes it easy to build a workflow around them using standard Linux/Unix tools. memy is written using Rust and a SQLite backend for speed and scalability.
+**memy** is a modern, fast command-line tool to track and recall the files and directories you use most often. It hooks into a variety of common tools and remembers every path you interact with, ranking them by a combination of frequency and recency ("frecency"). Unlike most similar tools, memy tracks both files and directories. It's written in Rust with a SQLite database for speed and scalability, and is ideal for CLI power users.
 
-**memy** is intended to be a flexible backend for tracking your usage, which will integrate with tools like [`fzf`](https://github.com/junegunn/fzf) and `cd` to jump around your filesystem. Crucially, memy also supports tracking files you use - not just directories - unlike most other tools in this space (except for `fasd`, which for a longer time was not maintained).
+memy can be used in three interchangeable ways:
 
-memy is ideal for developers, sysadmins, CLI power users, and anyone who works with many files and directories and wants a smarter way to recall them.
+- **Zoxide-compatible directory jumping** - memy provides a `z` command that works as a drop-in replacement for [zoxide](https://github.com/ajeetdsouza/zoxide), letting you jump to frecent directories with partial string matching.
+- **Interactive selection with tools like [`fzf`](https://github.com/junegunn/fzf)** — memy integrates with fuzzy finders and other selectors so you can interactively pick and open files or directories. Out of the box, the memy shell hooks provide ready-made functions (`memy-cd`, `memy-open`, `memy-go`) for common workflows.
+- **Structured output for custom workflows** - memy can output your tracked paths as plain text, CSV, or JSON to script your own workflows or build integrations from scratch.
 
-Currently, memy has been tested on Linux and MacOS (limited). It has not been tested on Windows, any testing or feedback would be appreciated. For transparency, `memy` is partially created using AI assistance - all code changes are overseen by a human maintainer!
+memy was originally inspired by [fasd](https://github.com/whjvenyl/fasd), but this unmaintained for some time, and so I decided to start memy afresh with some modern implementation choices. memy has been tested on Linux and MacOS (limited). It has not been tested on Windows, any testing or feedback would be appreciated. `memy` is partially created using AI assistance - all code changes are overseen by a human maintainer!
 
 ## Quick Start
 
