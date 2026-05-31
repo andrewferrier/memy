@@ -1,6 +1,7 @@
 use core::error::Error;
 use rusqlite::Connection;
 use std::fs;
+use std::path::PathBuf;
 use tracing::{debug, info};
 
 use crate::utils;
@@ -144,6 +145,64 @@ pub fn process_autojump_file(file_path: &str, conn: &mut Connection) -> Result<(
     process_file(file_path, conn, parse_autojump_state)
 }
 
+fn from_jumper_str(s: &str) -> Result<TablePathsEntry, Box<dyn Error>> {
+    let parts: Vec<&str> = s.split('|').collect();
+    if parts.len() != 3 {
+        return Err(format!("Invalid entry: {s}").into());
+    }
+
+    let path = parts[0].to_owned();
+    let count = parts[1]
+        .parse::<f64>()
+        .map_err(|e| format!("Invalid count: {e}"))?;
+
+    if count < 0.0 {
+        return Err(format!("Count cannot be negative: {count}").into());
+    }
+
+    let timestamp = parts[2]
+        .parse::<UnixTimestamp>()
+        .map_err(|e| format!("Invalid timestamp: {e}"))?;
+
+    #[allow(clippy::cast_possible_truncation, reason = "Round is intentional")]
+    #[allow(clippy::cast_sign_loss, reason = "Round is intentional")]
+    Ok(TablePathsEntry {
+        path,
+        noted_count: count.round() as NotedCount,
+        last_noted_timestamp: timestamp,
+    })
+}
+
+fn parse_jumper_state(contents: &str) -> Result<Vec<TablePathsEntry>, Box<dyn Error>> {
+    parse_state_generic(contents, from_jumper_str)
+}
+
+pub fn process_jumper_files(conn: &mut Connection) {
+    let home_dir = std::env::home_dir();
+
+    let folders_path = std::env::var("__JUMPER_FOLDERS")
+        .map(PathBuf::from)
+        .ok()
+        .or_else(|| home_dir.as_ref().map(|h| h.join(".jfolders")));
+
+    let files_path = std::env::var("__JUMPER_FILES")
+        .map(PathBuf::from)
+        .ok()
+        .or_else(|| home_dir.as_ref().map(|h| h.join(".jfiles")));
+
+    for path in [folders_path, files_path].into_iter().flatten() {
+        if path.exists() {
+            let Some(path_str) = path.to_str() else {
+                continue;
+            };
+            match process_file(path_str, conn, parse_jumper_state) {
+                Ok(()) => info!("Imported jumper state from {path_str}"),
+                Err(err) => debug!("Failed to process jumper file {path_str}: {err}"),
+            }
+        }
+    }
+}
+
 pub fn process_zoxide_query(conn: &mut Connection) {
     let Ok(output) = std::process::Command::new("zoxide")
         .args(["query", "--list", "--all", "--score"])
@@ -274,6 +333,68 @@ mod tests {
         let result = parse_zoxide_state(input);
 
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_jumper_state_valid_input() {
+        let input = "/home/user/projects|0.600000|1780252584\n/home/user/docs|1.900000|1780252589";
+        let result = parse_jumper_state(input).expect("Couldn't parse jumper state");
+
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0].path, "/home/user/projects");
+        assert_eq!(result[0].noted_count, 1);
+        assert_eq!(result[0].last_noted_timestamp, 1_780_252_584);
+        assert_eq!(result[1].path, "/home/user/docs");
+        assert_eq!(result[1].noted_count, 2);
+        assert_eq!(result[1].last_noted_timestamp, 1_780_252_589);
+    }
+
+    #[test]
+    fn test_parse_jumper_state_missing_fields() {
+        let input = "/home/user/projects|1.5";
+        let result = parse_jumper_state(input);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_jumper_state_invalid_count() {
+        let input = "/home/user/projects|invalid|1780252584";
+        let result = parse_jumper_state(input);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_jumper_state_negative_count() {
+        let input = "/home/user/projects|-1.5|1780252584";
+        let result = parse_jumper_state(input);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_jumper_state_invalid_timestamp() {
+        let input = "/home/user/projects|1.5|invalid_timestamp";
+        let result = parse_jumper_state(input);
+
+        assert!(result.is_err());
+    }
+
+    proptest! {
+        #[test]
+        fn prop_parse_jumper_str_valid_entry(
+            path in "/[a-z/]{1,50}",
+            count in 0u64..=10_000u64,
+            frac in 0u64..=9u64,
+            timestamp in 0i64..=i64::MAX,
+        ) {
+            let input = format!("{path}|{count}.{frac}00000|{timestamp}");
+            let result = from_jumper_str(&input).expect("valid jumper entry should parse");
+            prop_assert_eq!(&result.path, &path);
+            prop_assert_eq!(result.noted_count, if frac >= 5 { count + 1 } else { count });
+            prop_assert_eq!(result.last_noted_timestamp, timestamp);
+        }
     }
 
     proptest! {

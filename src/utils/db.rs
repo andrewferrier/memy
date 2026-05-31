@@ -100,6 +100,7 @@ fn handle_post_init_checks(conn: &mut Connection) {
             .expect("Failed to process autojump state file");
     }
 
+    import::process_jumper_files(conn);
     import::process_zoxide_query(conn);
 }
 
