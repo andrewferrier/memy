@@ -114,15 +114,15 @@ To see the list of current hooks provided by memy, type `memy hook`.
 
 To see the contents of a hook, type `memy hook <hookname>`. In future, we'll provide an easier way to [automatically install some hooks](https://github.com/andrewferrier/memy/issues/53). For now, the provided hooks can be installed like this (please be careful to make sure you backup any configuration files etc. before running these commands to avoid mishaps):
 
-| Tool   | How to Install                                              |
-| ------ | ----------------------------------------------------------- |
-| bash   | Run `echo 'source <(memy hook bash)' >> ~/.bashrc`          |
-| fish   | Run `memy hook fish.fish >> ~/.config/fish/config.fish`     |
-| lfrc   | Run `memy hook lfrc >> ~/.config/lf/lfrc`                   |
-| neovim | Run `memy hook neovim.lua > ~/.config/nvim/plugin/memy.lua` |
-| ranger | Run `memy hook ranger.rc.conf >> ~/.config/ranger/rc.conf`  |
-| vim    | Run `memy hook vim.vim > ~/.vim/plugin/memy.vim`            |
-| zsh    | Run `echo 'eval $(memy hook zsh)' >> ~/.zshrc`              |
+| Tool   | How to Install                                                                                                        |
+| ------ | --------------------------------------------------------------------------------------------------------------------- |
+| bash   | Run `echo 'source <(memy hook bash)' >> ~/.bashrc`                                                                    |
+| fish   | Run `memy hook fish.fish >> ~/.config/fish/config.fish`                                                               |
+| lfrc   | Run `memy hook lfrc >> ~/.config/lf/lfrc`                                                                             |
+| neovim | Run `memy hook neovim.lua > ~/.config/nvim/plugin/memy.lua`                                                           |
+| ranger | Run `memy hook ranger.rc.conf >> ~/.config/ranger/rc.conf`                                                            |
+| vim    | Run `memy hook vim.vim > ~/.vim/plugin/memy.vim`                                                                      |
+| zsh    | Run `echo 'eval $(memy hook zsh)' >> ~/.zshrc` or add `https://github.com/andrewferrier/memy` to your zsh plugin list |
 
 ### Shell Convenience Functions
 
@@ -244,13 +244,13 @@ Every path (file or directory) in memy's database has a **noted count** (how man
 \text{frecency} = (1 - \lambda) \cdot \frac{c}{c_{\max}} + \lambda \cdot \left(1 - \frac{t}{t_{\max}}\right)
 ```
 
-| Symbol | Meaning |
-|---|---|
-| $\lambda$ | `recency_bias` config parameter (default `0.5`) |
-| $c$ | Noted count for this entry |
-| $c_{\max}$ | Highest noted count across all entries |
-| $t$ | Age of this entry's last note, in hours |
-| $t_{\max}$ | Age of the oldest entry's last note, in hours |
+| Symbol       | Meaning                                         |
+| ------------ | ----------------------------------------------- |
+| $\\lambda$   | `recency_bias` config parameter (default `0.5`) |
+| $c$          | Noted count for this entry                      |
+| $c\_{\\max}$ | Highest noted count across all entries          |
+| $t$          | Age of this entry's last note, in hours         |
+| $t\_{\\max}$ | Age of the oldest entry's last note, in hours   |
 
 The first term is the **frequency score** — how often this path has been noted,
 normalised against the most-noted path. The second term is the **recency
