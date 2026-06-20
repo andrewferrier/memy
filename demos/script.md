@@ -11,7 +11,7 @@
 
 - Introduce memy: a fast, modern CLI tool for tracking and recalling frequently used files and directories using frecency algorithms, which combine frequency and recency
 - Designed for those who are comfortable working with the command line and hacking on their system
-- Many alternatives such as zoxide which only track directories
+- Many alternatives such as zoxide only track directories
 - Also fasd which tracks both but is based entirely in shell script and has a number of limitations that memy overcomes with a modern Rust implementation and SQLite database
 - memy will import database from those tools on first run
 - It's a 'backend', building frontends is up to you

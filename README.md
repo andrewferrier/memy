@@ -18,7 +18,7 @@ memy can be used in three interchangeable ways:
 - **Interactive selection with tools like [`fzf`](https://github.com/junegunn/fzf)** — memy integrates with fuzzy finders and other selectors so you can interactively pick and open files or directories. Out of the box, the memy shell hooks provide ready-made functions (`memy-cd`, `memy-open`, `memy-go`) for common workflows.
 - **Structured output for custom workflows** - memy can output your tracked paths as plain text, CSV, or JSON to script your own workflows or build integrations from scratch.
 
-memy was originally inspired by [fasd](https://github.com/whjvenyl/fasd), but this unmaintained for some time, and so I decided to start memy afresh with some modern implementation choices. memy has been tested on Linux and MacOS (limited). It has not been tested on Windows, any testing or feedback would be appreciated. `memy` is partially created using AI assistance - all code changes are overseen by a human maintainer!
+memy was originally inspired by [fasd](https://github.com/whjvenyl/fasd), but this was been unmaintained for some time, and so I decided to start memy afresh with some modern implementation choices. memy has been tested on Linux and MacOS (limited). It has not been tested on Windows, any testing or feedback would be appreciated. `memy` is partially created using AI assistance - all code changes are overseen by a human maintainer!
 
 ## Quick Start
 
@@ -136,7 +136,7 @@ When the bash, zsh, or fish hook is installed, the following shell functions are
 
 ### Automated Install using Shell Script
 
-Use single shell script to install:
+Use a single shell script to install:
 
 ```
 curl -sSL https://raw.githubusercontent.com/andrewferrier/memy/main/install.sh | sh
@@ -265,9 +265,9 @@ The `recency_bias` parameter (λ) controls the weighting:
 
 ### How `z` Keyword Matching Works
 
-The `z`/`zi` commands matches directories using the same algorithm as
+The `z`/`zi` commands match directories using the same algorithm as
 [zoxide](https://github.com/ajeetdsouza/zoxide). For full details see the
-[zoxide algorithm documentation](https://github.com/ajeetdsouza/zoxide/wiki/Algorithm). The `z` command always returns the most frecent directory that matches, and the `zi` command presents directories in list of frecency after applying the `z` algorithm. Note that memy's frecency algorithm is slightly different from zoxide's.
+[zoxide algorithm documentation](https://github.com/ajeetdsouza/zoxide/wiki/Algorithm). The `z` command always returns the most frecent directory that matches, and the `zi` command presents directories in a list by frecency after applying the `z` algorithm. Note that memy's frecency algorithm is slightly different from zoxide's.
 
 ## More Information
 
