@@ -219,7 +219,7 @@ memy completions zsh > "${HOME}/.zfunc/_memy"
 **Fish:**
 
 ```sh
-memy completions fish > "${HOME}/.config/fish/completions/memy.fish"
+memy completions fish > "$HOME/.config/fish/completions/memy.fish"
 ```
 
 ## Configuration & Under the Hood
