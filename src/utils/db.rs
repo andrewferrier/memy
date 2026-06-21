@@ -76,35 +76,6 @@ fn init_db(conn: &Connection) {
 }
 
 #[instrument(level = "trace")]
-fn handle_post_init_checks(conn: &mut Connection) {
-    if let Some(fasd_state_path) = BaseDirectories::new().find_cache_file("fasd")
-        && fasd_state_path.exists()
-    {
-        let fasd_state_path_str = fasd_state_path
-            .to_str()
-            .expect("Cannot convert PathBuf to str");
-
-        import::process_fasd_file(fasd_state_path_str, conn)
-            .expect("Failed to process fasd state file");
-    }
-
-    if let Some(autojump_share_path) =
-        BaseDirectories::with_prefix("autojump").find_data_file("autojump.txt")
-        && autojump_share_path.exists()
-    {
-        let autojump_share_path_str = autojump_share_path
-            .to_str()
-            .expect("Cannot convert PathBuf to str");
-
-        import::process_autojump_file(autojump_share_path_str, conn)
-            .expect("Failed to process autojump state file");
-    }
-
-    import::process_jumper_files(conn);
-    import::process_zoxide_query(conn);
-}
-
-#[instrument(level = "trace")]
 pub fn open() -> Result<Connection, Box<dyn Error>> {
     let db_path = get_db_path();
 
@@ -124,7 +95,7 @@ pub fn open() -> Result<Connection, Box<dyn Error>> {
         init_db(&conn);
 
         if config::get_import_on_first_use() {
-            handle_post_init_checks(&mut conn);
+            import::run_importers(&mut conn);
         }
     }
 

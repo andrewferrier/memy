@@ -2,7 +2,8 @@ use core::error::Error;
 use rusqlite::Connection;
 use std::fs;
 use std::path::PathBuf;
-use tracing::{debug, info};
+use tracing::{debug, info, instrument};
+use xdg::BaseDirectories;
 
 use crate::utils;
 use crate::utils::db::TablePathsEntry;
@@ -117,11 +118,7 @@ fn insert_into_db(
     Ok(())
 }
 
-pub fn process_file<F>(
-    file_path: &str,
-    conn: &mut Connection,
-    parser: F,
-) -> Result<(), Box<dyn Error>>
+fn process_file<F>(file_path: &str, conn: &mut Connection, parser: F) -> Result<(), Box<dyn Error>>
 where
     F: Fn(&str) -> Result<Vec<TablePathsEntry>, Box<dyn Error>>,
 {
@@ -137,11 +134,13 @@ where
     Ok(())
 }
 
-pub fn process_fasd_file(file_path: &str, conn: &mut Connection) -> Result<(), Box<dyn Error>> {
+#[instrument(level = "trace")]
+fn process_fasd_file(file_path: &str, conn: &mut Connection) -> Result<(), Box<dyn Error>> {
     process_file(file_path, conn, parse_fasd_state)
 }
 
-pub fn process_autojump_file(file_path: &str, conn: &mut Connection) -> Result<(), Box<dyn Error>> {
+#[instrument(level = "trace")]
+fn process_autojump_file(file_path: &str, conn: &mut Connection) -> Result<(), Box<dyn Error>> {
     process_file(file_path, conn, parse_autojump_state)
 }
 
@@ -177,7 +176,8 @@ fn parse_jumper_state(contents: &str) -> Result<Vec<TablePathsEntry>, Box<dyn Er
     parse_state_generic(contents, from_jumper_str)
 }
 
-pub fn process_jumper_files(conn: &mut Connection) {
+#[instrument(level = "trace")]
+fn process_jumper_files(conn: &mut Connection) {
     let home_dir = std::env::home_dir();
 
     let folders_path = std::env::var("__JUMPER_FOLDERS")
@@ -203,7 +203,8 @@ pub fn process_jumper_files(conn: &mut Connection) {
     }
 }
 
-pub fn process_zoxide_query(conn: &mut Connection) {
+#[instrument(level = "trace")]
+fn process_zoxide_query(conn: &mut Connection) {
     let Ok(output) = std::process::Command::new("zoxide")
         .args(["query", "--list", "--all", "--score"])
         .output()
@@ -228,6 +229,34 @@ pub fn process_zoxide_query(conn: &mut Connection) {
     };
 
     info!("Imported zoxide state");
+}
+
+#[instrument(level = "trace")]
+pub fn run_importers(conn: &mut Connection) {
+    if let Some(fasd_state_path) = BaseDirectories::new().find_cache_file("fasd")
+        && fasd_state_path.exists()
+    {
+        let fasd_state_path_str = fasd_state_path
+            .to_str()
+            .expect("Cannot convert PathBuf to str");
+
+        process_fasd_file(fasd_state_path_str, conn).expect("Failed to process fasd state file");
+    }
+
+    if let Some(autojump_share_path) =
+        BaseDirectories::with_prefix("autojump").find_data_file("autojump.txt")
+        && autojump_share_path.exists()
+    {
+        let autojump_share_path_str = autojump_share_path
+            .to_str()
+            .expect("Cannot convert PathBuf to str");
+
+        process_autojump_file(autojump_share_path_str, conn)
+            .expect("Failed to process autojump state file");
+    }
+
+    process_jumper_files(conn);
+    process_zoxide_query(conn);
 }
 
 #[cfg(test)]
