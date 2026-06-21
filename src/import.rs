@@ -40,7 +40,7 @@ fn from_fasd_str(s: &str) -> Result<TablePathsEntry, Box<dyn Error>> {
 }
 
 fn from_whitespace_split_str(s: &str) -> Result<TablePathsEntry, Box<dyn Error>> {
-    let parts: Vec<&str> = s.split_whitespace().collect();
+    let parts: Vec<&str> = s.trim().splitn(2, char::is_whitespace).collect();
     if parts.len() != 2 {
         return Err(format!("Invalid entry: {s}").into());
     }
@@ -48,7 +48,7 @@ fn from_whitespace_split_str(s: &str) -> Result<TablePathsEntry, Box<dyn Error>>
     let count = parts[0]
         .parse::<f64>()
         .map_err(|e| format!("Invalid count: {e}"))?;
-    let path = parts[1].to_owned();
+    let path = parts[1].trim_start().to_owned();
     let timestamp = utils::time::get_unix_timestamp();
 
     if count < 0.0 {
@@ -204,28 +204,43 @@ pub fn process_jumper_files(conn: &mut Connection) {
 }
 
 pub fn process_zoxide_query(conn: &mut Connection) {
-    let Ok(output) = std::process::Command::new("zoxide")
+    let output = match std::process::Command::new("zoxide")
         .args(["query", "--list", "--all", "--score"])
         .output()
-    else {
-        return;
+    {
+        Ok(o) => o,
+        Err(e) => {
+            debug!("zoxide: spawn failed: {e}");
+            return;
+        }
     };
 
     if !output.status.success() {
+        debug!("zoxide: non-zero exit: {}", output.status);
+        debug!("stderr: {}", String::from_utf8_lossy(&output.stderr));
         return;
     }
 
-    let Ok(stdout) = String::from_utf8(output.stdout) else {
-        return;
+    let stdout = match String::from_utf8(output.stdout) {
+        Ok(s) => s,
+        Err(e) => {
+            debug!("zoxide: invalid utf8: {e}");
+            return;
+        }
     };
 
-    let Ok(entries) = parse_zoxide_state(&stdout) else {
-        return;
+    let entries = match parse_zoxide_state(&stdout) {
+        Ok(e) => e,
+        Err(e) => {
+            debug!("zoxide: parse failed: {e}");
+            return;
+        }
     };
 
-    let Ok(()) = insert_into_db(conn, entries) else {
+    if let Err(e) = insert_into_db(conn, entries) {
+        debug!("zoxide: db insert failed: {e}");
         return;
-    };
+    }
 
     info!("Imported zoxide state");
 }
