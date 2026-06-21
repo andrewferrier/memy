@@ -85,7 +85,7 @@ fn build_man_pages(build_root_dir: &Path) -> std::io::Result<()> {
 
     write_man_page(&man_dir, "memy.1".to_owned(), main_cmd.clone())?;
 
-    for subcmd in main_cmd.get_subcommands() {
+    for subcmd in main_cmd.get_subcommands().filter(|s| !s.is_hide_set()) {
         let full_subcmd_name = format!("memy {}", subcmd.get_name());
 
         let sub = main_cmd
