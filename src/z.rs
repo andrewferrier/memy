@@ -5,7 +5,7 @@ use crate::utils::cli::{ListArgs, ZArgs};
 
 #[instrument(level = "trace")]
 pub fn command(args: &ZArgs) -> Result<(), Box<dyn Error>> {
-    warn!("memy z is deprecated; use 'memy list' instead");
+    warn!("`memy z` is deprecated; use `memy list` instead!");
 
     let list_args = ListArgs {
         directories_only: true,
