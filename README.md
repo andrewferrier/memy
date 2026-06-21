@@ -138,7 +138,7 @@ When the bash, zsh, or fish hook is installed, the following shell functions are
 
 Use a single shell script to install:
 
-```
+```sh
 curl -sSL https://raw.githubusercontent.com/andrewferrier/memy/main/install.sh | sh
 ```
 
@@ -171,7 +171,7 @@ brew install ferriera/memy/memy
 
 Download the PKGBUILD from the repository and build/install with:
 
-```bash
+```sh
 curl -O https://raw.githubusercontent.com/andrewferrier/memy/main/aur/PKGBUILD
 makepkg -si
 ```
