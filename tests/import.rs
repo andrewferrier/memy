@@ -115,13 +115,12 @@ fn test_import_jumper_state_files() {
 
     let jumper_folders_file = &ctx.cache_path.join("jfolders");
     let jumper_folders_contents =
-        format!("{}|0.600000|1780252584", test_dir_path.to_string_lossy(),);
+        format!("{}|0.600000|1780252584", test_dir_path.to_string_lossy());
     fs::write(jumper_folders_file, jumper_folders_contents)
         .expect("Failed to write mock jumper folders file");
 
     let jumper_files_file = &ctx.cache_path.join("jfiles");
-    let jumper_files_contents =
-        format!("{}|1.900000|1780252589", test_file_path.to_string_lossy(),);
+    let jumper_files_contents = format!("{}|1.900000|1780252589", test_file_path.to_string_lossy());
     fs::write(jumper_files_file, jumper_files_contents)
         .expect("Failed to write mock jumper files file");
 

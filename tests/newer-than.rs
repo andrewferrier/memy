@@ -61,7 +61,7 @@ fn test_newer_than_with_iso8601_date() {
         &ctx.db_path,
         &format!(
             "UPDATE paths SET last_noted_timestamp = {} WHERE path = '{}'",
-            1577836800, // 2020-01-01 00:00:00 UTC
+            1_577_836_800, // 2020-01-01 00:00:00 UTC
             file1.to_str().unwrap()
         ),
     );
@@ -70,7 +70,7 @@ fn test_newer_than_with_iso8601_date() {
         &ctx.db_path,
         &format!(
             "UPDATE paths SET last_noted_timestamp = {} WHERE path = '{}'",
-            1748736000, // 2025-06-01 00:00:00 UTC
+            1_748_736_000, // 2025-06-01 00:00:00 UTC
             file2.to_str().unwrap()
         ),
     );
@@ -140,7 +140,7 @@ fn test_newer_than_no_results() {
         &ctx.db_path,
         &format!(
             "UPDATE paths SET last_noted_timestamp = {} WHERE path = '{}'",
-            946684800, // 2000-01-01 00:00:00 UTC
+            946_684_800, // 2000-01-01 00:00:00 UTC
             file1.to_str().unwrap()
         ),
     );

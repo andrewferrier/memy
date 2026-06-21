@@ -190,7 +190,7 @@ pub fn list_paths(
 
     String::from_utf8_lossy(&output.stdout)
         .lines()
-        .map(str::to_string)
+        .map(str::to_owned)
         .collect()
 }
 

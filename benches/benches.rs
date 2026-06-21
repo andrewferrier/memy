@@ -230,7 +230,7 @@ criterion_group! {
     name = benches;
     config = Criterion::default()
         .warm_up_time(Duration::from_secs(10))
-        .measurement_time(Duration::from_secs(60))
+        .measurement_time(Duration::from_mins(1))
         .sample_size(10);
     targets = benchmark_note_command, benchmark_import_fasd, benchmark_list_command
 }
