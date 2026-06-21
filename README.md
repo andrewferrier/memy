@@ -51,10 +51,10 @@ memy was originally inspired by [fasd](https://github.com/whjvenyl/fasd), but th
   # or use the `memy-cd` convenience command if the memy hook is installed for your shell (see below)
   ```
 
-- Change to the most frecent directory containing the string 'download' (case-insensitive):
+- Search using ordered keywords (case-insensitive; the last keyword must match the last path component):
 
   ```sh
-  cd $(memy list -d -s --output-filter-command 'grep -i download | head -1')
+  memy list project notes
   ```
 
 - Open a recently used file with the platform default application, selecting it using `fzf` or other selector:

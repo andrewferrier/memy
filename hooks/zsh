@@ -59,13 +59,13 @@ if ! (( $+functions[z] )) && ! (( $+commands[z] )); then
       return
     fi
     local result
-    result="$(memy z -- "$@")" && cd "${result/#\~/$HOME}"
+    result="$(memy list -d --head 1 --zoxide-compatible -- "$@")" && cd "${result/#\~/$HOME}"
   }
 fi
 
 if ! (( $+functions[zi] )) && ! (( $+commands[zi] )); then
   function zi() {
     local result
-    result="$(memy z -i -- "$@")" && cd "$result"
+    result="$(memy list -d --output-filter --zoxide-compatible -- "$@")" && cd "$result"
   }
 fi

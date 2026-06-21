@@ -3,11 +3,14 @@ use core::error::Error;
 use rusqlite::Connection;
 use std::fs::FileType;
 use std::io::{Write as _, stdout};
+use tracing::debug;
 use tracing::instrument;
 
 use crate::utils;
 use crate::utils::db;
+use crate::utils::path;
 use crate::utils::query;
+use crate::utils::search::matches_zoxide_algo;
 use crate::utils::types::Frecency;
 use crate::utils::types::NotedCount;
 
@@ -41,10 +44,14 @@ fn calculate(conn: &Connection, args: &ListArgs) -> Result<Vec<PathFrecency>, Bo
             return query::FilterResult::Exclude;
         }
 
+        if !args.keywords.is_empty() && !matches_zoxide_algo(&row.path, &args.keywords) {
+            return query::FilterResult::Exclude;
+        }
+
         query::FilterResult::Include
     })?;
 
-    let to_output = matches
+    let mut to_output: Vec<PathFrecency> = matches
         .into_iter()
         .map(|m| PathFrecency {
             path: m.table_paths_entry.path,
@@ -54,6 +61,13 @@ fn calculate(conn: &Connection, args: &ListArgs) -> Result<Vec<PathFrecency>, Bo
             file_type: m.metadata.file_type(),
         })
         .collect();
+
+    if let Some(n) = args.head {
+        let len = to_output.len();
+        if n < len {
+            to_output.drain(..len - n);
+        }
+    }
 
     Ok(to_output)
 }
@@ -84,9 +98,42 @@ fn format_results(results: &[PathFrecency], args: &ListArgs) -> Result<String, B
 
 #[instrument(level = "trace")]
 pub fn command(args: &ListArgs) -> Result<(), Box<dyn Error>> {
+    if args.zoxide_compatible && !args.output_filter {
+        if args.keywords.is_empty() {
+            let home = std::env::home_dir().ok_or("Cannot determine home directory")?;
+            let normalized_home = path::normalize_path(&home);
+            let mut stdout_handle = stdout().lock();
+            debug!(
+                "Returning home directory as in zoxide_compatible mode and no keywords provided"
+            );
+            writeln!(stdout_handle, "{}", normalized_home.to_string_lossy())?;
+            return Ok(());
+        }
+
+        if args.keywords.len() == 1 && args.keywords[0] == "-" {
+            return Err("z -: cannot determine previous directory from within memy; use 'cd -' directly in your shell".into());
+        }
+
+        if args.keywords.len() == 1
+            && let Some(resolved) = path::resolve_existing_dir(&args.keywords[0])
+        {
+            debug!(
+                "Returning directory as specified on command line: {}",
+                resolved.to_string_lossy()
+            );
+            let mut stdout_handle = stdout().lock();
+            writeln!(stdout_handle, "{}", resolved.to_string_lossy())?;
+            return Ok(());
+        }
+    }
+
     let db_connection = db::open()?;
     let results: Vec<PathFrecency> = calculate(&db_connection, args)?;
     db::close(db_connection)?;
+
+    if results.is_empty() && (!args.keywords.is_empty() || args.zoxide_compatible) {
+        return Err("no match found".into());
+    }
 
     let output = format_results(&results, args)?;
 

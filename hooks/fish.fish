@@ -50,14 +50,14 @@ if not functions -q z; and not command -q z
             cd $OLDPWD
             return
         end
-        set result (memy z -- $argv)
+        set result (memy list -d --head 1 --zoxide-compatible -- $argv)
         and cd $result
     end
 end
 
 if not functions -q zi; and not command -q zi
     function zi
-        set result (memy z -i -- $argv)
+        set result (memy list -d --output-filter --zoxide-compatible -- $argv)
         and cd $result
     end
 end

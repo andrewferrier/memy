@@ -8,6 +8,7 @@ pub mod logging;
 pub mod output;
 pub mod path;
 pub mod query;
+pub mod search;
 pub mod time;
 pub mod types;
 

@@ -95,6 +95,10 @@ pub struct NoteArgs {
 }
 
 #[derive(Args, Debug)]
+#[allow(
+    clippy::struct_excessive_bools,
+    reason = "CLI flags are naturally boolean"
+)]
 pub struct ListArgs {
     /// Show only files in the list
     #[arg(short, long, conflicts_with = "directories_only")]
@@ -113,6 +117,10 @@ pub struct ListArgs {
     #[arg(long, value_name = "TIME")]
     pub newer_than: Option<String>,
 
+    /// Return only the top N most frecent results
+    #[arg(long, value_name = "N")]
+    pub head: Option<usize>,
+
     /// Pipe output through a command, defaulting to an interactive filter like `fzf`
     #[arg(short = 's', long = "output-filter", visible_alias = "select-filter")]
     pub output_filter: bool,
@@ -125,6 +133,16 @@ pub struct ListArgs {
         requires = "output_filter"
     )]
     pub output_filter_command: Option<String>,
+
+    /// Enable zoxide-compatible shortcut behaviours (home dir on no keywords, existing dir
+    /// passthrough, '-' error); intended for use by shell hooks only
+    #[arg(long, hide = true)]
+    pub zoxide_compatible: bool,
+
+    /// Search keywords (case-insensitive, must appear in path in the order provided, last keyword must appear in
+    /// the last path component)
+    #[arg(value_name = "KEYWORDS", num_args = 0..)]
+    pub keywords: Vec<String>,
 }
 
 #[derive(Args, Debug)]
