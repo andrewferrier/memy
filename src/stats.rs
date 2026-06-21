@@ -1,9 +1,10 @@
 use crate::utils::db::FromRow as _;
-use chrono::{Datelike as _, Local, TimeZone as _, Timelike as _};
+use chrono::{DateTime, Datelike as _, Local, TimeZone as _, Timelike as _};
 use core::error::Error;
 use rusqlite::Connection;
 use rusqlite::{OptionalExtension as _, params};
 use std::collections::BTreeMap;
+use std::fmt;
 use std::io::{Write as _, stdout};
 use tracing::instrument;
 
@@ -29,15 +30,143 @@ pub struct StatsOutput {
     pub all_noted_counts: Vec<NotedCount>,
 }
 
+fn get_local_datetime(timestamp: UnixTimestamp) -> DateTime<Local> {
+    Local
+        .timestamp_opt(timestamp, 0)
+        .single()
+        .expect("valid timestamp")
+}
+
+#[derive(Clone, Copy)]
+enum TimeGranularity {
+    Hour,
+    Day,
+    Week,
+    Month,
+    Year,
+}
+
+impl fmt::Display for TimeGranularity {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let name = match self {
+            Self::Hour => "hour",
+            Self::Day => "day",
+            Self::Week => "week",
+            Self::Month => "month",
+            Self::Year => "year",
+        };
+
+        write!(f, "{name}")
+    }
+}
+
+impl TimeGranularity {
+    fn starting_timestamp(self, timestamp: UnixTimestamp) -> UnixTimestamp {
+        let dt = get_local_datetime(timestamp);
+
+        match self {
+            Self::Hour => Local
+                .with_ymd_and_hms(dt.year(), dt.month(), dt.day(), dt.hour(), 0, 0)
+                .single()
+                .expect("valid date")
+                .timestamp(),
+            Self::Day => Local
+                .with_ymd_and_hms(dt.year(), dt.month(), dt.day(), 0, 0, 0)
+                .single()
+                .expect("valid date")
+                .timestamp(),
+            Self::Week => {
+                let weekday_offset = i64::from(dt.weekday().num_days_from_monday());
+                let day_start = Local
+                    .with_ymd_and_hms(dt.year(), dt.month(), dt.day(), 0, 0, 0)
+                    .single()
+                    .expect("valid date")
+                    .timestamp();
+                day_start - weekday_offset * 86_400
+            }
+            Self::Month => Local
+                .with_ymd_and_hms(dt.year(), dt.month(), 1, 0, 0, 0)
+                .single()
+                .expect("valid date")
+                .timestamp(),
+            Self::Year => Local
+                .with_ymd_and_hms(dt.year(), 1, 1, 0, 0, 0)
+                .single()
+                .expect("valid date")
+                .timestamp(),
+        }
+    }
+
+    fn next_bucket(self, timestamp: UnixTimestamp) -> UnixTimestamp {
+        match self {
+            Self::Hour => timestamp + 3_600,
+            Self::Day => timestamp + 86_400,
+            Self::Week => {
+                // Use calendar-day arithmetic so that DST transitions (±1 hour) don't
+                // cause the iteration to miss a bucket that starting_timestamp() computed
+                // via the same calendar-aware approach.
+                let dt = get_local_datetime(timestamp);
+                let next_date = dt.date_naive() + chrono::Days::new(7);
+                Local
+                    .with_ymd_and_hms(
+                        next_date.year(),
+                        next_date.month(),
+                        next_date.day(),
+                        0,
+                        0,
+                        0,
+                    )
+                    .single()
+                    .expect("valid date")
+                    .timestamp()
+            }
+            Self::Month => {
+                let dt = get_local_datetime(timestamp);
+                let (year, month) = if dt.month() == 12 {
+                    (dt.year() + 1, 1_u32)
+                } else {
+                    (dt.year(), dt.month() + 1)
+                };
+                Local
+                    .with_ymd_and_hms(year, month, 1, 0, 0, 0)
+                    .single()
+                    .expect("valid date")
+                    .timestamp()
+            }
+            Self::Year => {
+                let dt = get_local_datetime(timestamp);
+                Local
+                    .with_ymd_and_hms(dt.year() + 1, 1, 1, 0, 0, 0)
+                    .single()
+                    .expect("valid date")
+                    .timestamp()
+            }
+        }
+    }
+
+    fn display_timestamp(self, timestamp: UnixTimestamp) -> String {
+        let dt = get_local_datetime(timestamp);
+
+        match self {
+            Self::Hour => dt.format("%d %H:00").to_string(),
+            Self::Day => dt.format("%m-%d").to_string(),
+            Self::Week => {
+                let iso = dt.iso_week();
+                format!("{}-W{:02}", iso.year(), iso.week())
+            }
+            Self::Month => dt.format("%Y-%m").to_string(),
+            Self::Year => dt.format("%Y").to_string(),
+        }
+    }
+}
+
 fn query_path_limit_timestamp(
     conn: &Connection,
     order: &str,
 ) -> Result<Option<TablePathsEntry>, Box<dyn Error>> {
     let result = conn
         .query_row(
-            &format!(
-                "SELECT path, noted_count, last_noted_timestamp FROM paths ORDER BY last_noted_timestamp {order} LIMIT 1"
-            ),
+            &format!("SELECT * FROM paths ORDER BY {order} LIMIT 1"),
             params![],
             TablePathsEntry::from_row,
         )
@@ -47,18 +176,9 @@ fn query_path_limit_timestamp(
 
 #[instrument(level = "trace")]
 pub fn get(conn: &Connection) -> Result<StatsOutput, Box<dyn Error>> {
-    let row_count = conn.query_row("SELECT COUNT(*) FROM paths", [], |row| row.get(0))?;
-
-    let oldest = query_path_limit_timestamp(conn, "ASC")?;
-    let newest = query_path_limit_timestamp(conn, "DESC")?;
-
-    let highest_count = conn
-        .query_row(
-            "SELECT path, noted_count, last_noted_timestamp FROM paths ORDER BY noted_count DESC LIMIT 1",
-            params![],
-            TablePathsEntry::from_row,
-        )
-        .optional()?;
+    let oldest_note = query_path_limit_timestamp(conn, "last_noted_timestamp ASC")?;
+    let newest_note = query_path_limit_timestamp(conn, "last_noted_timestamp DESC")?;
+    let highest_count = query_path_limit_timestamp(conn, "noted_count DESC")?;
 
     let rows = db::get_rows(conn)?;
     let mut files_count = 0_usize;
@@ -78,12 +198,12 @@ pub fn get(conn: &Connection) -> Result<StatsOutput, Box<dyn Error>> {
     }
 
     Ok(StatsOutput {
-        total_paths: row_count,
+        total_paths: rows.len(),
         files_count,
         dirs_count,
         missing_count,
-        oldest_note: oldest,
-        newest_note: newest,
+        oldest_note,
+        newest_note,
         highest_count,
         all_timestamps,
         all_noted_counts,
@@ -94,11 +214,14 @@ fn build_histogram(counts: &[NotedCount]) -> Vec<(String, usize)> {
     if counts.is_empty() {
         return vec![];
     }
+
     let max_count = *counts.iter().max().expect("non-empty");
+
     // Number of log-2 buckets needed: floor(log2(max_count)) + 1, capped at 63.
     // Bucket 0 = [1, 1]; bucket n >= 1 = [2^n, 2^(n+1)-1].
     let n_buckets = ((u64::BITS - max_count.leading_zeros()) as usize).min(63);
     let mut bucket_counts = vec![0_usize; n_buckets];
+
     for &count in counts {
         if count == 0 {
             continue;
@@ -106,6 +229,7 @@ fn build_histogram(counts: &[NotedCount]) -> Vec<(String, usize)> {
         let idx = ((u64::BITS - count.leading_zeros() - 1) as usize).min(n_buckets - 1);
         bucket_counts[idx] += 1;
     }
+
     bucket_counts
         .into_iter()
         .enumerate()
@@ -123,15 +247,6 @@ fn build_histogram(counts: &[NotedCount]) -> Vec<(String, usize)> {
         .collect()
 }
 
-#[derive(Clone, Copy)]
-enum TimeGranularity {
-    Hour,
-    Day,
-    Week,
-    Month,
-    Year,
-}
-
 /// Pick the finest granularity whose bucket count for `total_span_secs` fits in `max_cols`.
 fn choose_granularity_for_width(total_span_secs: i64, max_cols: usize) -> TimeGranularity {
     let candidates = [
@@ -141,6 +256,7 @@ fn choose_granularity_for_width(total_span_secs: i64, max_cols: usize) -> TimeGr
         (TimeGranularity::Month, 30 * 86_400_i64),
         (TimeGranularity::Year, 365 * 86_400_i64),
     ];
+
     for (granularity, interval_secs) in candidates {
         // +1 so a span of exactly one interval produces 2 buckets (start + end).
         let buckets = usize::try_from(total_span_secs / interval_secs + 1).unwrap_or(usize::MAX);
@@ -148,129 +264,8 @@ fn choose_granularity_for_width(total_span_secs: i64, max_cols: usize) -> TimeGr
             return granularity;
         }
     }
+
     TimeGranularity::Year
-}
-
-/// Advance one bucket forward from `floor_ts`.
-fn next_bucket_ts(floor_ts: i64, granularity: TimeGranularity) -> i64 {
-    match granularity {
-        TimeGranularity::Hour => floor_ts + 3_600,
-        TimeGranularity::Day => floor_ts + 86_400,
-        TimeGranularity::Week => {
-            // Use calendar-day arithmetic so that DST transitions (±1 hour) don't
-            // cause the iteration to miss a bucket that bucket_floor_ts() computed
-            // via the same calendar-aware approach.
-            let dt = Local
-                .timestamp_opt(floor_ts, 0)
-                .single()
-                .expect("valid timestamp");
-            let next_date = dt.date_naive() + chrono::Days::new(7);
-            Local
-                .with_ymd_and_hms(
-                    next_date.year(),
-                    next_date.month(),
-                    next_date.day(),
-                    0,
-                    0,
-                    0,
-                )
-                .single()
-                .expect("valid date")
-                .timestamp()
-        }
-        TimeGranularity::Month => {
-            let dt = Local
-                .timestamp_opt(floor_ts, 0)
-                .single()
-                .expect("valid timestamp");
-            let (year, month) = if dt.month() == 12 {
-                (dt.year() + 1, 1_u32)
-            } else {
-                (dt.year(), dt.month() + 1)
-            };
-            Local
-                .with_ymd_and_hms(year, month, 1, 0, 0, 0)
-                .single()
-                .expect("valid date")
-                .timestamp()
-        }
-        TimeGranularity::Year => {
-            let dt = Local
-                .timestamp_opt(floor_ts, 0)
-                .single()
-                .expect("valid timestamp");
-            Local
-                .with_ymd_and_hms(dt.year() + 1, 1, 1, 0, 0, 0)
-                .single()
-                .expect("valid date")
-                .timestamp()
-        }
-    }
-}
-
-const fn granularity_name(granularity: TimeGranularity) -> &'static str {
-    match granularity {
-        TimeGranularity::Hour => "hour",
-        TimeGranularity::Day => "day",
-        TimeGranularity::Week => "week",
-        TimeGranularity::Month => "month",
-        TimeGranularity::Year => "year",
-    }
-}
-
-fn bucket_floor_ts(ts: UnixTimestamp, granularity: TimeGranularity) -> i64 {
-    let dt = Local
-        .timestamp_opt(ts, 0)
-        .single()
-        .expect("valid timestamp");
-    match granularity {
-        TimeGranularity::Hour => Local
-            .with_ymd_and_hms(dt.year(), dt.month(), dt.day(), dt.hour(), 0, 0)
-            .single()
-            .expect("valid date")
-            .timestamp(),
-        TimeGranularity::Day => Local
-            .with_ymd_and_hms(dt.year(), dt.month(), dt.day(), 0, 0, 0)
-            .single()
-            .expect("valid date")
-            .timestamp(),
-        TimeGranularity::Week => {
-            let weekday_offset = i64::from(dt.weekday().num_days_from_monday());
-            let day_start = Local
-                .with_ymd_and_hms(dt.year(), dt.month(), dt.day(), 0, 0, 0)
-                .single()
-                .expect("valid date")
-                .timestamp();
-            day_start - weekday_offset * 86_400
-        }
-        TimeGranularity::Month => Local
-            .with_ymd_and_hms(dt.year(), dt.month(), 1, 0, 0, 0)
-            .single()
-            .expect("valid date")
-            .timestamp(),
-        TimeGranularity::Year => Local
-            .with_ymd_and_hms(dt.year(), 1, 1, 0, 0, 0)
-            .single()
-            .expect("valid date")
-            .timestamp(),
-    }
-}
-
-fn bucket_display_label(floor_ts: i64, granularity: TimeGranularity) -> String {
-    let dt = Local
-        .timestamp_opt(floor_ts, 0)
-        .single()
-        .expect("valid timestamp");
-    match granularity {
-        TimeGranularity::Hour => dt.format("%d %H:00").to_string(),
-        TimeGranularity::Day => dt.format("%m-%d").to_string(),
-        TimeGranularity::Week => {
-            let iso = dt.iso_week();
-            format!("{}-W{:02}", iso.year(), iso.week())
-        }
-        TimeGranularity::Month => dt.format("%Y-%m").to_string(),
-        TimeGranularity::Year => dt.format("%Y").to_string(),
-    }
 }
 
 fn build_time_chart(
@@ -293,24 +288,24 @@ fn build_time_chart(
     let mut bucket_counts: BTreeMap<i64, usize> = BTreeMap::new();
     for &ts in timestamps {
         *bucket_counts
-            .entry(bucket_floor_ts(ts, granularity))
+            .entry(granularity.starting_timestamp(ts))
             .or_insert(0) += 1;
     }
 
-    let first_bucket = bucket_floor_ts(min_ts, granularity);
-    let now_bucket = bucket_floor_ts(now, granularity);
+    let first_bucket = granularity.starting_timestamp(min_ts);
+    let now_bucket = granularity.starting_timestamp(now);
     let mut entries = Vec::new();
     let mut current = first_bucket;
     loop {
         let count = *bucket_counts.get(&current).unwrap_or(&0);
-        entries.push((bucket_display_label(current, granularity), count));
+        entries.push((granularity.display_timestamp(current), count));
         if current >= now_bucket {
             break;
         }
-        current = next_bucket_ts(current, granularity);
+        current = granularity.next_bucket(current);
     }
 
-    let title = format!("Time Distribution (by {})", granularity_name(granularity));
+    let title = format!("Time Distribution (by {granularity})");
     (title, entries)
 }
 
@@ -574,7 +569,7 @@ mod tests {
                 base in 1_000_000i64..1_800_000_000i64,
                 offsets in prop::collection::vec(0i64..=3_650i64 * 86_400, 2..50)
             ) {
-                let timestamps: Vec<i64> = offsets.iter().map(|&o| base + o).collect();
+                let timestamps: Vec<UnixTimestamp> = offsets.iter().map(|&o| base + o).collect();
                 let max_ts = *timestamps.iter().max().unwrap();
                 let now = max_ts + 86_400;
                 let (_, entries) = build_time_chart(&timestamps, now, 80);
