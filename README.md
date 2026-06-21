@@ -200,7 +200,7 @@ mv memy-<platform-arch> /usr/local/bin/memy
 
 ### Install via Cargo (from Source)
 
-If you have [Cargo](https://doc.rust-lang.org/cargo/) installed, you can install memy directly from the very latest source (main branch). This version may have more recent changes than the packaged versions linked above and so may be more unstable.
+If you have [Cargo](https://doc.rust-lang.org/cargo/) installed, you can install memy directly from the very latest source (main branch). This development version may have more recent changes than the packaged versions linked above and so may be more unstable.
 
 ```sh
 cargo install --git https://github.com/andrewferrier/memy
