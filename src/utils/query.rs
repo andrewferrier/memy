@@ -9,7 +9,7 @@ use super::config;
 use super::config::DeniedFilesOnList;
 use super::db;
 use super::frecency;
-use super::time::{get_unix_timestamp, timestamp_age_hours};
+use super::time::{get_timestamp_now, timestamp_age_hours};
 use crate::stats;
 use crate::utils::db::TablePathsEntry;
 
@@ -43,7 +43,7 @@ where
     F: Fn(&db::TablePathsEntry, &Metadata) -> FilterResult + Send + Sync,
 {
     let rows = db::get_rows(conn)?;
-    let now = get_unix_timestamp();
+    let now = get_timestamp_now();
     let stats = stats::get(conn)?;
 
     let (Some(oldest_note), Some(highest_count_entry)) = (stats.oldest_note, stats.highest_count)

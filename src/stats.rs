@@ -1,5 +1,5 @@
 use crate::utils::db::FromRow as _;
-use chrono::{DateTime, Datelike as _, Local, TimeZone as _, Timelike as _};
+use chrono::{Datelike as _, Local, TimeZone as _, Timelike as _};
 use core::error::Error;
 use rusqlite::Connection;
 use rusqlite::{OptionalExtension as _, params};
@@ -13,6 +13,7 @@ use crate::utils::cli;
 use crate::utils::db;
 use crate::utils::db::TablePathsEntry;
 use crate::utils::graphs::{COL_WIDTH, get_terminal_width, render_bar_chart, render_column_chart};
+use crate::utils::time::get_datetime_local;
 use crate::utils::types::{NotedCount, UnixTimestamp};
 
 #[derive(serde::Serialize)]
@@ -28,13 +29,6 @@ pub struct StatsOutput {
     pub all_timestamps: Vec<UnixTimestamp>,
     #[serde(skip)]
     pub all_noted_counts: Vec<NotedCount>,
-}
-
-fn get_local_datetime(timestamp: UnixTimestamp) -> DateTime<Local> {
-    Local
-        .timestamp_opt(timestamp, 0)
-        .single()
-        .expect("valid timestamp")
 }
 
 #[derive(Clone, Copy)]
@@ -62,7 +56,7 @@ impl fmt::Display for TimeGranularity {
 
 impl TimeGranularity {
     fn starting_timestamp(self, timestamp: UnixTimestamp) -> UnixTimestamp {
-        let dt = get_local_datetime(timestamp);
+        let dt = get_datetime_local(timestamp);
 
         match self {
             Self::Hour => Local
@@ -105,7 +99,7 @@ impl TimeGranularity {
                 // Use calendar-day arithmetic so that DST transitions (±1 hour) don't
                 // cause the iteration to miss a bucket that starting_timestamp() computed
                 // via the same calendar-aware approach.
-                let dt = get_local_datetime(timestamp);
+                let dt = get_datetime_local(timestamp);
                 let next_date = dt.date_naive() + chrono::Days::new(7);
                 Local
                     .with_ymd_and_hms(
@@ -121,7 +115,7 @@ impl TimeGranularity {
                     .timestamp()
             }
             Self::Month => {
-                let dt = get_local_datetime(timestamp);
+                let dt = get_datetime_local(timestamp);
                 let (year, month) = if dt.month() == 12 {
                     (dt.year() + 1, 1_u32)
                 } else {
@@ -134,7 +128,7 @@ impl TimeGranularity {
                     .timestamp()
             }
             Self::Year => {
-                let dt = get_local_datetime(timestamp);
+                let dt = get_datetime_local(timestamp);
                 Local
                     .with_ymd_and_hms(dt.year() + 1, 1, 1, 0, 0, 0)
                     .single()
@@ -145,7 +139,7 @@ impl TimeGranularity {
     }
 
     fn display_timestamp(self, timestamp: UnixTimestamp) -> String {
-        let dt = get_local_datetime(timestamp);
+        let dt = get_datetime_local(timestamp);
 
         match self {
             Self::Hour => dt.format("%d %H:00").to_string(),
@@ -333,7 +327,7 @@ pub fn command(args: &cli::StatsArgs) -> Result<(), Box<dyn Error>> {
             writeln!(
                 stdout_handle,
                 "Oldest Note: {}, path={}",
-                utils::time::timestamp_to_iso8601(oldest_note.last_noted_timestamp),
+                utils::time::get_iso8601(oldest_note.last_noted_timestamp),
                 oldest_note.path
             )?;
         }
@@ -342,7 +336,7 @@ pub fn command(args: &cli::StatsArgs) -> Result<(), Box<dyn Error>> {
             writeln!(
                 stdout_handle,
                 "Newest Note: {}, path={}",
-                utils::time::timestamp_to_iso8601(newest_note.last_noted_timestamp),
+                utils::time::get_iso8601(newest_note.last_noted_timestamp),
                 newest_note.path
             )?;
         }

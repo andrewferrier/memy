@@ -57,7 +57,7 @@ fn calculate(conn: &Connection, args: &ListArgs) -> Result<Vec<PathFrecency>, Bo
             path: m.table_paths_entry.path,
             frecency: m.frecency,
             count: m.table_paths_entry.noted_count,
-            last_noted: utils::time::timestamp_to_iso8601(m.table_paths_entry.last_noted_timestamp),
+            last_noted: utils::time::get_iso8601(m.table_paths_entry.last_noted_timestamp),
             file_type: m.metadata.file_type(),
         })
         .collect();

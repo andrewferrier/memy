@@ -8,19 +8,22 @@ use super::types::UnixTimestampHours;
     clippy::cast_possible_wrap,
     reason = "Value is never going to be large enough in practice that it can't be cast"
 )]
-pub fn get_unix_timestamp() -> UnixTimestamp {
+pub fn get_timestamp_now() -> UnixTimestamp {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .expect("Time went backwards")
         .as_secs() as UnixTimestamp
 }
 
-pub fn timestamp_to_iso8601(timestamp: UnixTimestamp) -> String {
-    let datetime: DateTime<Local> = Local
+pub fn get_datetime_local(timestamp: UnixTimestamp) -> DateTime<Local> {
+    Local
         .timestamp_opt(timestamp, 0)
         .single()
-        .unwrap_or_else(|| panic!("Can't convert timestamp {timestamp}"));
+        .expect("valid timestamp")
+}
 
+pub fn get_iso8601(timestamp: UnixTimestamp) -> String {
+    let datetime = get_datetime_local(timestamp);
     datetime.to_rfc3339()
 }
 
@@ -31,7 +34,7 @@ pub fn timestamp_age_hours(now: UnixTimestamp, timestamp: UnixTimestamp) -> Unix
 
 pub fn parse_newer_than(input: &str) -> Result<UnixTimestamp, Box<dyn core::error::Error>> {
     if let Ok(duration) = humantime::parse_duration(input) {
-        let now = get_unix_timestamp();
+        let now = get_timestamp_now();
         let cutoff = now - duration.as_secs().cast_signed() as UnixTimestamp;
         return Ok(cutoff);
     }
@@ -72,7 +75,7 @@ mod tests {
 
     #[test]
     fn test_parse_newer_than_humantime_hour() {
-        let now = get_unix_timestamp();
+        let now = get_timestamp_now();
         let cutoff = parse_newer_than("1h").expect("'1h' should parse");
         let diff = now - cutoff;
         assert!(
@@ -83,7 +86,7 @@ mod tests {
 
     #[test]
     fn test_parse_newer_than_humantime_days() {
-        let now = get_unix_timestamp();
+        let now = get_timestamp_now();
         let cutoff = parse_newer_than("2days").expect("'2days' should parse");
         let expected = 2 * 86400_i64;
         let diff = now - cutoff;
@@ -131,7 +134,7 @@ mod tests {
     proptest! {
         #[test]
         fn round_trip_timestamp_serialization(timestamp in 0..=DateTime::parse_from_rfc3339("9999-12-31T23:59:59+00:00").expect("Cannot parse").timestamp()) {
-            let iso8601 = timestamp_to_iso8601(timestamp);
+            let iso8601 = get_iso8601(timestamp);
             let parsed_datetime = DateTime::parse_from_rfc3339(&iso8601).unwrap_or_else(|_| panic!("Failed to parse ISO8601 string {iso8601}"));
             let round_trip_timestamp = parsed_datetime.timestamp();
 
