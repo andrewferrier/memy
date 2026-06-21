@@ -41,15 +41,20 @@ fn from_fasd_str(s: &str) -> Result<TablePathsEntry, Box<dyn Error>> {
 }
 
 fn from_whitespace_split_str(s: &str) -> Result<TablePathsEntry, Box<dyn Error>> {
-    let parts: Vec<&str> = s.split_whitespace().collect();
-    if parts.len() != 2 {
+    let trimmed = s.trim();
+    let score_end = trimmed
+        .find(char::is_whitespace)
+        .ok_or_else(|| format!("Invalid entry: {s}"))?;
+    let count_str = &trimmed[..score_end];
+    let path = trimmed[score_end..].trim_start().to_owned();
+
+    if path.is_empty() {
         return Err(format!("Invalid entry: {s}").into());
     }
 
-    let count = parts[0]
+    let count = count_str
         .parse::<f64>()
         .map_err(|e| format!("Invalid count: {e}"))?;
-    let path = parts[1].to_owned();
     let timestamp = utils::time::get_unix_timestamp();
 
     if count < 0.0 {
@@ -365,6 +370,48 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_zoxide_state_path_with_spaces() {
+        let input = "4.0 /home/user/Foo Bar";
+        let result = parse_zoxide_state(input).expect("Couldn't parse zoxide state with spaces");
+
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].path, "/home/user/Foo Bar");
+        assert_eq!(result[0].noted_count, 4);
+    }
+
+    #[test]
+    fn test_parse_zoxide_state_path_with_unicode() {
+        let input = "2.0 /home/user/文書";
+        let result = parse_zoxide_state(input).expect("Couldn't parse zoxide state with unicode");
+
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].path, "/home/user/文書");
+        assert_eq!(result[0].noted_count, 2);
+    }
+
+    #[test]
+    fn test_parse_autojump_state_path_with_spaces() {
+        let input = "5.0\t/home/user/test dir with spaces";
+        let result =
+            parse_autojump_state(input).expect("Couldn't parse autojump state with spaces");
+
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].path, "/home/user/test dir with spaces");
+        assert_eq!(result[0].noted_count, 5);
+    }
+
+    #[test]
+    fn test_parse_autojump_state_path_with_unicode() {
+        let input = "3.0\t/home/user/日本語dir";
+        let result =
+            parse_autojump_state(input).expect("Couldn't parse autojump state with unicode");
+
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].path, "/home/user/日本語dir");
+        assert_eq!(result[0].noted_count, 3);
+    }
+
+    #[test]
     fn test_parse_jumper_state_valid_input() {
         let input = "/home/user/projects|0.600000|1780252584\n/home/user/docs|1.900000|1780252589";
         let result = parse_jumper_state(input).expect("Couldn't parse jumper state");
@@ -447,6 +494,20 @@ mod tests {
         ) {
             let input = format!("{count}.0 {path}");
             let result = from_whitespace_split_str(&input).expect("valid whitespace entry should parse");
+            prop_assert_eq!(&result.path, &path);
+            prop_assert_eq!(result.noted_count, count, "count should equal rounded score");
+            prop_assert!(result.last_noted_timestamp > 0, "timestamp should be positive");
+        }
+
+        #[test]
+        fn prop_parse_whitespace_str_path_with_spaces(
+            count in 0u64..=10_000u64,
+            segment1 in "[a-z]{1,20}",
+            segment2 in "[a-z]{1,20}",
+        ) {
+            let path = format!("/home/{segment1} {segment2}");
+            let input = format!("{count}.0 {path}");
+            let result = from_whitespace_split_str(&input).expect("path with spaces should parse");
             prop_assert_eq!(&result.path, &path);
             prop_assert_eq!(result.noted_count, count, "count should equal rounded score");
             prop_assert!(result.last_noted_timestamp > 0, "timestamp should be positive");
