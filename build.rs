@@ -14,14 +14,22 @@ include!("src/utils/cli.rs");
 include!("src/utils/denylist_default.rs");
 
 fn get_git_version() {
-    let output = Command::new("git")
+    let version = Command::new("git")
         .args(["describe", "--tags", "--always", "--dirty"])
         .output()
-        .expect("Failed to execute git");
+        .ok()
+        .filter(|o| o.status.success())
+        .and_then(|o| String::from_utf8(o.stdout).ok())
+        .map(|s| s.trim().to_owned())
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(|| {
+            format!(
+                "v{}",
+                std::env::var("CARGO_PKG_VERSION").unwrap_or_default()
+            )
+        });
 
-    let git_version = String::from_utf8(output.stdout).expect("Cannot get git version");
-    println!("cargo:rustc-env=GIT_VERSION={}", git_version.trim());
-
+    println!("cargo:rustc-env=GIT_VERSION={version}");
     println!("cargo:rerun-if-changed=.git/HEAD");
     println!("cargo:rerun-if-changed=.git/refs/");
 }
