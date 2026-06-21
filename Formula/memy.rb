@@ -4,30 +4,30 @@
 class Memy < Formula
   desc "Track and recall frequently and recently used files or directories"
   homepage "https://github.com/andrewferrier/memy"
-  version "0.20.0"
+  version "0.21.0"
   license "MIT"
 
   on_macos do
     on_arm do
-      url "https://github.com/andrewferrier/memy/releases/download/v0.20.0/memy-macos-aarch64.tar.gz"
-      sha256 "c7f5dc43081d71d0fc1cca3e3b5cd56f460bb3f61fc72c452d6449801a2381f5"
+      url "https://github.com/andrewferrier/memy/releases/download/v0.21.0/memy-macos-aarch64.tar.gz"
+      sha256 "27c52a51d79e5fbbb60dd9d4959a781b2e1397f06d618ccd55d97a4ad7aba3c4"
     end
 
     on_intel do
-      url "https://github.com/andrewferrier/memy/releases/download/v0.20.0/memy-macos-x86_64.tar.gz"
-      sha256 "e1f8bd85e89b90916382e39b4643532377eb142c9ff4b64eed706c44631326a8"
+      url "https://github.com/andrewferrier/memy/releases/download/v0.21.0/memy-macos-x86_64.tar.gz"
+      sha256 "d34dcff09e74435d0a0c64d85f0c82e5305aaa7ac5bc3109ec77e638d7697623"
     end
   end
 
   on_linux do
     on_arm do
-      url "https://github.com/andrewferrier/memy/releases/download/v0.20.0/memy-linux-aarch64.tar.gz"
-      sha256 "2c81358f0b987008f65cd9c5df0a8dab9aac6cf12593dd9e2e0c0ce2266986a7"
+      url "https://github.com/andrewferrier/memy/releases/download/v0.21.0/memy-linux-aarch64.tar.gz"
+      sha256 "d434f7a6066b3e888aa915144a765646595e8c81f221c172cf700070d481f6ff"
     end
 
     on_intel do
-      url "https://github.com/andrewferrier/memy/releases/download/v0.20.0/memy-linux-x86_64.tar.gz"
-      sha256 "fdc5ecadc5a8fa652313b8f4216f33fc4b7b6298c8425021af3f3fc6c8f1789a"
+      url "https://github.com/andrewferrier/memy/releases/download/v0.21.0/memy-linux-x86_64.tar.gz"
+      sha256 "5c004e290525536a25951aae626fdc5fc34b4dfefb0c3f5e75cb66ace6351d55"
     end
   end
 
