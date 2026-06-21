@@ -167,6 +167,15 @@ brew install ferriera/memy/memy
 
 [How to install RPMs](https://phoenixnap.com/kb/how-to-install-rpm-file-centos-linux).
 
+### Arch Linux
+
+Download the PKGBUILD from the repository and build/install with:
+
+```bash
+curl -O https://raw.githubusercontent.com/andrewferrier/memy/main/aur/PKGBUILD
+makepkg -si
+```
+
 ### Download Binaries for Linux or MacOS from GitHub
 
 - [Linux (x86_64)](https://github.com/andrewferrier/memy/releases/latest/download/memy-linux-x86_64)
