@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.21.0](https://github.com/andrewferrier/memy/compare/v0.20.0...v0.21.0) (2026-06-21)
+
+
+### Features
+
+* Arch Linux install ([15b88ab](https://github.com/andrewferrier/memy/commit/15b88ab18031da86813342e61e83a1b110f705f6))
+
+
+### Bug Fixes
+
+* Don't generate manpages for hidden subcommands ([2eda9ec](https://github.com/andrewferrier/memy/commit/2eda9ec0047ec997e833d8ef2e891903c30f2be5))
+
 ## [0.20.0](https://github.com/andrewferrier/memy/compare/v0.19.2...v0.20.0) (2026-06-20)
 
 
