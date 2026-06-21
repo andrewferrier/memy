@@ -156,7 +156,28 @@ fn next_bucket_ts(floor_ts: i64, granularity: TimeGranularity) -> i64 {
     match granularity {
         TimeGranularity::Hour => floor_ts + 3_600,
         TimeGranularity::Day => floor_ts + 86_400,
-        TimeGranularity::Week => floor_ts + 7 * 86_400,
+        TimeGranularity::Week => {
+            // Use calendar-day arithmetic so that DST transitions (±1 hour) don't
+            // cause the iteration to miss a bucket that bucket_floor_ts() computed
+            // via the same calendar-aware approach.
+            let dt = Local
+                .timestamp_opt(floor_ts, 0)
+                .single()
+                .expect("valid timestamp");
+            let next_date = dt.date_naive() + chrono::Days::new(7);
+            Local
+                .with_ymd_and_hms(
+                    next_date.year(),
+                    next_date.month(),
+                    next_date.day(),
+                    0,
+                    0,
+                    0,
+                )
+                .single()
+                .expect("valid date")
+                .timestamp()
+        }
         TimeGranularity::Month => {
             let dt = Local
                 .timestamp_opt(floor_ts, 0)
