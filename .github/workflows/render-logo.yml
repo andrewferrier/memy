@@ -14,7 +14,7 @@ jobs:
   render-logo:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install rsvg-convert
         run: sudo apt-get install -y librsvg2-bin fonts-freefont-ttf
