@@ -154,6 +154,61 @@ fn test_note_multiple_deleted_files_fake_expiry_one_retained() {
 }
 
 #[test]
+fn test_note_deleted_file_fake_expiry_single_quote_in_filename() {
+    let ctx = TestContext::new();
+
+    let test_file_path = create_test_file(&ctx.working_path, "te'st_file", "test content");
+
+    note_path(
+        &ctx.db_path,
+        None,
+        test_file_path.to_str().unwrap(),
+        1,
+        &[],
+        &[],
+    );
+
+    age_all_paths(&ctx.db_path, 45);
+
+    let lines_before: Vec<String> = list_paths(&ctx.db_path, None, &["-vvv"], &[]);
+    assert_lines_eq(&lines_before, &[test_file_path.to_str().unwrap()]);
+
+    fs::remove_file(&test_file_path).expect("failed to delete test file");
+
+    let lines_after_delete: Vec<String> = list_paths(&ctx.db_path, None, &["-vvv"], &[]);
+    assert_lines_eq(&lines_after_delete, &[]);
+
+    _ = create_test_file(&ctx.working_path, "te'st_file", "test content");
+
+    let lines_after_recreation: Vec<String> = list_paths(&ctx.db_path, None, &["-vvv"], &[]);
+    assert_lines_eq(&lines_after_recreation, &[]);
+}
+
+#[test]
+fn test_note_multiple_deleted_files_fake_expiry_single_quotes_retained() {
+    let ctx = TestContext::new();
+
+    let file_a = create_test_file(&ctx.working_path, "fi'le_a", "content a");
+    let file_b = create_test_file(&ctx.working_path, "fi'le_b", "content b");
+    let file_c = create_test_file(&ctx.working_path, "file_c", "content c");
+
+    for path in [&file_a, &file_b, &file_c] {
+        note_path(&ctx.db_path, None, path.to_str().unwrap(), 1, &[], &[]);
+    }
+
+    age_all_paths(&ctx.db_path, 45);
+
+    let lines_before: Vec<String> = list_paths(&ctx.db_path, None, &["-vvv"], &[]);
+    assert_eq!(lines_before.len(), 3);
+
+    fs::remove_file(&file_a).expect("failed to delete file_a");
+    fs::remove_file(&file_b).expect("failed to delete file_b");
+
+    let lines_after_delete: Vec<String> = list_paths(&ctx.db_path, None, &["-vvv"], &[]);
+    assert_lines_eq(&lines_after_delete, &[file_c.to_str().unwrap()]);
+}
+
+#[test]
 fn test_note_deleted_file_not_quite_expired() {
     let ctx = TestContext::new();
 

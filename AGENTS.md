@@ -135,6 +135,11 @@ Refer to `ARCHITECTURE.md` for architectural principles and design decisions.
 
 - **Use clippy suggestions** - Fix clippy warnings before committing
 
+### SQL Safety
+
+- Always bind values via rusqlite parameters (`?1`, `?2`, etc.) instead of string interpolation.
+- Never interpolate paths or other variable/user-influenced data directly into SQL text.
+
 ### Adding New Features
 
 1. **New Command:**
