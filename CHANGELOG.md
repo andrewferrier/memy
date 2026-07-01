@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.22.0](https://github.com/andrewferrier/memy/compare/v0.21.0...v0.22.0) (2026-07-01)
+
+
+### Features
+
+* Add 'dir' versions of commands for NeoVim hook - closes [#171](https://github.com/andrewferrier/memy/issues/171) ([00887c5](https://github.com/andrewferrier/memy/commit/00887c5784e321de1353cdca6f4f15a17b910783))
+* Support search terms in 'memy list', deprecate 'memy z' ([ec739b3](https://github.com/andrewferrier/memy/commit/ec739b3c91e78b69c02c0de71922f16e84419a5e))
+
+
+### Bug Fixes
+
+* Handle spaces in zoxide/autojump imports ([9dc2b0c](https://github.com/andrewferrier/memy/commit/9dc2b0ca5f28579f04acc284a59627f93a4d9aa2))
+* Timezone-aware logic for stats ([ebb47d2](https://github.com/andrewferrier/memy/commit/ebb47d23b197488282704e71b0e39ff165e1c2f6))
+* Use version number from Cargo.toml for release versions ([3019260](https://github.com/andrewferrier/memy/commit/3019260eff9f70cc355acd655b78c517e15826b2))
+
 ## [0.21.0](https://github.com/andrewferrier/memy/compare/v0.20.0...v0.21.0) (2026-06-21)
 
 
