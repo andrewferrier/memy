@@ -21,6 +21,7 @@ cargo build --release    # Release build with LTO and optimizations
 ```
 
 The build script (`build.rs`) performs several important tasks:
+
 - Embeds hook files into the binary from the `hooks/` directory
 - Generates shell completions (bash, zsh, fish) into `target/completions/`
 - Creates man pages from CLI definitions into `target/man/`
@@ -36,6 +37,7 @@ cargo test <test_name>   # Run specific test
 ```
 
 Tests are organized as:
+
 - Unit tests within source files (using `#[cfg(test)]`)
 - Integration tests in `tests/` directory
 - Each integration test file tests a specific feature area
@@ -58,6 +60,7 @@ cargo fmt --check        # Check formatting without modifying files
 ### Pre-commit Hooks
 
 The repository uses pre-commit hooks (`.pre-commit-config.yaml`):
+
 - `clippy` - Rust linting
 - `gitleaks` - Secret scanning
 - `gitlint` - Commit message linting (conventional commits required)
@@ -67,6 +70,7 @@ The repository uses pre-commit hooks (`.pre-commit-config.yaml`):
 ### CI/CD
 
 GitHub Actions workflows in `.github/workflows/`:
+
 - **tests.yml** - Runs on Ubuntu and macOS:
   - `cargo audit` - Security vulnerability checks
   - `cargo build --verbose`
@@ -81,7 +85,7 @@ GitHub Actions workflows in `.github/workflows/`:
 
 ### Directory Structure
 
-```
+```text
 memy/
 ├── src/                    # Source code
 ├── hooks/                  # Integration hooks (embedded at build time)
@@ -120,6 +124,7 @@ Refer to `ARCHITECTURE.md` for architectural principles and design decisions.
 ### Code Conventions
 
 - **Use conventional commits** - Required by gitlint and CI
+
   - Format: `type(scope): description`
   - Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
   - Example: `feat(list): add --newer-than filter`
@@ -127,11 +132,12 @@ Refer to `ARCHITECTURE.md` for architectural principles and design decisions.
 - **Implement and update unit tests** - Always test new functionality
 
 - **Follow Rust idioms:**
+
   - Prefer `?` over `.unwrap()` or `.expect()`
   - Use `impl Trait` for return types where appropriate
   - Leverage type system for compile-time guarantees
 
-- **Avoid variable shadowing** - Clippy warns on shadow_* lints
+- **Avoid variable shadowing** - Clippy warns on shadow\_\* lints
 
 - **Use clippy suggestions** - Fix clippy warnings before committing
 
@@ -143,17 +149,20 @@ Refer to `ARCHITECTURE.md` for architectural principles and design decisions.
 ### Adding New Features
 
 1. **New Command:**
+
    - Add command variant to `Cli` enum in `cli.rs`
    - Implement handler in new module (e.g., `src/newcmd.rs`)
    - Add module reference in `main.rs`
    - Add integration test in `tests/newcmd.rs`
 
-2. **New Hook:**
+1. **New Hook:**
+
    - Add hook file to `hooks/` directory
    - Build script will automatically embed it
    - Document usage in README.md
 
-3. **Configuration Option:**
+1. **Configuration Option:**
+
    - Add field to `Config` struct in `config.rs`
    - Update `config/template-memy.toml` with documentation
    - Handle in relevant command implementation

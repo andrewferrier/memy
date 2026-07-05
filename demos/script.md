@@ -2,10 +2,10 @@
 
 - Open a window into the memy repo, `cd demo/` and run `make`
 - Open browser to:
-    <https://github.com/andrewferrier/memy>
-    <https://github.com/whjvenyl/fasd>
-    <https://github.com/ajeetdsouza/zoxide>
-    <https://github.com/junegunn/fzf>
+  <https://github.com/andrewferrier/memy>
+  <https://github.com/whjvenyl/fasd>
+  <https://github.com/ajeetdsouza/zoxide>
+  <https://github.com/junegunn/fzf>
 
 ## Introduction
 
@@ -36,7 +36,6 @@
 - Scroll to README and find hook for editing, run it
 - What I mean when I say memy doesn't provide much frontend
 - Wrap it as a shell alias
-
 - Scroll to README and show hook install for bash, run that
 - Run `bash --login`
 - Now navigate around and show directories / files building up
@@ -45,6 +44,6 @@
 ## Conclusion
 
 - memy is a database for tracking frequently used files and directories
-    - Shell completions
-    - Configuration file
+  - Shell completions
+  - Configuration file
 - Invite viewers to try it and contribute feedback
