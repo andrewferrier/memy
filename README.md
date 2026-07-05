@@ -124,7 +124,6 @@ To see the contents of a hook, type `memy hook <hookname>`. In future, we'll pro
 | neovim | Run `memy hook neovim.lua > ~/.config/nvim/plugin/memy.lua` |
 | ranger | Run `memy hook ranger.rc.conf >> ~/.config/ranger/rc.conf` |
 | vim | Run `memy hook vim.vim > ~/.vim/plugin/memy.vim` |
-| zsh-autocomplete | Run `echo 'source <(memy hook zsh-autocomplete)' >> ~/.zshrc` |
 | zsh | Run `echo 'eval $(memy hook zsh)' >> ~/.zshrc` or add `https://github.com/andrewferrier/memy` to your zsh plugin list |
 
 ### Shell Convenience Functions
