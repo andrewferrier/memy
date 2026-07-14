@@ -14,7 +14,7 @@ use clap::{Args, CommandFactory as _, Parser, Subcommand};
   memy note <FILES...> - note some files
   memy list            - list noted files in frecency order"#)]
 pub struct Cli {
-    /// Enable verbose logging (add multiple times for more verbosity)
+    /// Enable verbose logging (repeat for more verbosity)
     #[arg(display_order = 100, short, long, global = true, action = clap::ArgAction::Count, default_value_t = 0)]
     pub verbose: u8,
 
