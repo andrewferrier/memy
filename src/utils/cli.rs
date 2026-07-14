@@ -23,7 +23,7 @@ pub struct Cli {
     pub config: Vec<(String, String)>,
 
     /// Output colorization
-    #[arg(long, default_value = "automatic", value_name = "WHEN", alias="colour", value_parser = PossibleValuesParser::new(["always", "automatic", "never"]))]
+    #[arg(display_order = 102, long, global = true, default_value = "automatic", value_name = "WHEN", alias="colour", value_parser = PossibleValuesParser::new(["always", "automatic", "never"]))]
     pub color: String,
 
     #[command(subcommand)]
