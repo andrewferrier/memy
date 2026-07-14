@@ -1,4 +1,4 @@
-use clap::builder::PossibleValuesParser;
+use clap::builder::{PossibleValuesParser, Styles};
 use clap::error::ErrorKind;
 use clap::{Args, CommandFactory as _, Parser, Subcommand};
 
@@ -6,6 +6,7 @@ use clap::{Args, CommandFactory as _, Parser, Subcommand};
 #[command(
     name = "memy",
     version = option_env!("GIT_VERSION"),
+    styles = Styles::styled(),
     author = "Andrew Ferrier",
     about = "Track and recall frequently and recently used files or directories.",
     subcommand_required = true,
