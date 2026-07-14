@@ -122,13 +122,13 @@ pub struct ListArgs {
     pub head: Option<usize>,
 
     /// Pipe output through a command, defaulting to an interactive filter like `fzf`
-    #[arg(short = 's', long = "output-filter", visible_alias = "select-filter")]
+    #[arg(short = 's', long = "output-filter", alias = "select-filter")]
     pub output_filter: bool,
 
     /// Output filter command (overrides `MEMY_OUTPUT_FILTER` environment variable and `memy_output_filter` config)
     #[arg(
         long = "output-filter-command",
-        visible_alias = "select-filter-command",
+        alias = "select-filter-command",
         value_name = "OUTPUT_FILTER_COMMAND",
         requires = "output_filter"
     )]
@@ -170,7 +170,7 @@ pub fn parse() -> Cli {
         Cli::command()
             .error(
                 ErrorKind::ArgumentConflict,
-                "--output-filter (or --select) can only be used with --format plain",
+                "--output-filter can only be used with --format plain",
             )
             .exit();
     }

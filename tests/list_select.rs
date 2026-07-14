@@ -236,7 +236,7 @@ fn test_output_filter_with_format_json_fails() {
 
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(
-        stderr.contains("--output-filter (or --select) can only be used with --format plain"),
+        stderr.contains("--output-filter can only be used with --format plain"),
         "Error message should mention format constraint, got: {stderr}"
     );
 }
