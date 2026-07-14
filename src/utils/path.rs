@@ -3,11 +3,13 @@ use std::env::home_dir;
 use std::path::{Component, Path, PathBuf};
 
 /// Strips trailing slashes (by re-collecting components).
+#[must_use]
 pub fn normalize_path(path: &Path) -> PathBuf {
     path.components().collect()
 }
 
 /// Returns `Some(absolute_path)` if the resolved path is an existing directory, `None` otherwise.
+#[must_use]
 pub fn resolve_existing_dir(arg: &str) -> Option<PathBuf> {
     let expanded = expand_tilde_in_path(arg);
     let resolved = if expanded.is_absolute() {
@@ -24,6 +26,7 @@ pub fn resolve_existing_dir(arg: &str) -> Option<PathBuf> {
     }
 }
 
+#[must_use]
 pub fn expand_tilde_in_path<P: AsRef<Path> + ?Sized>(path: &'_ P) -> Cow<'_, Path> {
     let p = path.as_ref();
 
@@ -51,7 +54,7 @@ fn expand_tilde_in_string(line: &str) -> Cow<'_, str> {
         Cow::Borrowed(_) => Cow::Borrowed(line),
     }
 }
-
+#[must_use]
 pub fn expand_tildes_in_multiline_string(text: &str) -> String {
     let had_trailing_newline = text.ends_with('\n');
 
@@ -68,6 +71,7 @@ pub fn expand_tildes_in_multiline_string(text: &str) -> String {
     expanded
 }
 
+#[must_use]
 pub fn collapse_to_tilde<P: AsRef<Path>>(path: P) -> String {
     let p = path.as_ref();
 

@@ -8,6 +8,7 @@ use super::types::UnixTimestampHours;
     clippy::cast_possible_wrap,
     reason = "Value is never going to be large enough in practice that it can't be cast"
 )]
+#[must_use]
 pub fn get_timestamp_now() -> UnixTimestamp {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -15,6 +16,7 @@ pub fn get_timestamp_now() -> UnixTimestamp {
         .as_secs() as UnixTimestamp
 }
 
+#[must_use]
 pub fn get_datetime_local(timestamp: UnixTimestamp) -> DateTime<Local> {
     Local
         .timestamp_opt(timestamp, 0)
@@ -22,11 +24,13 @@ pub fn get_datetime_local(timestamp: UnixTimestamp) -> DateTime<Local> {
         .expect("valid timestamp")
 }
 
+#[must_use]
 pub fn get_iso8601(timestamp: UnixTimestamp) -> String {
     let datetime = get_datetime_local(timestamp);
     datetime.to_rfc3339()
 }
 
+#[must_use]
 pub fn timestamp_age_hours(now: UnixTimestamp, timestamp: UnixTimestamp) -> UnixTimestampHours {
     let age_seconds = now - timestamp;
     age_seconds as f64 / 3600.0
