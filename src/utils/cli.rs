@@ -161,6 +161,7 @@ pub struct StatsArgs {
 }
 
 #[must_use]
+#[allow(dead_code, reason = "Code is not dead")]
 pub fn parse() -> Cli {
     let cli = Cli::parse();
 

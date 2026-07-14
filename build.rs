@@ -1,3 +1,4 @@
+use clap::CommandFactory as _;
 use clap_complete::{
     generate_to,
     shells::{Bash, Fish, Zsh},
@@ -10,8 +11,13 @@ use std::process::Command;
 use std::{fs, path::Path};
 use tera::{Context, Tera};
 
-include!("src/utils/cli.rs");
-include!("src/utils/denylist_default.rs");
+#[path = "src/utils/cli.rs"]
+mod cli;
+use crate::cli::Cli;
+
+#[path = "src/utils/denylist_default.rs"]
+mod denylist_default;
+use crate::denylist_default::DEFAULT_DENYLIST;
 
 fn get_git_version() {
     let version = Command::new("git")
@@ -38,7 +44,7 @@ fn generate_completions(build_root_dir: &Path) -> std::io::Result<()> {
     let completions_dir = build_root_dir.join("target/completions");
     create_dir_all(&completions_dir)?;
 
-    let mut cmd = Cli::command();
+    let mut cmd = cli::Cli::command();
 
     generate_to(Bash, &mut cmd, "memy", &completions_dir)?;
     generate_to(Zsh, &mut cmd, "memy", &completions_dir)?;
