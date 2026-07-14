@@ -1,4 +1,4 @@
-pub static DEFAULT_DENYLIST: &[&str] = &[
+pub const DEFAULT_DENYLIST: &[&str] = &[
     "*\\.swp",
     "/\\.git",
     "/dev",
