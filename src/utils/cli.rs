@@ -112,8 +112,8 @@ pub struct ListArgs {
     #[arg(long, default_value = "plain", value_name = "FORMAT", value_parser = PossibleValuesParser::new(["plain", "csv", "json"]))]
     pub format: String,
 
-    /// Only show paths noted after a specific time. Accepts duration strings (e.g., '4d', '3h', '4d3h')
-    /// or ISO-8601 date/time strings (e.g., '2025-01-01', '2025-01-01T12:00:00')
+    /// Only show paths noted after a specific time. Can use durations (e.g., '4d', '3h', '4d3h') or
+    /// ISO-8601 date/timestamps (e.g., '2025-01-01', '2025-01-01T12:00:00')
     #[arg(long, value_name = "TIME")]
     pub newer_than: Option<String>,
 
