@@ -19,7 +19,7 @@ add-zsh-hook preexec memy_preexec
 
 _memy_select() {
   local selected
-  selected=$(memy --color always list "$@" -s) || return
+  selected=$(memy --color always list --pretty-paths "$@" -s) || return
   [[ -n "$selected" ]] || return 1
   echo "${selected/#\~/$HOME}"
 }
@@ -66,6 +66,6 @@ fi
 if ! (( $+functions[zi] )) && ! (( $+commands[zi] )); then
   function zi() {
     local result
-    result="$(memy list -d --output-filter --zoxide-compatible -- "$@")" && cd "$result"
+    result="$(memy list -d --pretty-paths --output-filter --zoxide-compatible -- "$@")" && cd "$result"
   }
 fi

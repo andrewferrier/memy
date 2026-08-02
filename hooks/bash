@@ -36,7 +36,7 @@ _memy_install_debug_trap
 
 _memy_select() {
   local selected
-  selected=$(memy --color always list "$@" -s) || return
+  selected=$(memy --color always list --pretty-paths "$@" -s) || return
   [[ -n "$selected" ]] || return 1
   echo "${selected/#\~/$HOME}"
 }
@@ -86,6 +86,6 @@ fi
 if ! declare -f zi &>/dev/null && ! command -v zi &>/dev/null; then
   function zi() {
     local result
-    result="$(memy list -d --output-filter --zoxide-compatible -- "$@")" && cd "$result"
+    result="$(memy list -d --pretty-paths --output-filter --zoxide-compatible -- "$@")" && cd "$result"
   }
 fi

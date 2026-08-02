@@ -27,8 +27,8 @@ local function cd_to_path(path)
     vim.cmd({ cmd = "cd", args = { path } })
 end
 
-local file_list_command = "memy list -f | tac"
-local dir_list_command = "memy list -d | tac"
+local file_list_command = "memy list -f --pretty-paths | tac"
+local dir_list_command = "memy list -d --pretty-paths | tac"
 local external_command_files = { "sh", "-c", file_list_command }
 local external_command_dirs = { "sh", "-c", dir_list_command }
 

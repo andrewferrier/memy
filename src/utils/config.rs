@@ -34,6 +34,7 @@ pub struct MemyConfig {
     pub missing_files_warn_on_note: Option<bool>,
     pub denied_files_warn_on_note: Option<bool>,
     pub denied_files_on_list: Option<DeniedFilesOnList>,
+    pub use_pretty_paths: Option<bool>,
     pub use_tilde_on_list: Option<bool>,
     #[serde(default, deserialize_with = "validate_recency_bias")]
     pub recency_bias: Option<RecencyBias>,
@@ -116,6 +117,7 @@ pub fn load_config(overrides: Vec<(String, String)>) {
         .expect("Defaults didn't load");
 
     let mut builder = Config::builder().add_source(default_config);
+    let mut legacy_use_tilde_file_value: Option<bool> = None;
 
     let config_path: PathBuf = get_config_file_path();
     debug!("Config file path resolved to {}", config_path.display());
@@ -127,11 +129,42 @@ pub fn load_config(overrides: Vec<(String, String)>) {
         }
 
         debug!("Config file looks OK");
+
+        // *** This is ugly but is only needed for backwards compat
+        let config_content =
+            fs::read_to_string(&config_path).expect("Failed to read configuration file");
+        let config_toml: TomlValue =
+            toml::from_str(&config_content).expect("Failed to parse configuration file as TOML");
+        if let Some(table) = config_toml.as_table()
+            && !table.contains_key("use_pretty_paths")
+        {
+            legacy_use_tilde_file_value =
+                table.get("use_tilde_on_list").and_then(TomlValue::as_bool);
+        }
+
         builder = builder.add_source(File::from(config_path).format(FileFormat::Toml));
+
+        if let Some(value) = legacy_use_tilde_file_value {
+            builder = builder
+                .set_override("use_pretty_paths", value)
+                .expect("Failed to set override");
+        }
+
+        // ***
     }
 
+    let is_pretty_path_present = overrides.iter().any(|(key, _)| key == "use_pretty_paths");
+
     for (key, value_str) in overrides {
-        if key == "denylist" {
+        if key == "use_tilde_on_list" && !is_pretty_path_present {
+            // This is ugly but is only needed for backwards compat
+            builder = builder
+                .set_override(key, value_str.as_str())
+                .expect("Failed to set override");
+            builder = builder
+                .set_override("use_pretty_paths", value_str)
+                .expect("Failed to set override");
+        } else if key == "denylist" {
             let value = parse_toml_value(&value_str)
                 .expect("Failed to parse TOML value for denylist override");
             builder = builder
@@ -220,8 +253,11 @@ pub fn get_denied_files_on_list() -> DeniedFilesOnList {
         .unwrap_or(DeniedFilesOnList::Delete)
 }
 
-pub fn get_use_tilde_on_list() -> bool {
-    get_config().use_tilde_on_list.unwrap_or(true)
+pub fn get_use_pretty_paths() -> bool {
+    get_config()
+        .use_pretty_paths
+        .or_else(|| get_config().use_tilde_on_list)
+        .unwrap_or(false)
 }
 
 pub fn get_recency_bias() -> RecencyBias {

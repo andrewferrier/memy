@@ -4,6 +4,7 @@ mod support;
 use support::*;
 
 use core::time::Duration;
+use std::env::home_dir;
 use std::thread::sleep;
 
 #[test]
@@ -171,4 +172,41 @@ fn test_incorrect_type() {
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(stderr.contains("invalid type: string"));
     assert!(stderr.contains("expected a boolean"));
+}
+
+#[test]
+fn test_legacy_use_tilde_on_list_config_file_is_supported() {
+    let ctx = TestContext::new();
+
+    create_config_file(
+        &ctx.config_path,
+        r#"
+import_on_first_use = false
+use_tilde_on_list = true
+"#,
+    );
+
+    note_path(&ctx.db_path, Some(&ctx.config_path), "~", 1, &[], &[]);
+    let lines = list_paths(&ctx.db_path, Some(&ctx.config_path), &[], &[]);
+    assert_lines_eq(&lines, &["~"]);
+}
+
+#[test]
+fn test_use_pretty_paths_takes_precedence_over_legacy_key_in_config_file() {
+    let ctx = TestContext::new();
+
+    create_config_file(
+        &ctx.config_path,
+        r#"
+import_on_first_use = false
+use_pretty_paths = false
+use_tilde_on_list = true
+"#,
+    );
+
+    note_path(&ctx.db_path, Some(&ctx.config_path), "~", 1, &[], &[]);
+    let lines = list_paths(&ctx.db_path, Some(&ctx.config_path), &[], &[]);
+
+    let home = home_dir().unwrap();
+    assert_lines_eq(&lines, &[home.to_str().unwrap()]);
 }

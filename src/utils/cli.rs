@@ -122,6 +122,10 @@ pub struct ListArgs {
     #[arg(long, value_name = "N")]
     pub head: Option<usize>,
 
+    /// Show paths under the home directory using `~` prefixes
+    #[arg(long)]
+    pub pretty_paths: bool,
+
     /// Pipe output through a command, defaulting to an interactive filter like `fzf`
     #[arg(short = 's', long = "output-filter", alias = "select-filter")]
     pub output_filter: bool,

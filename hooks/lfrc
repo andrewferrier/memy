@@ -7,7 +7,7 @@ cmd on-cd &{{
 cmd memy-dir ${{
     set -o noglob
 
-    DIR="$(FZF_TMUX_HEIGHT=100 memy list -d | fzf)"
+    DIR="$(FZF_TMUX_HEIGHT=100 memy list -d --pretty-paths | fzf)"
     if [ -n "$DIR" ]; then
         DIR="$(printf '%s' "$DIR" | sed 's/\\/\\\\/g;s/"/\\"/g')"
         lf -remote "send $id cd \"$DIR\""
@@ -17,7 +17,7 @@ cmd memy-dir ${{
 cmd memy-file ${{
     set -o noglob
 
-    FILE="$(FZF_TMUX_HEIGHT=100 memy list -f | fzf)"
+    FILE="$(FZF_TMUX_HEIGHT=100 memy list -f --pretty-paths | fzf)"
     if [ -n "$FILE" ]; then
         PARENT=$(dirname $FILE)
         FILENAME=$(basename $FILE)

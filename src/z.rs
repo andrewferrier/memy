@@ -15,6 +15,7 @@ pub fn command(args: &ZArgs) -> Result<(), Box<dyn Error>> {
         output_filter: args.interactive,
         output_filter_command: None,
         head: if args.interactive { None } else { Some(1) },
+        pretty_paths: false,
         format: "plain".to_owned(),
         newer_than: None,
     };

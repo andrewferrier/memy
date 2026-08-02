@@ -18,7 +18,7 @@ function fish_preexec --on-event fish_preexec
 end
 
 function _memy_select
-    set selected (memy --color always list $argv -s)
+    set selected (memy --color always list --pretty-paths $argv -s)
     if test -z "$selected"
         return 1
     end
@@ -57,7 +57,7 @@ end
 
 if not functions -q zi; and not command -q zi
     function zi
-        set result (memy list -d --output-filter --zoxide-compatible -- $argv)
+        set result (memy list -d --pretty-paths --output-filter --zoxide-compatible -- $argv)
         and cd $result
     end
 end

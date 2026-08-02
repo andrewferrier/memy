@@ -11,8 +11,8 @@ use super::config;
 use super::is_command_available;
 use super::path::expand_tildes_in_multiline_string;
 
-fn format_path_colored(path: &str, is_dir: bool) -> String {
-    let display: Cow<str> = if config::get_use_tilde_on_list() {
+fn format_path_colored(path: &str, is_dir: bool, use_pretty_paths: bool) -> String {
+    let display: Cow<str> = if use_pretty_paths {
         Cow::Owned(path::collapse_to_tilde(path))
     } else {
         Cow::Borrowed(path)
@@ -31,10 +31,13 @@ fn format_path_colored(path: &str, is_dir: bool) -> String {
     }
 }
 
-pub fn format_paths_colored<'a>(items: impl Iterator<Item = (&'a str, bool)>) -> String {
+pub fn format_paths_colored<'a>(
+    items: impl Iterator<Item = (&'a str, bool)>,
+    use_pretty_paths: bool,
+) -> String {
     let mut output = String::new();
     for (path, is_dir) in items {
-        output.push_str(&format_path_colored(path, is_dir));
+        output.push_str(&format_path_colored(path, is_dir, use_pretty_paths));
         output.push('\n');
     }
     output

@@ -36,11 +36,22 @@ fn test_note_homedir() {
     note_path(&ctx.db_path, None, "~", 1, &[], &[]);
 
     let lines = list_paths(&ctx.db_path, None, &[], &[]);
+    let home = home_dir().unwrap();
+    assert_lines_eq(&lines, &[home.to_str().unwrap()]);
+}
+
+#[test]
+fn test_note_homedir_use_pretty_paths() {
+    let ctx = TestContext::new();
+
+    note_path(&ctx.db_path, None, "~", 1, &[], &[]);
+
+    let lines = list_paths(&ctx.db_path, None, &[], &["--pretty-paths"]);
     assert_lines_eq(&lines, &["~"]);
 }
 
 #[test]
-fn test_note_homedir_dont_use_tilde_on_list() {
+fn test_note_homedir_use_pretty_paths_legacy_config_synonym() {
     let ctx = TestContext::new();
 
     note_path(&ctx.db_path, None, "~", 1, &[], &[]);
@@ -48,12 +59,47 @@ fn test_note_homedir_dont_use_tilde_on_list() {
     let lines = list_paths(
         &ctx.db_path,
         None,
-        &["--config=use_tilde_on_list=false"],
+        &["--config=use_tilde_on_list=true"],
+        &[],
+    );
+
+    assert_lines_eq(&lines, &["~"]);
+}
+
+#[test]
+fn test_note_homedir_pretty_paths_config_wins_over_legacy_synonym() {
+    let ctx = TestContext::new();
+
+    note_path(&ctx.db_path, None, "~", 1, &[], &[]);
+
+    let lines = list_paths(
+        &ctx.db_path,
+        None,
+        &[
+            "--config=use_pretty_paths=false",
+            "--config=use_tilde_on_list=true",
+        ],
         &[],
     );
 
     let home = home_dir().unwrap();
     assert_lines_eq(&lines, &[home.to_str().unwrap()]);
+}
+
+#[test]
+fn test_note_homedir_list_flag_pretty_paths_overrides_config() {
+    let ctx = TestContext::new();
+
+    note_path(&ctx.db_path, None, "~", 1, &[], &[]);
+
+    let lines = list_paths(
+        &ctx.db_path,
+        None,
+        &["--config=use_pretty_paths=false"],
+        &["--pretty-paths"],
+    );
+
+    assert_lines_eq(&lines, &["~"]);
 }
 
 #[test]

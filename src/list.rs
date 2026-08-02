@@ -74,6 +74,8 @@ fn calculate(conn: &Connection, args: &ListArgs) -> Result<Vec<PathFrecency>, Bo
 
 #[instrument(level = "trace", skip(results, args))]
 fn format_results(results: &[PathFrecency], args: &ListArgs) -> Result<String, Box<dyn Error>> {
+    let use_pretty_paths = args.pretty_paths || utils::config::get_use_pretty_paths();
+
     match args.format.as_str() {
         "json" => {
             let json_output = serde_json::to_string_pretty(&results)
@@ -92,6 +94,7 @@ fn format_results(results: &[PathFrecency], args: &ListArgs) -> Result<String, B
             results
                 .iter()
                 .map(|r| (r.path.as_str(), r.file_type.is_dir())),
+            use_pretty_paths,
         )),
     }
 }
