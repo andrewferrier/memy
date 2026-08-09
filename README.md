@@ -233,7 +233,7 @@ memy completions zsh > "${HOME}/.zfunc/_memy"
 memy completions fish > "$HOME/.config/fish/completions/memy.fish"
 ```
 
-## Configuration & Under the Hood
+## Configuration & Database
 
 By default, memy looks for its config file at `$XDG_CONFIG_HOME/memy/memy.toml` (typically `~/.config/memy/memy.toml`). You can override the config location by setting the `MEMY_CONFIG_DIR` environment variable to a directory of your choice.
 
