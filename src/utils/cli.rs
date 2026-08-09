@@ -2,6 +2,14 @@ use clap::builder::{PossibleValuesParser, Styles};
 use clap::error::ErrorKind;
 use clap::{Args, CommandFactory as _, Parser, Subcommand};
 
+#[derive(clap::ValueEnum, Debug, Clone, PartialEq, Eq)]
+pub enum SortOrder {
+    /// Most-frecent first (default).
+    Descending,
+    /// Least-frecent first.
+    Ascending,
+}
+
 #[derive(Parser, Debug)]
 #[command(
     name = "memy",
@@ -118,9 +126,16 @@ pub struct ListArgs {
     #[arg(long, value_name = "TIME")]
     pub newer_than: Option<String>,
 
-    /// Return only the top N most frecent results
+    /// Return only the top N results (most or least frecent, depending on --sort)
     #[arg(long, value_name = "N")]
+    pub limit_results: Option<usize>,
+
+    #[arg(long, value_name = "N", hide = true)]
     pub head: Option<usize>,
+
+    /// Sort order for the output
+    #[arg(long, value_name = "ORDER")]
+    pub sort: Option<SortOrder>,
 
     /// Show paths under the home directory using `~` prefixes
     #[arg(long)]
@@ -150,6 +165,14 @@ pub struct ListArgs {
     pub keywords: Vec<String>,
 }
 
+#[allow(dead_code, reason = "Code is used outside of build.rs")]
+impl ListArgs {
+    #[must_use]
+    pub fn effective_limit_results(&self) -> Option<usize> {
+        self.limit_results.or(self.head)
+    }
+}
+
 #[derive(Args, Debug)]
 pub struct OpenArgs {
     /// Path to the file to open
@@ -165,7 +188,7 @@ pub struct StatsArgs {
 }
 
 #[must_use]
-#[allow(dead_code, reason = "Code is not dead")]
+#[allow(dead_code, reason = "Code is used outside of build.rs")]
 pub fn parse() -> Cli {
     let cli = Cli::parse();
 

@@ -79,7 +79,7 @@ if ! declare -f z &>/dev/null && ! command -v z &>/dev/null; then
       return
     fi
     local result
-    result="$(memy list -d --head 1 --zoxide-compatible -- "$@")" && cd "${result/#\~/$HOME}"
+    result="$(memy list -d --limit-results 1 --zoxide-compatible -- "$@")" && cd "${result/#\~/$HOME}"
   }
 fi
 

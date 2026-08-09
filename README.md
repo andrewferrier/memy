@@ -20,6 +20,10 @@ memy can be used in three interchangeable ways:
 - **Interactive selection with tools like [`fzf`](https://github.com/junegunn/fzf)** — memy integrates with fuzzy finders and other selectors so you can interactively pick and open files or directories. Out of the box, the memy shell hooks provide ready-made functions (`memy-cd`, `memy-open`, `memy-go`) for common workflows.
 - **Structured output for custom workflows** - memy can output your tracked paths as plain text, CSV, or JSON to script your own workflows or build integrations from scratch.
 
+> **Warning**
+>
+> In v1.0+, `memy list` defaults to **descending** sort order (most-frecent first) - the order can be changed with the `--sort` option, or the `default_sort` config option. This is a breaking change from earlier versions, and scripts, aliases, editor integrations, or other utilities that assume the old order may need updating. See [issue #172](https://github.com/andrewferrier/memy/issues/172) for background.
+
 memy was originally inspired by [fasd](https://github.com/whjvenyl/fasd), but this was been unmaintained for some time, and so I decided to start memy afresh with some modern implementation choices. memy has been tested on Linux and MacOS (limited). It has not been tested on Windows, any testing or feedback would be appreciated. `memy` is partially created using AI assistance - all code changes are overseen by a human maintainer!
 
 ## Quick Start
@@ -32,13 +36,19 @@ memy was originally inspired by [fasd](https://github.com/whjvenyl/fasd), but th
 
   You are free to note a path whenever you wish, although typically this is done by the supplied hooks (see more information below).
 
-- List all remembered paths (in frecency order):
+- List all remembered paths (most-frecent first):
 
   ```sh
   memy list
   ```
 
   (`ls` is an alias for `list`, so `memy ls` works too.)
+
+  To reverse the order (least-frecent first), use `--sort ascending`:
+
+  ```sh
+  memy list --sort ascending
+  ```
 
 - Open a recently used file in your editor, selecting it using `fzf` or other selector (assuming your editor is `vim`).
 
@@ -249,7 +259,7 @@ By default, memy stores its database in `$XDG_STATE_HOME/memy/memy.sqlite3` (typ
 
 ### How Frecency Is Calculated
 
-Every path (file or directory) in memy's database has a **noted count** (how many times it has been noted) and a **last noted timestamp**. When paths are listed with `memy list`, they are sorted by increasing frecency score - a number between `0` and `1` that blends frequency and recency:
+Every path (file or directory) in memy's database has a **noted count** (how many times it has been noted) and a **last noted timestamp**. When paths are listed with `memy list`, they are sorted by **descending frecency score** by default (most-frecent first) - a number between `0` and `1` that blends frequency and recency:
 
 ```math
 \text{frecency} = (1 - \lambda) \cdot \frac{c}{c_{\max}} + \lambda \cdot \left(1 - \frac{t}{t_{\max}}\right)

@@ -48,8 +48,8 @@ fn test_import_fasd_state_file() {
     assert_lines_eq(
         &lines,
         &[
-            test_file_path_1.to_str().unwrap(),
             test_file_path_2.to_str().unwrap(),
+            test_file_path_1.to_str().unwrap(),
         ],
     );
 }
@@ -100,8 +100,8 @@ fn test_import_autojump_state_file() {
     assert_lines_eq(
         &lines,
         &[
-            test_file_path_1.to_str().unwrap(),
             test_file_path_2.to_str().unwrap(),
+            test_file_path_1.to_str().unwrap(),
         ],
     );
 }
@@ -146,8 +146,8 @@ fn test_import_jumper_state_files() {
     assert_lines_eq(
         &lines,
         &[
-            test_dir_path.to_str().unwrap(),
             test_file_path.to_str().unwrap(),
+            test_dir_path.to_str().unwrap(),
         ],
     );
 }

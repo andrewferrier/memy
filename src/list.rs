@@ -1,10 +1,11 @@
 use crate::utils::cli::ListArgs;
+use crate::utils::cli::SortOrder;
 use core::error::Error;
 use rusqlite::Connection;
 use std::fs::FileType;
-use std::io::{Write as _, stdout};
-use tracing::debug;
+use std::io::{IsTerminal as _, Write as _, stdout};
 use tracing::instrument;
+use tracing::{debug, warn};
 
 use crate::utils;
 use crate::utils::db;
@@ -13,6 +14,15 @@ use crate::utils::query;
 use crate::utils::search::matches_zoxide_algo;
 use crate::utils::types::Frecency;
 use crate::utils::types::NotedCount;
+
+const BREAKING_CHANGE_SORT_WARNING: &str = "\
+⚠️  NOTICE: 'memy list' now outputs most-frecent-first by default (was least-frecent-first).
+    Use '--sort ascending' to restore the previous order, or set 'default_sort = \"ascending\"' in memy.toml.
+    (This notice will appear 10 times in total.)";
+
+fn check_warning() -> bool {
+    stdout().is_terminal() && db::should_show_breaking_change_sort_warning()
+}
 
 #[derive(serde::Serialize)]
 struct PathFrecency {
@@ -62,11 +72,17 @@ fn calculate(conn: &Connection, args: &ListArgs) -> Result<Vec<PathFrecency>, Bo
         })
         .collect();
 
-    if let Some(n) = args.head {
-        let len = to_output.len();
-        if n < len {
-            to_output.drain(..len - n);
-        }
+    let effective_sort = args
+        .sort
+        .clone()
+        .unwrap_or_else(utils::config::get_default_sort);
+
+    if effective_sort == SortOrder::Descending {
+        to_output.reverse();
+    }
+
+    if let Some(n) = args.effective_limit_results() {
+        to_output.truncate(n);
     }
 
     Ok(to_output)
@@ -140,6 +156,11 @@ pub fn command(args: &ListArgs) -> Result<(), Box<dyn Error>> {
 
     let output = format_results(&results, args)?;
 
+    let show_warning = check_warning();
+    if show_warning {
+        warn!("{BREAKING_CHANGE_SORT_WARNING}");
+    }
+
     if args.output_filter {
         let filtered =
             utils::output::pipe_through_filter(&output, args.output_filter_command.as_deref())?;
@@ -148,6 +169,10 @@ pub fn command(args: &ListArgs) -> Result<(), Box<dyn Error>> {
     } else {
         let mut stdout_handle = stdout().lock();
         write!(stdout_handle, "{output}")?;
+    }
+
+    if show_warning {
+        warn!("{BREAKING_CHANGE_SORT_WARNING}");
     }
 
     Ok(())

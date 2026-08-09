@@ -7,6 +7,7 @@
 #![allow(dead_code, reason = "Dead code false +ves inside support.rs")]
 
 use assert_cmd::Command;
+use core::fmt::Write as _;
 use core::time::Duration;
 use std::fs;
 use std::path::PathBuf;
@@ -76,48 +77,109 @@ pub fn create_test_directory(base: &std::path::Path, dirname: &str) -> std::path
     dir_path
 }
 
+struct MemyInvocation {
+    _temp_dir_db: Option<TempDir>,
+    _temp_dir_config: Option<TempDir>,
+    db_dir: PathBuf,
+    config_dir: PathBuf,
+    env_vars: Vec<(String, String)>,
+}
+
+fn build_memy_invocation(
+    db_path: Option<&std::path::Path>,
+    config_path: Option<&std::path::Path>,
+    env_vars: Vec<(&str, &str)>,
+) -> MemyInvocation {
+    let (temp_dir_db, db_dir) = db_path.map_or_else(
+        || {
+            let (temp_dir, path) = temp_dir();
+            (Some(temp_dir), path)
+        },
+        |db| (None, db.to_path_buf()),
+    );
+
+    let (temp_dir_config, config_dir) = config_path.map_or_else(
+        || {
+            let (temp_dir, path) = temp_dir();
+            (Some(temp_dir), path)
+        },
+        |config| (None, config.to_path_buf()),
+    );
+
+    let env_vars_owned = env_vars
+        .into_iter()
+        .map(|(key, value)| (key.to_owned(), value.to_owned()))
+        .collect();
+
+    MemyInvocation {
+        _temp_dir_db: temp_dir_db,
+        _temp_dir_config: temp_dir_config,
+        db_dir,
+        config_dir,
+        env_vars: env_vars_owned,
+    }
+}
+
 pub fn memy_cmd(
     db_path: Option<&std::path::Path>,
     config_path: Option<&std::path::Path>,
     args: &[&str],
     env_vars: Vec<(&str, &str)>,
 ) -> Output {
-    #[allow(
-        clippy::collection_is_never_read,
-        reason = "Keeping these dirs in scope stops them being deleted"
-    )]
-    let mut _temp_dir_db: Option<TempDir> = None;
-    #[allow(
-        clippy::collection_is_never_read,
-        reason = "Keeping these dirs in scope stops them being deleted"
-    )]
-    let mut _temp_dir_config: Option<TempDir> = None;
+    let invocation = build_memy_invocation(db_path, config_path, env_vars);
 
     let mut cmd = Command::cargo_bin("memy").expect("Cannot set up memy command");
+    cmd.env("MEMY_DB_DIR", &invocation.db_dir);
+    cmd.env("MEMY_CONFIG_DIR", &invocation.config_dir);
 
-    if let Some(db) = db_path {
-        cmd.env("MEMY_DB_DIR", db);
-    } else {
-        let (temp_dir_db, temp_path_db) = temp_dir();
-        cmd.env("MEMY_DB_DIR", &temp_path_db);
-        _temp_dir_db = Some(temp_dir_db);
-    }
-
-    if let Some(config) = config_path {
-        cmd.env("MEMY_CONFIG_DIR", config);
-    } else {
-        let (temp_dir_config, temp_path_config) = temp_dir();
-        cmd.env("MEMY_CONFIG_DIR", &temp_path_config);
-        _temp_dir_config = Some(temp_dir_config);
-    }
-
-    for (key, value) in env_vars {
+    for (key, value) in invocation.env_vars {
         cmd.env(key, value);
     }
 
     cmd.args(args);
 
     cmd.output().expect("Could not run memy")
+}
+
+pub fn memy_cmd_force_terminal(
+    db_path: Option<&std::path::Path>,
+    config_path: Option<&std::path::Path>,
+    args: &[&str],
+    env_vars: Vec<(&str, &str)>,
+) -> Output {
+    fn shell_quote(value: &str) -> String {
+        format!("'{}'", value.replace('\'', "'\"'\"'"))
+    }
+
+    let invocation = build_memy_invocation(db_path, config_path, env_vars);
+    let binary = std::env::var("CARGO_BIN_EXE_memy").expect("Missing test binary");
+    let mut script = String::new();
+
+    let _ = write!(
+        script,
+        "MEMY_DB_DIR={} ",
+        shell_quote(&invocation.db_dir.to_string_lossy())
+    );
+    let _ = write!(
+        script,
+        "MEMY_CONFIG_DIR={} ",
+        shell_quote(&invocation.config_dir.to_string_lossy())
+    );
+
+    for (key, value) in invocation.env_vars {
+        let _ = write!(script, "{key}={} ", shell_quote(&value));
+    }
+
+    script.push_str(&shell_quote(&binary));
+    for arg in args {
+        script.push(' ');
+        script.push_str(&shell_quote(arg));
+    }
+
+    std::process::Command::new("script")
+        .args(["-qec", &script, "/dev/null"])
+        .output()
+        .expect("Could not run memy in terminal")
 }
 
 pub fn memy_cmd_test_defaults(

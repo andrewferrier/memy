@@ -26,7 +26,7 @@ fn test_note_and_list_paths() {
     note_paths_with_delay(&ctx.db_path, None, &[&dir_a, &dir_b]);
 
     let lines = list_paths(&ctx.db_path, None, &[], &[]);
-    assert_lines_eq(&lines, &[dir_a.to_str().unwrap(), dir_b.to_str().unwrap()]);
+    assert_lines_eq(&lines, &[dir_b.to_str().unwrap(), dir_a.to_str().unwrap()]);
 }
 
 #[test]
@@ -161,9 +161,9 @@ fn test_frecency_ordering() {
     assert_lines_eq(
         &lines,
         &[
-            dir_b.to_str().unwrap(),
-            dir_a.to_str().unwrap(),
             dir_c.to_str().unwrap(),
+            dir_a.to_str().unwrap(),
+            dir_b.to_str().unwrap(),
         ],
     );
 }

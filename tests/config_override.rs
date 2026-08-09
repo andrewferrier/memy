@@ -19,7 +19,7 @@ fn test_config_override_float() {
     note_path(&ctx.db_path, None, dir_b.to_str().unwrap(), 1, &[], &[]);
 
     let lines = list_paths(&ctx.db_path, None, &["--config", "recency_bias=0"], &[]);
-    assert_path_before(&lines, "dir_b", "dir_a");
+    assert_path_before(&lines, "dir_a", "dir_b");
 }
 
 #[test]
@@ -34,7 +34,7 @@ fn test_config_override_float_2() {
     note_path(&ctx.db_path, None, dir_b.to_str().unwrap(), 1, &[], &[]);
 
     let lines = list_paths(&ctx.db_path, None, &["--config", "recency_bias=1"], &[]);
-    assert_path_before(&lines, "dir_a", "dir_b");
+    assert_path_before(&lines, "dir_b", "dir_a");
 }
 
 #[test]
@@ -66,7 +66,7 @@ fn test_config_override_float_with_config_file() {
     );
 
     let lines = list_paths(&ctx.db_path, None, &["--config", "recency_bias=1"], &[]);
-    assert_path_before(&lines, "dir_a", "dir_b");
+    assert_path_before(&lines, "dir_b", "dir_a");
 }
 
 #[test]

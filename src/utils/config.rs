@@ -12,8 +12,22 @@ use tracing::instrument;
 use tracing::{debug, error};
 use xdg::BaseDirectories;
 
+use super::cli::SortOrder;
 use super::denylist_default;
 use super::path::expand_tilde_in_path;
+
+impl<'de> serde::Deserialize<'de> for SortOrder {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let s = String::deserialize(deserializer)?;
+        match s.as_str() {
+            "descending" => Ok(Self::Descending),
+            "ascending" => Ok(Self::Ascending),
+            other => Err(de::Error::custom(format!(
+                "invalid sort order '{other}': expected 'descending' or 'ascending'"
+            ))),
+        }
+    }
+}
 
 pub type RecencyBias = f64;
 
@@ -25,7 +39,7 @@ pub enum DeniedFilesOnList {
     Delete,
 }
 
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Debug, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct MemyConfig {
     pub import_on_first_use: Option<bool>,
@@ -40,6 +54,7 @@ pub struct MemyConfig {
     pub recency_bias: Option<RecencyBias>,
     pub missing_files_delete_from_db_after: Option<i32>,
     pub memy_output_filter: Option<String>,
+    pub default_sort: Option<SortOrder>,
 }
 
 fn validate_recency_bias<'de, D>(deserializer: D) -> Result<Option<RecencyBias>, D::Error>
@@ -276,6 +291,13 @@ pub fn get_memy_output_filter() -> Option<String> {
         .as_ref()
         .filter(|cmd| !cmd.is_empty())
         .cloned()
+}
+
+pub fn get_default_sort() -> SortOrder {
+    get_config()
+        .default_sort
+        .clone()
+        .unwrap_or(SortOrder::Descending)
 }
 
 #[cfg(test)]

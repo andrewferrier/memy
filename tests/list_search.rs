@@ -185,82 +185,6 @@ fn test_list_keyword_with_directories_only_flag() {
 }
 
 #[test]
-fn test_list_head_limits_results() {
-    let ctx = TestContext::new();
-
-    let file_a = create_test_file(&ctx.working_path, "file_a.txt", "content");
-    let file_b = create_test_file(&ctx.working_path, "file_b.txt", "content");
-    let file_c = create_test_file(&ctx.working_path, "file_c.txt", "content");
-
-    note_paths_with_delay(&ctx.db_path, None, &[&file_a, &file_b, &file_c]);
-
-    let all_lines = list_paths(&ctx.db_path, None, &[], &[]);
-    assert_eq!(all_lines.len(), 3, "Should have 3 files without --head");
-
-    let head_lines = list_paths(&ctx.db_path, None, &[], &["--head", "2"]);
-    assert_eq!(head_lines.len(), 2, "Should have 2 files with --head 2");
-}
-
-#[test]
-fn test_list_head_one_returns_most_frecent() {
-    let ctx = TestContext::new();
-
-    let file_a = create_test_file(&ctx.working_path, "file_a.txt", "content");
-    let file_b = create_test_file(&ctx.working_path, "file_b.txt", "content");
-    let file_c = create_test_file(&ctx.working_path, "file_c.txt", "content");
-
-    note_paths_with_delay(&ctx.db_path, None, &[&file_a, &file_b, &file_c]);
-
-    let all_lines = list_paths(&ctx.db_path, None, &[], &[]);
-    let most_frecent = all_lines.last().unwrap().clone();
-
-    let head_lines = list_paths(&ctx.db_path, None, &[], &["--head", "1"]);
-    assert_eq!(head_lines.len(), 1, "Should have 1 file with --head 1");
-    assert_eq!(
-        head_lines[0], most_frecent,
-        "Should return the most frecent item"
-    );
-}
-
-#[test]
-fn test_list_head_larger_than_results() {
-    let ctx = TestContext::new();
-
-    let file_a = create_test_file(&ctx.working_path, "file_a.txt", "content");
-    let file_b = create_test_file(&ctx.working_path, "file_b.txt", "content");
-
-    note_paths_with_delay(&ctx.db_path, None, &[&file_a, &file_b]);
-
-    let lines = list_paths(&ctx.db_path, None, &[], &["--head", "10"]);
-    assert_eq!(
-        lines.len(),
-        2,
-        "Should return all results when --head exceeds count"
-    );
-}
-
-#[test]
-fn test_list_head_with_keyword() {
-    let ctx = TestContext::new();
-
-    let file_a = create_test_file(&ctx.working_path, "main_proj.rs", "fn main() {}");
-    let file_b = create_test_file(&ctx.working_path, "lib_proj.rs", "pub mod foo;");
-    let file_c = create_test_file(&ctx.working_path, "unrelated.txt", "content");
-
-    note_paths_with_delay(&ctx.db_path, None, &[&file_a, &file_b, &file_c]);
-
-    let all_matching = list_paths(&ctx.db_path, None, &[], &["--", "proj"]);
-    assert_eq!(all_matching.len(), 2, "Should have 2 matching files");
-
-    let head_one = list_paths(&ctx.db_path, None, &[], &["--head", "1", "--", "proj"]);
-    assert_eq!(
-        head_one.len(),
-        1,
-        "Should return 1 matching file with --head 1"
-    );
-}
-
-#[test]
 fn test_list_zoxide_compatible_no_keywords_prints_home() {
     let ctx = TestContext::new();
 
@@ -389,7 +313,7 @@ fn test_list_keyword_slash_matches_component() {
         &ctx.db_path,
         None,
         &[],
-        &["-d", "--head", "1", "--", "foo/bar"],
+        &["-d", "--limit-results", "1", "--", "foo/bar"],
     );
     assert_lines_eq(&lines, &[dir_bar.to_str().unwrap()]);
 }
@@ -415,7 +339,7 @@ fn test_list_keyword_slash_no_deeper_match() {
         "import_on_first_use=false",
         "list",
         "-d",
-        "--head",
+        "--limit-results",
         "1",
         "--",
         "foo/bar",
@@ -437,7 +361,12 @@ fn test_list_returns_most_frecent_of_multiple_matches() {
     note_path(&ctx.db_path, None, dir_a.to_str().unwrap(), 1, &[], &[]);
     note_path(&ctx.db_path, None, dir_b.to_str().unwrap(), 3, &[], &[]);
 
-    let lines = list_paths(&ctx.db_path, None, &[], &["-d", "--head", "1", "--", "bar"]);
+    let lines = list_paths(
+        &ctx.db_path,
+        None,
+        &[],
+        &["-d", "--limit-results", "1", "--", "bar"],
+    );
     assert_lines_eq(&lines, &[dir_b.to_str().unwrap()]);
 }
 
@@ -452,7 +381,7 @@ fn test_list_missing_dir_not_yet_expired() {
         &ctx.db_path,
         None,
         &[],
-        &["-d", "--head", "1", "--", "mydir"],
+        &["-d", "--limit-results", "1", "--", "mydir"],
     );
     assert_lines_eq(&initial_lines, &[dir.to_str().unwrap()]);
 
@@ -461,7 +390,7 @@ fn test_list_missing_dir_not_yet_expired() {
     let output = memy_cmd_test_defaults(
         &ctx.db_path,
         None,
-        &["list", "-d", "--head", "1", "--", "mydir"],
+        &["list", "-d", "--limit-results", "1", "--", "mydir"],
     );
     assert!(
         !output.status.success(),
@@ -474,7 +403,7 @@ fn test_list_missing_dir_not_yet_expired() {
         &ctx.db_path,
         None,
         &[],
-        &["-d", "--head", "1", "--", "mydir"],
+        &["-d", "--limit-results", "1", "--", "mydir"],
     );
     assert_lines_eq(&restored_lines, &[dir.to_str().unwrap()]);
 }
@@ -493,7 +422,7 @@ fn test_list_missing_dir_expired_deleted_from_db() {
     let output = memy_cmd_test_defaults(
         &ctx.db_path,
         None,
-        &["list", "-d", "--head", "1", "--", "mydir"],
+        &["list", "-d", "--limit-results", "1", "--", "mydir"],
     );
     assert!(
         !output.status.success(),
@@ -505,7 +434,7 @@ fn test_list_missing_dir_expired_deleted_from_db() {
     let output2 = memy_cmd_test_defaults(
         &ctx.db_path,
         None,
-        &["list", "-d", "--head", "1", "--", "mydir"],
+        &["list", "-d", "--limit-results", "1", "--", "mydir"],
     );
     assert!(
         !output2.status.success(),

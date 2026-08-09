@@ -63,17 +63,17 @@ fn get_output_filter_command(override_cmd: Option<&str>) -> Result<String, &str>
 
     if is_command_available("fzf") {
         debug!("Output filter automatically set for fzf");
-        return Ok("fzf --ansi --tac".to_owned());
+        return Ok("fzf --ansi".to_owned());
     }
 
     if is_command_available("sk") {
         debug!("Output filter automatically set for sk");
-        return Ok("sk --ansi --tac".to_owned());
+        return Ok("sk --ansi".to_owned());
     }
 
     if is_command_available("fzy") {
         debug!("Output filter automatically set for fzy");
-        return Ok("tac | fzy".to_owned());
+        return Ok("fzy".to_owned());
     }
 
     Err(

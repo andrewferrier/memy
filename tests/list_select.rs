@@ -32,7 +32,7 @@ fn test_output_filter_basic_with_head() {
 
     let result = String::from_utf8_lossy(&output.stdout);
     let lines: Vec<&str> = result.lines().collect();
-    assert_lines_eq(&lines, &[file_a.to_str().unwrap()]);
+    assert_lines_eq(&lines, &[file_c.to_str().unwrap()]);
 }
 
 #[test]
@@ -56,7 +56,7 @@ fn test_output_filter_with_command_flag() {
 
     let result = String::from_utf8_lossy(&output.stdout);
     let lines: Vec<&str> = result.lines().collect();
-    assert_lines_eq(&lines, &[file_a.to_str().unwrap()]);
+    assert_lines_eq(&lines, &[file_b.to_str().unwrap()]);
 }
 
 #[test]
@@ -141,7 +141,7 @@ memy_output_filter = "head -1"
 
     let result = String::from_utf8_lossy(&output.stdout);
     let lines: Vec<&str> = result.lines().collect();
-    assert_lines_eq(&lines, &[file_a.to_str().unwrap()]);
+    assert_lines_eq(&lines, &[file_b.to_str().unwrap()]);
 }
 
 #[test]
@@ -172,8 +172,8 @@ fn test_output_filter_priority_command_flag_over_env() {
 
     let result = String::from_utf8_lossy(&output.stdout);
     let lines: Vec<&str> = result.lines().collect();
-    // Should use head, not tail, so first file
-    assert_lines_eq(&lines, &[file_a.to_str().unwrap()]);
+    // Should use head, not tail, so most frecent file (file_b, noted last)
+    assert_lines_eq(&lines, &[file_b.to_str().unwrap()]);
 }
 
 #[test]
@@ -206,8 +206,8 @@ memy_output_filter = "tail -1"
 
     let result = String::from_utf8_lossy(&output.stdout);
     let lines: Vec<&str> = result.lines().collect();
-    // Should use head, not tail, so first file
-    assert_lines_eq(&lines, &[file_a.to_str().unwrap()]);
+    // Should use head, not tail, so most frecent file (file_b, noted last)
+    assert_lines_eq(&lines, &[file_b.to_str().unwrap()]);
 }
 
 #[test]
