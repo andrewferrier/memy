@@ -164,7 +164,7 @@ Refer to `ARCHITECTURE.md` for architectural principles and design decisions.
 1. **Configuration Option:**
 
    - Add field to `Config` struct in `config.rs`
-   - Update `config/template-memy.toml` with documentation
+   - Update `config/template-memy.toml.tmpl` with documentation (**not** `config/template-memy.toml`, which is the rendered output)
    - Handle in relevant command implementation
 
 ### Testing Strategy
