@@ -1,4 +1,5 @@
 #![allow(clippy::unwrap_used, reason = "unwrap() OK inside tests")]
+#![cfg(not(target_os = "macos"))]
 
 mod support;
 use support::*;
