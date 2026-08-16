@@ -1,6 +1,6 @@
 # Maintainer: Andrew Ferrier <andrew.ferrier@example.com>
 pkgname=memy
-pkgver=0.22.0
+pkgver=1.0.0
 pkgrel=1
 pkgdesc='Track and recall frequently and recently used files or directories'
 arch=('x86_64' 'aarch64')
@@ -9,7 +9,7 @@ license=('MIT')
 makedepends=('cargo')
 options=('!debug')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/andrewferrier/memy/archive/v$pkgver.tar.gz")
-sha256sums=('ca46b47a06fd094ac20e2d881066fee9b5fe9f9470a05460bc8ffa76e22e1fe1')
+sha256sums=('ab583a662705ed75b8f7b4dc2f505ddd7a49358b12aa136926d3464cbbe29844')
 
 prepare() {
         cd "$srcdir/$pkgname-$pkgver"
