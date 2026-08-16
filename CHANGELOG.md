@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.0.0](https://github.com/andrewferrier/memy/compare/v0.22.0...v1.0.0) (2026-08-16)
+
+
+### ⚠ BREAKING CHANGES
+
+* Change default sort order, introduce --sort - closes #172
+* Make non-tilde paths the default.
+
+### Features
+
+* Add styling to help ([37c6abf](https://github.com/andrewferrier/memy/commit/37c6abff5ad22999460a0365df010fe56e2a83a3))
+* Change default sort order, introduce --sort - closes [#172](https://github.com/andrewferrier/memy/issues/172) ([48fef44](https://github.com/andrewferrier/memy/commit/48fef447444e1259a1503883c9dd86c7006068b5))
+* Make non-tilde paths the default. ([58b20b9](https://github.com/andrewferrier/memy/commit/58b20b9c776660f21a58b0d55400d88c15d6b29f))
+
+
+### Bug Fixes
+
+* Correct color to be a global option ([96540ab](https://github.com/andrewferrier/memy/commit/96540ab8bd2ec563860b3df4e5551ae3d9fe77ce))
+* Make aliases invisible to gently discourage use ([091be98](https://github.com/andrewferrier/memy/commit/091be9808bf76be3a46a61dc007d6ad986023371))
+* Update deps to fix audit issue ([b9f2186](https://github.com/andrewferrier/memy/commit/b9f2186a041af3f08f8312374b80df021f81a7ee))
+
 ## [0.22.0](https://github.com/andrewferrier/memy/compare/v0.21.0...v0.22.0) (2026-07-01)
 
 
